@@ -169,9 +169,9 @@ type School struct {
 	Category    SchoolCategory  `json:"category"`
 	Ownership   SchoolOwnership `json:"ownership"`
 	Status      SchoolStatus    `json:"status"`
+	NumberOfClassrooms int		`json:"Number_of_classrooms"`
+    TotalStudents int			`json:"total_students"`
 	Address     string          `json:"address"`
-	Email       string          `json:"email,omitempty"`
-	Phone       string          `json:"phone,omitempty"`
 	HeadTeacher string          `json:"head_teacher,omitempty"`
 	Founded     *int            `json:"founded,omitempty"`
 	AuditFields

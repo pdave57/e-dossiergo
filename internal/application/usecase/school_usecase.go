@@ -154,7 +154,7 @@ func (uc *SchoolUseCase) Create(ctx context.Context, stateID string, req dto.Cre
 		Name: req.Name, Code: req.Code,
 		Category: domain.SchoolCategory(req.Category), Ownership: domain.SchoolOwnership(req.Ownership),
 		Status: domain.SchoolStatusActive, Address: req.Address,
-		Email: req.Email, Phone: req.Phone, HeadTeacher: req.HeadTeacher, Founded: req.Founded,
+		HeadTeacher: req.HeadTeacher, Founded: req.Founded,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 	return s, uc.schools.Create(ctx, s)
@@ -178,9 +178,7 @@ func (uc *SchoolUseCase) Update(ctx context.Context, id string, req dto.UpdateSc
 	s.Name = req.Name
 	s.Category = domain.SchoolCategory(req.Category)
 	s.Ownership = domain.SchoolOwnership(req.Ownership)
-	s.Address = req.Address
-	s.Email = req.Email
-	s.Phone = req.Phone
+	s.Address = req.Address	
 	s.HeadTeacher = req.HeadTeacher
 	s.Founded = req.Founded
 	if req.Status != "" {

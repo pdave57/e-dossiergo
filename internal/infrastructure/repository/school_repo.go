@@ -287,7 +287,7 @@ func (r *schoolRepo) Create(ctx context.Context, s *domain.School) error {
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
 		s.ID, s.StateID, s.ZoneID, s.LGAID, s.Name, s.Code,
 		s.Category, s.Ownership, s.Status, s.Address,
-		nullableString(s.Email), nullableString(s.Phone), nullableString(s.HeadTeacher),
+		nullableString(s.HeadTeacher),
 		s.Founded, s.CreatedAt, s.UpdatedAt, s.CreatedBy)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -313,8 +313,7 @@ func (r *schoolRepo) Update(ctx context.Context, s *domain.School) error {
 		  address=$7,email=$8,phone=$9,head_teacher=$10,founded=$11,updated_at=$12,updated_by=$13
 		 WHERE id=$14 AND deleted_at IS NULL`,
 		s.ZoneID, s.LGAID, s.Name, s.Category, s.Ownership, s.Status,
-		s.Address, nullableString(s.Email), nullableString(s.Phone),
-		nullableString(s.HeadTeacher), s.Founded, s.UpdatedAt, s.UpdatedBy, s.ID)
+		s.Address, nullableString(s.HeadTeacher), s.Founded, s.UpdatedAt, s.UpdatedBy, s.ID)
 	return checkRowsAffected(res, err, "school", s.ID)
 }
 
@@ -390,7 +389,7 @@ func scanSchool(s scanner) (*domain.School, error) {
 	err := s.Scan(
 		&sc.ID, &sc.StateID, &sc.ZoneID, &sc.LGAID, &sc.Name, &sc.Code,
 		&sc.Category, &sc.Ownership, &sc.Status,
-		&sc.Address, &sc.Email, &sc.Phone, &sc.HeadTeacher, &sc.Founded,
+		&sc.Address, &sc.HeadTeacher, &sc.Founded,
 		&sc.CreatedAt, &sc.UpdatedAt, &sc.CreatedBy, &sc.UpdatedBy,
 	)
 	if err == sql.ErrNoRows {
