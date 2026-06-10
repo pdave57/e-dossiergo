@@ -159,17 +159,19 @@ const (
 	SchoolStatusSuspended SchoolStatus = "SUSPENDED"
 )
 
+// School belongs to an LGA (one LGA contains many Schools).
+// Hierarchy: State → Zone → LGA → School
 type School struct {
 	ID                 string          `json:"id"`
 	StateID            string          `json:"state_id"`
 	ZoneID             string          `json:"zone_id"`
-	LGAID              string          `json:"lga_id"`
+	LGAID              string          `json:"lga_id"` // owning Local Government Area
 	Name               string          `json:"name"`
 	Code               string          `json:"code"`
 	Category           SchoolCategory  `json:"category"`
 	Ownership          SchoolOwnership `json:"ownership"`
 	Status             SchoolStatus    `json:"status"`
-	NumberOfClassrooms int             `json:"Number_of_classrooms"`
+	NumberOfClassrooms int             `json:"number_of_classrooms"`
 	TotalStudents      int             `json:"total_students"`
 	Address            string          `json:"address"`
 	HeadTeacher        string          `json:"head_teacher,omitempty"`
@@ -261,14 +263,15 @@ const (
 	LevelTypeVocational LevelType = "VOCATIONAL"
 )
 
-// Level is a state-wide class definition (JSS1, JSS2, SS1, …).
+// Level is a school-defined class (JSS1, JSS2, SS1, …).
+// A School owns its Levels; use SchoolLevel to activate a Level for a session.
 type Level struct {
-	ID      string    `json:"id"`
-	StateID string    `json:"state_id"`
-	Name    string    `json:"name"`
-	Code    string    `json:"code"`
-	Type    LevelType `json:"type"`
-	Order   int       `json:"order"` // used for progression sequencing
+	ID       string    `json:"id"`
+	SchoolID string    `json:"school_id"` // owning school
+	Name     string    `json:"name"`
+	Code     string    `json:"code"`
+	Type     LevelType `json:"type"`
+	Order    int       `json:"order"` // used for progression sequencing
 	AuditFields
 }
 

@@ -379,7 +379,7 @@ func NewLevelService(
 	return &LevelService{levels: levels, subLevels: subLevels, schoolLevels: schoolLevels}
 }
 
-func (uc *LevelService) CreateLevel(ctx context.Context, stateID string, req dto.CreateLevelRequest, createdBy string) (*domain.Level, error) {
+func (uc *LevelService) CreateLevel(ctx context.Context, schoolID string, req dto.CreateLevelRequest, createdBy string) (*domain.Level, error) {
 	v := validator.New().
 		Required(req.Name, "name").
 		Required(req.Code, "code").
@@ -388,15 +388,15 @@ func (uc *LevelService) CreateLevel(ctx context.Context, stateID string, req dto
 		return nil, apperror.Validation(v.Errors())
 	}
 	l := &domain.Level{
-		StateID: stateID, Name: req.Name, Code: req.Code,
+		SchoolID: schoolID, Name: req.Name, Code: req.Code,
 		Type: domain.LevelType(req.Type), Order: req.Order,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 	return l, uc.levels.Create(ctx, l)
 }
 
-func (uc *LevelService) ListLevels(ctx context.Context, stateID string) ([]*domain.Level, error) {
-	return uc.levels.ListByState(ctx, stateID)
+func (uc *LevelService) ListLevels(ctx context.Context, schoolID string) ([]*domain.Level, error) {
+	return uc.levels.ListBySchool(ctx, schoolID)
 }
 
 func (uc *LevelService) GetLevel(ctx context.Context, id string) (*domain.Level, error) {

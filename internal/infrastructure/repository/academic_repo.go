@@ -257,13 +257,13 @@ func (r *levelRepo) Create(ctx context.Context, l *domain.Level) error {
 	now := time.Now()
 	l.CreatedAt, l.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO levels (id,state_id,name,code,type,ord,created_at,updated_at,created_by)
+		`INSERT INTO levels (id,school_id,name,code,type,ord,created_at,updated_at,created_by)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		l.ID, l.StateID, l.Name, l.Code, l.Type, l.Order,
+		l.ID, l.SchoolID, l.Name, l.Code, l.Type, l.Order,
 		l.CreatedAt, l.UpdatedAt, l.CreatedBy)
 	if err != nil {
 		if isUniqueViolation(err) {
-			return apperror.Conflict("level code already exists for this state")
+			return apperror.Conflict("level code already exists for this school")
 		}
 		return apperror.Internal(err)
 	}
@@ -290,9 +290,9 @@ func (r *levelRepo) Delete(ctx context.Context, id string) error {
 	return checkRowsAffected(res, err, "level", id)
 }
 
-func (r *levelRepo) ListByState(ctx context.Context, stateID string) ([]*domain.Level, error) {
+func (r *levelRepo) ListBySchool(ctx context.Context, schoolID string) ([]*domain.Level, error) {
 	rows, err := r.db.QueryContext(ctx,
-		levelSelect+" WHERE state_id=$1 AND deleted_at IS NULL ORDER BY ord,name", stateID)
+		levelSelect+" WHERE school_id=$1 AND deleted_at IS NULL ORDER BY ord,name", schoolID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
@@ -311,23 +311,23 @@ func (r *levelRepo) ListByState(ctx context.Context, stateID string) ([]*domain.
 // GetNextLevel returns the level with ord = current+1 of the same type.
 func (r *levelRepo) GetNextLevel(ctx context.Context, currentLevelID string) (*domain.Level, error) {
 	return scanLevel(r.db.QueryRowContext(ctx, `
-		SELECT id,state_id,name,code,type,ord,created_at,updated_at,
+		SELECT id,school_id,name,code,type,ord,created_at,updated_at,
 		       COALESCE(created_by,''),COALESCE(updated_by,'')
 		FROM levels
-		WHERE state_id=(SELECT state_id FROM levels WHERE id=$1)
+		WHERE school_id=(SELECT school_id FROM levels WHERE id=$1)
 		  AND type=(SELECT type FROM levels WHERE id=$1)
 		  AND ord=(SELECT ord+1 FROM levels WHERE id=$1)
 		  AND deleted_at IS NULL`, currentLevelID))
 }
 
 const levelSelect = `
-	SELECT id,state_id,name,code,type,ord,created_at,updated_at,
+	SELECT id,school_id,name,code,type,ord,created_at,updated_at,
 	       COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM levels`
 
 func scanLevel(s scanner) (*domain.Level, error) {
 	l := &domain.Level{}
-	err := s.Scan(&l.ID, &l.StateID, &l.Name, &l.Code, &l.Type, &l.Order,
+	err := s.Scan(&l.ID, &l.SchoolID, &l.Name, &l.Code, &l.Type, &l.Order,
 		&l.CreatedAt, &l.UpdatedAt, &l.CreatedBy, &l.UpdatedBy)
 	if err == sql.ErrNoRows {
 		return nil, apperror.NotFound("level", "")

@@ -173,11 +173,11 @@ func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dt
 }
 
 // BulkUpsertScores processes multiple score entries in one call.
-func (uc *ResultService) BulkUpsertScores(ctx context.Context, stateID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
+func (uc *ResultService) BulkUpsertScores(ctx context.Context, studentID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
 	results := make([]*domain.ScoreSheet, 0, len(req.Scores))
 	errs := make([]error, 0)
 	for _, s := range req.Scores {
-		ss, err := uc.UpsertScore(ctx, stateID, s, recordedBy)
+		ss, err := uc.UpsertScore(ctx, studentID, s, recordedBy)
 		if err != nil {
 			errs = append(errs, err)
 			continue

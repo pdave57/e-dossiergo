@@ -41,6 +41,7 @@ type PersonnelFilter struct {
 type StudentFilter struct {
 	StateID  string
 	SchoolID string
+	LGAID    string
 	Status   string
 	Search   string
 }
@@ -195,7 +196,7 @@ type LevelRepository interface {
 	GetByID(ctx context.Context, id string) (*Level, error)
 	Update(ctx context.Context, l *Level) error
 	Delete(ctx context.Context, id string) error
-	ListByState(ctx context.Context, stateID string) ([]*Level, error)
+	ListBySchool(ctx context.Context, schoolID string) ([]*Level, error)
 	GetNextLevel(ctx context.Context, currentLevelID string) (*Level, error)
 }
 
@@ -266,6 +267,7 @@ type StudentRepository interface {
 	Update(ctx context.Context, s *Student) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter StudentFilter, p pagination.Params) ([]*Student, int, error)
+	GetAllStudents(ctx context.Context, lgaID, schoolID string) ([]*Student, error)
 }
 
 type EnrollmentRepository interface {

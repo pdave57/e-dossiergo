@@ -283,27 +283,42 @@ func (r *studentRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (r *studentRepo) List(ctx context.Context, f domain.StudentFilter, p pagination.Params) ([]*domain.Student, int, error) {
-	where, args := []string{"deleted_at IS NULL"}, []any{}
+	where, args := []string{"s.deleted_at IS NULL"}, []any{}
 	idx := 1
 	if f.StateID != "" {
-		where = append(where, fmt.Sprintf("state_id=$%d", idx)); args = append(args, f.StateID); idx++
+		where = append(where, fmt.Sprintf("s.state_id=$%d", idx)); args = append(args, f.StateID); idx++
+	}
+	if f.SchoolID != "" {
+		// students are linked to schools via enrollment
+		where = append(where, fmt.Sprintf(`EXISTS(
+			SELECT 1 FROM enrollments e WHERE e.student_id=s.id AND e.school_id=$%d
+		)`, idx))
+		args = append(args, f.SchoolID); idx++
+	}
+	if f.LGAID != "" {
+		where = append(where, fmt.Sprintf(`EXISTS(
+			SELECT 1 FROM enrollments e
+			JOIN schools sc ON sc.id=e.school_id
+			WHERE e.student_id=s.id AND sc.lga_id=$%d
+		)`, idx))
+		args = append(args, f.LGAID); idx++
 	}
 	if f.Status != "" {
-		where = append(where, fmt.Sprintf("status=$%d", idx)); args = append(args, f.Status); idx++
+		where = append(where, fmt.Sprintf("s.status=$%d", idx)); args = append(args, f.Status); idx++
 	}
 	if f.Search != "" {
 		where = append(where, fmt.Sprintf(
-			"(first_name ILIKE $%d OR last_name ILIKE $%d OR admission_no ILIKE $%d)", idx, idx, idx))
+			"(s.first_name ILIKE $%d OR s.last_name ILIKE $%d OR s.admission_no ILIKE $%d)", idx, idx, idx))
 		args = append(args, "%"+f.Search+"%"); idx++
 	}
 	clause := "WHERE " + strings.Join(where, " AND ")
 
 	var total int
-	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM students "+clause, args...).Scan(&total); err != nil {
+	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM students s "+clause, args...).Scan(&total); err != nil {
 		return nil, 0, apperror.Internal(err)
 	}
 	args = append(args, p.PerPage, p.Offset)
-	q := fmt.Sprintf(studentSelect+" %s ORDER BY last_name,first_name LIMIT $%d OFFSET $%d",
+	q := fmt.Sprintf(`SELECT `+studentSelectAlias+` FROM students s %s ORDER BY s.last_name,s.first_name LIMIT $%d OFFSET $%d`,
 		clause, idx, idx+1)
 	rows, err := r.db.QueryContext(ctx, q, args...)
 	if err != nil {
@@ -321,6 +336,63 @@ func (r *studentRepo) List(ctx context.Context, f domain.StudentFilter, p pagina
 	return out, total, rows.Err()
 }
 
+// GetAllStudents returns every distinct student enrolled in schools that match
+// the provided filters. Both lgaID and schoolID are optional — pass "" to skip
+// that filter. When both are provided they are ANDed together (i.e. a specific
+// school inside the given LGA). Results are ordered by last_name, first_name.
+func (r *studentRepo) GetAllStudents(ctx context.Context, lgaID, schoolID string) ([]*domain.Student, error) {
+	where := []string{"s.deleted_at IS NULL"}
+	args := []any{}
+	idx := 1
+
+	// Both filters work via the enrollment → school join
+	needJoin := lgaID != "" || schoolID != ""
+	if lgaID != "" {
+		where = append(where, fmt.Sprintf("sc.lga_id = $%d", idx))
+		args = append(args, lgaID)
+		idx++
+	}
+	if schoolID != "" {
+		where = append(where, fmt.Sprintf("e.school_id = $%d", idx))
+		args = append(args, schoolID)
+		idx++
+	}
+
+	clause := strings.Join(where, " AND ")
+
+	var q string
+	if needJoin {
+		q = `SELECT DISTINCT ` + studentSelectAlias + `
+		FROM students s
+		JOIN enrollments e ON e.student_id = s.id
+		JOIN schools    sc ON sc.id        = e.school_id
+		WHERE ` + clause + `
+		ORDER BY s.last_name, s.first_name`
+	} else {
+		// No filters — return all non-deleted students
+		q = `SELECT ` + studentSelectAlias + `
+		FROM students s
+		WHERE s.deleted_at IS NULL
+		ORDER BY s.last_name, s.first_name`
+	}
+
+	rows, err := r.db.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, apperror.Internal(err)
+	}
+	defer rows.Close()
+	var out []*domain.Student
+	for rows.Next() {
+		st, err := scanStudentAlias(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, st)
+	}
+	return out, rows.Err()
+}
+
+// studentSelect is used when querying the students table directly (no alias).
 const studentSelect = `
 	SELECT id,state_id,admission_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,
 	       COALESCE(state_of_origin,''),COALESCE(lga_id,''),COALESCE(religion,''),
@@ -329,7 +401,21 @@ const studentSelect = `
 	       status,created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM students`
 
+// studentSelectAlias is used when students is aliased as "s" (e.g. in JOINs).
+const studentSelectAlias = `
+	s.id,s.state_id,s.admission_no,s.first_name,COALESCE(s.middle_name,''),s.last_name,s.gender,s.date_of_birth,
+	COALESCE(s.state_of_origin,''),COALESCE(s.lga_id,''),COALESCE(s.religion,''),
+	COALESCE(s.phone,''),COALESCE(s.email,''),COALESCE(s.address,''),
+	s.guardian_name,s.guardian_phone,COALESCE(s.guardian_relation,''),
+	s.status,s.created_at,s.updated_at,COALESCE(s.created_by,''),COALESCE(s.updated_by,'')`
+
 func scanStudent(s scanner) (*domain.Student, error) {
+	return scanStudentAlias(s)
+}
+
+// scanStudentAlias scans a student row regardless of whether the underlying
+// query used an aliased or un-aliased column list.
+func scanStudentAlias(s scanner) (*domain.Student, error) {
 	st := &domain.Student{}
 	err := s.Scan(
 		&st.ID, &st.StateID, &st.AdmissionNo,
