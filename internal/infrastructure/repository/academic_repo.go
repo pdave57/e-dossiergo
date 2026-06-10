@@ -28,13 +28,13 @@ func (r *sessionRepo) Create(ctx context.Context, s *domain.AcademicSession) err
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO academic_sessions
-		 (id,state_id,name,start_year,end_year,status,start_date,end_date,created_at,updated_at,created_by)
+		 (id,school_id,name,start_year,end_year,status,start_date,end_date,created_at,updated_at,created_by)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-		s.ID, s.StateID, s.Name, s.StartYear, s.EndYear, s.Status,
+		s.ID, s.SchoolID, s.Name, s.StartYear, s.EndYear, s.Status,
 		s.StartDate, s.EndDate, s.CreatedAt, s.UpdatedAt, s.CreatedBy)
 	if err != nil {
 		if isUniqueViolation(err) {
-			return apperror.Conflict("academic session name already exists for this state")
+			return apperror.Conflict("academic session name already exists for this school")
 		}
 		return apperror.Internal(err)
 	}
@@ -46,9 +46,9 @@ func (r *sessionRepo) GetByID(ctx context.Context, id string) (*domain.AcademicS
 		sessionSelect+" WHERE id=$1 AND deleted_at IS NULL", id))
 }
 
-func (r *sessionRepo) GetActive(ctx context.Context, stateID string) (*domain.AcademicSession, error) {
+func (r *sessionRepo) GetActive(ctx context.Context, schoolID string) (*domain.AcademicSession, error) {
 	return scanSession(r.db.QueryRowContext(ctx,
-		sessionSelect+" WHERE state_id=$1 AND status='ACTIVE' AND deleted_at IS NULL", stateID))
+		sessionSelect+" WHERE school_id=$1 AND status='ACTIVE' AND deleted_at IS NULL", schoolID))
 }
 
 func (r *sessionRepo) Update(ctx context.Context, s *domain.AcademicSession) error {
@@ -68,16 +68,16 @@ func (r *sessionRepo) Delete(ctx context.Context, id string) error {
 	return checkRowsAffected(res, err, "academic_session", id)
 }
 
-func (r *sessionRepo) List(ctx context.Context, stateID string, p pagination.Params) ([]*domain.AcademicSession, int, error) {
+func (r *sessionRepo) List(ctx context.Context, schoolID string, p pagination.Params) ([]*domain.AcademicSession, int, error) {
 	var total int
 	if err := r.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM academic_sessions WHERE state_id=$1 AND deleted_at IS NULL`, stateID).
+		`SELECT COUNT(*) FROM academic_sessions WHERE school_id=$1 AND deleted_at IS NULL`, schoolID).
 		Scan(&total); err != nil {
 		return nil, 0, apperror.Internal(err)
 	}
 	rows, err := r.db.QueryContext(ctx,
-		sessionSelect+` WHERE state_id=$1 AND deleted_at IS NULL ORDER BY start_year DESC LIMIT $2 OFFSET $3`,
-		stateID, p.PerPage, p.Offset)
+		sessionSelect+` WHERE school_id=$1 AND deleted_at IS NULL ORDER BY start_year DESC LIMIT $2 OFFSET $3`,
+		schoolID, p.PerPage, p.Offset)
 	if err != nil {
 		return nil, 0, apperror.Internal(err)
 	}
@@ -94,7 +94,7 @@ func (r *sessionRepo) List(ctx context.Context, stateID string, p pagination.Par
 }
 
 // SetActive atomically makes one session ACTIVE and closes others.
-func (r *sessionRepo) SetActive(ctx context.Context, id, stateID string) error {
+func (r *sessionRepo) SetActive(ctx context.Context, id, schoolID string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return apperror.Internal(err)
@@ -103,7 +103,7 @@ func (r *sessionRepo) SetActive(ctx context.Context, id, stateID string) error {
 
 	if _, err = tx.ExecContext(ctx,
 		`UPDATE academic_sessions SET status='CLOSED',updated_at=NOW()
-		 WHERE state_id=$1 AND status='ACTIVE' AND deleted_at IS NULL`, stateID); err != nil {
+		 WHERE school_id=$1 AND status='ACTIVE' AND deleted_at IS NULL`, schoolID); err != nil {
 		return apperror.Internal(err)
 	}
 	res, err := tx.ExecContext(ctx,
@@ -118,13 +118,13 @@ func (r *sessionRepo) SetActive(ctx context.Context, id, stateID string) error {
 }
 
 const sessionSelect = `
-	SELECT id,state_id,name,start_year,end_year,status,start_date,end_date,
+	SELECT id,school_id,name,start_year,end_year,status,start_date,end_date,
 	       created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM academic_sessions`
 
 func scanSession(s scanner) (*domain.AcademicSession, error) {
 	as := &domain.AcademicSession{}
-	err := s.Scan(&as.ID, &as.StateID, &as.Name, &as.StartYear, &as.EndYear,
+	err := s.Scan(&as.ID, &as.SchoolID, &as.Name, &as.StartYear, &as.EndYear,
 		&as.Status, &as.StartDate, &as.EndDate,
 		&as.CreatedAt, &as.UpdatedAt, &as.CreatedBy, &as.UpdatedBy)
 	if err == sql.ErrNoRows {

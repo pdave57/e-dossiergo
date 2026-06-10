@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -12,22 +12,22 @@ import (
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GEO USE CASES
+// ZONE USE CASES
 // ─────────────────────────────────────────────────────────────────────────────
 
-type GeoUseCase struct {
+type ZoneService struct {
 	states domain.StateRepository
 	zones  domain.ZoneRepository
 	lgas   domain.LGARepository
 }
 
-func NewGeoUseCase(states domain.StateRepository, zones domain.ZoneRepository, lgas domain.LGARepository) *GeoUseCase {
-	return &GeoUseCase{states: states, zones: zones, lgas: lgas}
+func NewZoneService(states domain.StateRepository, zones domain.ZoneRepository, lgas domain.LGARepository) *ZoneService {
+	return &ZoneService{states: states, zones: zones, lgas: lgas}
 }
 
 // — States —
 
-func (uc *GeoUseCase) CreateState(ctx context.Context, req dto.CreateStateRequest, createdBy string) (*domain.State, error) {
+func (uc *ZoneService) CreateState(ctx context.Context, req dto.CreateStateRequest, createdBy string) (*domain.State, error) {
 	v := validator.New().Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -39,15 +39,15 @@ func (uc *GeoUseCase) CreateState(ctx context.Context, req dto.CreateStateReques
 	return s, uc.states.Create(ctx, s)
 }
 
-func (uc *GeoUseCase) GetState(ctx context.Context, id string) (*domain.State, error) {
+func (uc *ZoneService) GetState(ctx context.Context, id string) (*domain.State, error) {
 	return uc.states.GetByID(ctx, id)
 }
 
-func (uc *GeoUseCase) ListStates(ctx context.Context) ([]*domain.State, error) {
+func (uc *ZoneService) ListStates(ctx context.Context) ([]*domain.State, error) {
 	return uc.states.List(ctx)
 }
 
-func (uc *GeoUseCase) UpdateState(ctx context.Context, id string, req dto.UpdateStateRequest, updatedBy string) (*domain.State, error) {
+func (uc *ZoneService) UpdateState(ctx context.Context, id string, req dto.UpdateStateRequest, updatedBy string) (*domain.State, error) {
 	s, err := uc.states.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (uc *GeoUseCase) UpdateState(ctx context.Context, id string, req dto.Update
 
 // — Zones —
 
-func (uc *GeoUseCase) CreateZone(ctx context.Context, stateID string, req dto.CreateZoneRequest, createdBy string) (*domain.Zone, error) {
+func (uc *ZoneService) CreateZone(ctx context.Context, stateID string, req dto.CreateZoneRequest, createdBy string) (*domain.Zone, error) {
 	v := validator.New().Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -71,11 +71,11 @@ func (uc *GeoUseCase) CreateZone(ctx context.Context, stateID string, req dto.Cr
 	return z, uc.zones.Create(ctx, z)
 }
 
-func (uc *GeoUseCase) ListZones(ctx context.Context, stateID string) ([]*domain.Zone, error) {
+func (uc *ZoneService) ListZones(ctx context.Context, stateID string) ([]*domain.Zone, error) {
 	return uc.zones.ListByState(ctx, stateID)
 }
 
-func (uc *GeoUseCase) UpdateZone(ctx context.Context, id string, req dto.UpdateZoneRequest, updatedBy string) (*domain.Zone, error) {
+func (uc *ZoneService) UpdateZone(ctx context.Context, id string, req dto.UpdateZoneRequest, updatedBy string) (*domain.Zone, error) {
 	z, err := uc.zones.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -86,13 +86,13 @@ func (uc *GeoUseCase) UpdateZone(ctx context.Context, id string, req dto.UpdateZ
 	return z, uc.zones.Update(ctx, z)
 }
 
-func (uc *GeoUseCase) DeleteZone(ctx context.Context, id string) error {
+func (uc *ZoneService) DeleteZone(ctx context.Context, id string) error {
 	return uc.zones.Delete(ctx, id)
 }
 
 // — LGAs —
 
-func (uc *GeoUseCase) CreateLGA(ctx context.Context, stateID string, req dto.CreateLGARequest, createdBy string) (*domain.LGA, error) {
+func (uc *ZoneService) CreateLGA(ctx context.Context, stateID string, req dto.CreateLGARequest, createdBy string) (*domain.LGA, error) {
 	v := validator.New().Required(req.ZoneID, "zone_id").Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -101,15 +101,15 @@ func (uc *GeoUseCase) CreateLGA(ctx context.Context, stateID string, req dto.Cre
 	return l, uc.lgas.Create(ctx, l)
 }
 
-func (uc *GeoUseCase) ListLGAs(ctx context.Context, stateID string) ([]*domain.LGA, error) {
+func (uc *ZoneService) ListLGAs(ctx context.Context, stateID string) ([]*domain.LGA, error) {
 	return uc.lgas.ListByState(ctx, stateID)
 }
 
-func (uc *GeoUseCase) ListLGAsByZone(ctx context.Context, zoneID string) ([]*domain.LGA, error) {
+func (uc *ZoneService) ListLGAsByZone(ctx context.Context, zoneID string) ([]*domain.LGA, error) {
 	return uc.lgas.ListByZone(ctx, zoneID)
 }
 
-func (uc *GeoUseCase) UpdateLGA(ctx context.Context, id string, req dto.UpdateLGARequest, updatedBy string) (*domain.LGA, error) {
+func (uc *ZoneService) UpdateLGA(ctx context.Context, id string, req dto.UpdateLGARequest, updatedBy string) (*domain.LGA, error) {
 	l, err := uc.lgas.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (uc *GeoUseCase) UpdateLGA(ctx context.Context, id string, req dto.UpdateLG
 	return l, uc.lgas.Update(ctx, l)
 }
 
-func (uc *GeoUseCase) DeleteLGA(ctx context.Context, id string) error {
+func (uc *ZoneService) DeleteLGA(ctx context.Context, id string) error {
 	return uc.lgas.Delete(ctx, id)
 }
 
@@ -129,16 +129,16 @@ func (uc *GeoUseCase) DeleteLGA(ctx context.Context, id string) error {
 // SCHOOL USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type SchoolUseCase struct {
+type SchoolService struct {
 	schools    domain.SchoolRepository
 	facilities domain.SchoolFacilityRepository
 }
 
-func NewSchoolUseCase(schools domain.SchoolRepository, facilities domain.SchoolFacilityRepository) *SchoolUseCase {
-	return &SchoolUseCase{schools: schools, facilities: facilities}
+func NewSchoolService(schools domain.SchoolRepository, facilities domain.SchoolFacilityRepository) *SchoolService {
+	return &SchoolService{schools: schools, facilities: facilities}
 }
 
-func (uc *SchoolUseCase) Create(ctx context.Context, stateID string, req dto.CreateSchoolRequest, createdBy string) (*domain.School, error) {
+func (uc *SchoolService) Create(ctx context.Context, stateID string, req dto.CreateSchoolRequest, createdBy string) (*domain.School, error) {
 	v := validator.New().
 		Required(req.ZoneID, "zone_id").
 		Required(req.LGAID, "lga_id").
@@ -160,15 +160,15 @@ func (uc *SchoolUseCase) Create(ctx context.Context, stateID string, req dto.Cre
 	return s, uc.schools.Create(ctx, s)
 }
 
-func (uc *SchoolUseCase) GetByID(ctx context.Context, id string) (*domain.School, error) {
+func (uc *SchoolService) GetByID(ctx context.Context, id string) (*domain.School, error) {
 	return uc.schools.GetByID(ctx, id)
 }
 
-func (uc *SchoolUseCase) List(ctx context.Context, f domain.SchoolFilter, p pagination.Params) ([]*domain.School, int, error) {
+func (uc *SchoolService) List(ctx context.Context, f domain.SchoolFilter, p pagination.Params) ([]*domain.School, int, error) {
 	return uc.schools.List(ctx, f, p)
 }
 
-func (uc *SchoolUseCase) Update(ctx context.Context, id string, req dto.UpdateSchoolRequest, updatedBy string) (*domain.School, error) {
+func (uc *SchoolService) Update(ctx context.Context, id string, req dto.UpdateSchoolRequest, updatedBy string) (*domain.School, error) {
 	s, err := uc.schools.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (uc *SchoolUseCase) Update(ctx context.Context, id string, req dto.UpdateSc
 	s.Name = req.Name
 	s.Category = domain.SchoolCategory(req.Category)
 	s.Ownership = domain.SchoolOwnership(req.Ownership)
-	s.Address = req.Address	
+	s.Address = req.Address
 	s.HeadTeacher = req.HeadTeacher
 	s.Founded = req.Founded
 	if req.Status != "" {
@@ -188,13 +188,13 @@ func (uc *SchoolUseCase) Update(ctx context.Context, id string, req dto.UpdateSc
 	return s, uc.schools.Update(ctx, s)
 }
 
-func (uc *SchoolUseCase) Delete(ctx context.Context, id string) error {
+func (uc *SchoolService) Delete(ctx context.Context, id string) error {
 	return uc.schools.Delete(ctx, id)
 }
 
 // — Facilities —
 
-func (uc *SchoolUseCase) AddFacility(ctx context.Context, schoolID string, req dto.CreateFacilityRequest, createdBy string) (*domain.SchoolFacility, error) {
+func (uc *SchoolService) AddFacility(ctx context.Context, schoolID string, req dto.CreateFacilityRequest, createdBy string) (*domain.SchoolFacility, error) {
 	v := validator.New().
 		Required(req.Type, "type").
 		Required(req.Name, "name").
@@ -213,11 +213,11 @@ func (uc *SchoolUseCase) AddFacility(ctx context.Context, schoolID string, req d
 	return f, uc.facilities.Create(ctx, f)
 }
 
-func (uc *SchoolUseCase) ListFacilities(ctx context.Context, schoolID string) ([]*domain.SchoolFacility, error) {
+func (uc *SchoolService) ListFacilities(ctx context.Context, schoolID string) ([]*domain.SchoolFacility, error) {
 	return uc.facilities.ListBySchool(ctx, schoolID)
 }
 
-func (uc *SchoolUseCase) UpdateFacility(ctx context.Context, id string, req dto.UpdateFacilityRequest, updatedBy string) (*domain.SchoolFacility, error) {
+func (uc *SchoolService) UpdateFacility(ctx context.Context, id string, req dto.UpdateFacilityRequest, updatedBy string) (*domain.SchoolFacility, error) {
 	f, err := uc.facilities.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -231,7 +231,7 @@ func (uc *SchoolUseCase) UpdateFacility(ctx context.Context, id string, req dto.
 	return f, uc.facilities.Update(ctx, f)
 }
 
-func (uc *SchoolUseCase) DeleteFacility(ctx context.Context, id string) error {
+func (uc *SchoolService) DeleteFacility(ctx context.Context, id string) error {
 	return uc.facilities.Delete(ctx, id)
 }
 
@@ -239,16 +239,16 @@ func (uc *SchoolUseCase) DeleteFacility(ctx context.Context, id string) error {
 // ACADEMIC SESSION USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AcademicUseCase struct {
+type AcademicService struct {
 	sessions domain.AcademicSessionRepository
 	terms    domain.TermRepository
 }
 
-func NewAcademicUseCase(sessions domain.AcademicSessionRepository, terms domain.TermRepository) *AcademicUseCase {
-	return &AcademicUseCase{sessions: sessions, terms: terms}
+func NewAcademicService(sessions domain.AcademicSessionRepository, terms domain.TermRepository) *AcademicService {
+	return &AcademicService{sessions: sessions, terms: terms}
 }
 
-func (uc *AcademicUseCase) CreateSession(ctx context.Context, stateID string, req dto.CreateSessionRequest, createdBy string) (*domain.AcademicSession, error) {
+func (uc *AcademicService) CreateSession(ctx context.Context, schoolID string, req dto.CreateSessionRequest, createdBy string) (*domain.AcademicSession, error) {
 	v := validator.New().
 		Required(req.Name, "name").
 		Check(req.StartYear > 2000, "start_year", "must be a valid year").
@@ -260,7 +260,7 @@ func (uc *AcademicUseCase) CreateSession(ctx context.Context, stateID string, re
 		return nil, apperror.Validation(v.Errors())
 	}
 	s := &domain.AcademicSession{
-		StateID: stateID, Name: req.Name,
+		SchoolID: schoolID, Name: req.Name,
 		StartYear: req.StartYear, EndYear: req.EndYear,
 		Status: domain.SessionDraft, StartDate: req.StartDate, EndDate: req.EndDate,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
@@ -268,19 +268,19 @@ func (uc *AcademicUseCase) CreateSession(ctx context.Context, stateID string, re
 	return s, uc.sessions.Create(ctx, s)
 }
 
-func (uc *AcademicUseCase) GetSession(ctx context.Context, id string) (*domain.AcademicSession, error) {
+func (uc *AcademicService) GetSession(ctx context.Context, id string) (*domain.AcademicSession, error) {
 	return uc.sessions.GetByID(ctx, id)
 }
 
-func (uc *AcademicUseCase) GetActiveSession(ctx context.Context, stateID string) (*domain.AcademicSession, error) {
-	return uc.sessions.GetActive(ctx, stateID)
+func (uc *AcademicService) GetActiveSession(ctx context.Context, schoolID string) (*domain.AcademicSession, error) {
+	return uc.sessions.GetActive(ctx, schoolID)
 }
 
-func (uc *AcademicUseCase) ListSessions(ctx context.Context, stateID string, p pagination.Params) ([]*domain.AcademicSession, int, error) {
-	return uc.sessions.List(ctx, stateID, p)
+func (uc *AcademicService) ListSessions(ctx context.Context, schoolID string, p pagination.Params) ([]*domain.AcademicSession, int, error) {
+	return uc.sessions.List(ctx, schoolID, p)
 }
 
-func (uc *AcademicUseCase) UpdateSession(ctx context.Context, id string, req dto.UpdateSessionRequest, updatedBy string) (*domain.AcademicSession, error) {
+func (uc *AcademicService) UpdateSession(ctx context.Context, id string, req dto.UpdateSessionRequest, updatedBy string) (*domain.AcademicSession, error) {
 	s, err := uc.sessions.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -299,11 +299,11 @@ func (uc *AcademicUseCase) UpdateSession(ctx context.Context, id string, req dto
 	return s, uc.sessions.Update(ctx, s)
 }
 
-func (uc *AcademicUseCase) ActivateSession(ctx context.Context, id, stateID string) error {
-	return uc.sessions.SetActive(ctx, id, stateID)
+func (uc *AcademicService) ActivateSession(ctx context.Context, id, schoolID string) error {
+	return uc.sessions.SetActive(ctx, id, schoolID)
 }
 
-func (uc *AcademicUseCase) DeleteSession(ctx context.Context, id string) error {
+func (uc *AcademicService) DeleteSession(ctx context.Context, id string) error {
 	session, err := uc.sessions.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -316,7 +316,7 @@ func (uc *AcademicUseCase) DeleteSession(ctx context.Context, id string) error {
 
 // — Terms —
 
-func (uc *AcademicUseCase) CreateTerm(ctx context.Context, sessionID string, req dto.CreateTermRequest, createdBy string) (*domain.Term, error) {
+func (uc *AcademicService) CreateTerm(ctx context.Context, sessionID string, req dto.CreateTermRequest, createdBy string) (*domain.Term, error) {
 	v := validator.New().
 		Required(req.Name, "name").
 		Check(req.Number >= 1 && req.Number <= 3, "term_number", "must be 1, 2, or 3").
@@ -333,11 +333,11 @@ func (uc *AcademicUseCase) CreateTerm(ctx context.Context, sessionID string, req
 	return t, uc.terms.Create(ctx, t)
 }
 
-func (uc *AcademicUseCase) ListTerms(ctx context.Context, sessionID string) ([]*domain.Term, error) {
+func (uc *AcademicService) ListTerms(ctx context.Context, sessionID string) ([]*domain.Term, error) {
 	return uc.terms.ListBySession(ctx, sessionID)
 }
 
-func (uc *AcademicUseCase) UpdateTerm(ctx context.Context, id string, req dto.UpdateTermRequest, updatedBy string) (*domain.Term, error) {
+func (uc *AcademicService) UpdateTerm(ctx context.Context, id string, req dto.UpdateTermRequest, updatedBy string) (*domain.Term, error) {
 	t, err := uc.terms.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -353,11 +353,11 @@ func (uc *AcademicUseCase) UpdateTerm(ctx context.Context, id string, req dto.Up
 	return t, uc.terms.Update(ctx, t)
 }
 
-func (uc *AcademicUseCase) ActivateTerm(ctx context.Context, id, sessionID string) error {
+func (uc *AcademicService) ActivateTerm(ctx context.Context, id, sessionID string) error {
 	return uc.terms.SetActive(ctx, id, sessionID)
 }
 
-func (uc *AcademicUseCase) DeleteTerm(ctx context.Context, id string) error {
+func (uc *AcademicService) DeleteTerm(ctx context.Context, id string) error {
 	return uc.terms.Delete(ctx, id)
 }
 
@@ -365,21 +365,21 @@ func (uc *AcademicUseCase) DeleteTerm(ctx context.Context, id string) error {
 // LEVEL USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type LevelUseCase struct {
+type LevelService struct {
 	levels       domain.LevelRepository
 	subLevels    domain.SubLevelRepository
 	schoolLevels domain.SchoolLevelRepository
 }
 
-func NewLevelUseCase(
+func NewLevelService(
 	levels domain.LevelRepository,
 	subLevels domain.SubLevelRepository,
 	schoolLevels domain.SchoolLevelRepository,
-) *LevelUseCase {
-	return &LevelUseCase{levels: levels, subLevels: subLevels, schoolLevels: schoolLevels}
+) *LevelService {
+	return &LevelService{levels: levels, subLevels: subLevels, schoolLevels: schoolLevels}
 }
 
-func (uc *LevelUseCase) CreateLevel(ctx context.Context, stateID string, req dto.CreateLevelRequest, createdBy string) (*domain.Level, error) {
+func (uc *LevelService) CreateLevel(ctx context.Context, stateID string, req dto.CreateLevelRequest, createdBy string) (*domain.Level, error) {
 	v := validator.New().
 		Required(req.Name, "name").
 		Required(req.Code, "code").
@@ -395,15 +395,15 @@ func (uc *LevelUseCase) CreateLevel(ctx context.Context, stateID string, req dto
 	return l, uc.levels.Create(ctx, l)
 }
 
-func (uc *LevelUseCase) ListLevels(ctx context.Context, stateID string) ([]*domain.Level, error) {
+func (uc *LevelService) ListLevels(ctx context.Context, stateID string) ([]*domain.Level, error) {
 	return uc.levels.ListByState(ctx, stateID)
 }
 
-func (uc *LevelUseCase) GetLevel(ctx context.Context, id string) (*domain.Level, error) {
+func (uc *LevelService) GetLevel(ctx context.Context, id string) (*domain.Level, error) {
 	return uc.levels.GetByID(ctx, id)
 }
 
-func (uc *LevelUseCase) UpdateLevel(ctx context.Context, id string, req dto.UpdateLevelRequest, updatedBy string) (*domain.Level, error) {
+func (uc *LevelService) UpdateLevel(ctx context.Context, id string, req dto.UpdateLevelRequest, updatedBy string) (*domain.Level, error) {
 	l, err := uc.levels.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -416,13 +416,13 @@ func (uc *LevelUseCase) UpdateLevel(ctx context.Context, id string, req dto.Upda
 	return l, uc.levels.Update(ctx, l)
 }
 
-func (uc *LevelUseCase) DeleteLevel(ctx context.Context, id string) error {
+func (uc *LevelService) DeleteLevel(ctx context.Context, id string) error {
 	return uc.levels.Delete(ctx, id)
 }
 
 // — Sub-Levels —
 
-func (uc *LevelUseCase) CreateSubLevel(ctx context.Context, schoolID string, req dto.CreateSubLevelRequest, createdBy string) (*domain.SubLevel, error) {
+func (uc *LevelService) CreateSubLevel(ctx context.Context, schoolID string, req dto.CreateSubLevelRequest, createdBy string) (*domain.SubLevel, error) {
 	v := validator.New().
 		Required(req.LevelID, "level_id").
 		Required(req.Name, "name").
@@ -441,11 +441,11 @@ func (uc *LevelUseCase) CreateSubLevel(ctx context.Context, schoolID string, req
 	return sl, uc.subLevels.Create(ctx, sl)
 }
 
-func (uc *LevelUseCase) ListSubLevels(ctx context.Context, schoolID, levelID string) ([]*domain.SubLevel, error) {
+func (uc *LevelService) ListSubLevels(ctx context.Context, schoolID, levelID string) ([]*domain.SubLevel, error) {
 	return uc.subLevels.ListByLevel(ctx, schoolID, levelID)
 }
 
-func (uc *LevelUseCase) UpdateSubLevel(ctx context.Context, id string, req dto.UpdateSubLevelRequest, updatedBy string) (*domain.SubLevel, error) {
+func (uc *LevelService) UpdateSubLevel(ctx context.Context, id string, req dto.UpdateSubLevelRequest, updatedBy string) (*domain.SubLevel, error) {
 	sl, err := uc.subLevels.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -459,24 +459,24 @@ func (uc *LevelUseCase) UpdateSubLevel(ctx context.Context, id string, req dto.U
 	return sl, uc.subLevels.Update(ctx, sl)
 }
 
-func (uc *LevelUseCase) DeleteSubLevel(ctx context.Context, id string) error {
+func (uc *LevelService) DeleteSubLevel(ctx context.Context, id string) error {
 	return uc.subLevels.Delete(ctx, id)
 }
 
 // — School Levels (which levels a school offers) —
 
-func (uc *LevelUseCase) UpsertSchoolLevel(ctx context.Context, schoolID string, req dto.UpsertSchoolLevelRequest, createdBy string) error {
+func (uc *LevelService) UpsertSchoolLevel(ctx context.Context, schoolID string, req dto.UpsertSchoolLevelRequest, createdBy string) error {
 	return uc.schoolLevels.Upsert(ctx, &domain.SchoolLevel{
 		SchoolID: schoolID, LevelID: req.LevelID, SessionID: req.SessionID,
 		IsActive: req.IsActive, AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	})
 }
 
-func (uc *LevelUseCase) ListSchoolLevels(ctx context.Context, schoolID, sessionID string) ([]*domain.SchoolLevel, error) {
+func (uc *LevelService) ListSchoolLevels(ctx context.Context, schoolID, sessionID string) ([]*domain.SchoolLevel, error) {
 	return uc.schoolLevels.ListBySchool(ctx, schoolID, sessionID)
 }
 
-func (uc *LevelUseCase) RemoveSchoolLevel(ctx context.Context, schoolID, levelID, sessionID string) error {
+func (uc *LevelService) RemoveSchoolLevel(ctx context.Context, schoolID, levelID, sessionID string) error {
 	return uc.schoolLevels.Delete(ctx, schoolID, levelID, sessionID)
 }
 
@@ -484,16 +484,16 @@ func (uc *LevelUseCase) RemoveSchoolLevel(ctx context.Context, schoolID, levelID
 // SUBJECT USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type SubjectUseCase struct {
+type SubjectService struct {
 	subjects       domain.SubjectRepository
 	schoolSubjects domain.SchoolSubjectRepository
 }
 
-func NewSubjectUseCase(subjects domain.SubjectRepository, schoolSubjects domain.SchoolSubjectRepository) *SubjectUseCase {
-	return &SubjectUseCase{subjects: subjects, schoolSubjects: schoolSubjects}
+func NewSubjectService(subjects domain.SubjectRepository, schoolSubjects domain.SchoolSubjectRepository) *SubjectService {
+	return &SubjectService{subjects: subjects, schoolSubjects: schoolSubjects}
 }
 
-func (uc *SubjectUseCase) Create(ctx context.Context, stateID string, req dto.CreateSubjectRequest, createdBy string) (*domain.Subject, error) {
+func (uc *SubjectService) Create(ctx context.Context, stateID string, req dto.CreateSubjectRequest, createdBy string) (*domain.Subject, error) {
 	v := validator.New().
 		Required(req.Name, "name").
 		Required(req.Code, "code").
@@ -510,15 +510,15 @@ func (uc *SubjectUseCase) Create(ctx context.Context, stateID string, req dto.Cr
 	return s, uc.subjects.Create(ctx, s)
 }
 
-func (uc *SubjectUseCase) GetByID(ctx context.Context, id string) (*domain.Subject, error) {
+func (uc *SubjectService) GetByID(ctx context.Context, id string) (*domain.Subject, error) {
 	return uc.subjects.GetByID(ctx, id)
 }
 
-func (uc *SubjectUseCase) ListByState(ctx context.Context, stateID string) ([]*domain.Subject, error) {
+func (uc *SubjectService) ListByState(ctx context.Context, stateID string) ([]*domain.Subject, error) {
 	return uc.subjects.ListByState(ctx, stateID)
 }
 
-func (uc *SubjectUseCase) Update(ctx context.Context, id string, req dto.UpdateSubjectRequest, updatedBy string) (*domain.Subject, error) {
+func (uc *SubjectService) Update(ctx context.Context, id string, req dto.UpdateSubjectRequest, updatedBy string) (*domain.Subject, error) {
 	s, err := uc.subjects.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -535,13 +535,13 @@ func (uc *SubjectUseCase) Update(ctx context.Context, id string, req dto.UpdateS
 	return s, uc.subjects.Update(ctx, s)
 }
 
-func (uc *SubjectUseCase) Delete(ctx context.Context, id string) error {
+func (uc *SubjectService) Delete(ctx context.Context, id string) error {
 	return uc.subjects.Delete(ctx, id)
 }
 
 // — School Subjects —
 
-func (uc *SubjectUseCase) AssignToSchool(ctx context.Context, schoolID string, req dto.CreateSchoolSubjectRequest, createdBy string) (*domain.SchoolSubject, error) {
+func (uc *SubjectService) AssignToSchool(ctx context.Context, schoolID string, req dto.CreateSchoolSubjectRequest, createdBy string) (*domain.SchoolSubject, error) {
 	v := validator.New().
 		Required(req.SubjectID, "subject_id").
 		Required(req.LevelID, "level_id").
@@ -557,11 +557,11 @@ func (uc *SubjectUseCase) AssignToSchool(ctx context.Context, schoolID string, r
 	return ss, uc.schoolSubjects.Create(ctx, ss)
 }
 
-func (uc *SubjectUseCase) ListSchoolSubjects(ctx context.Context, schoolID, sessionID, levelID string) ([]*domain.SchoolSubject, error) {
+func (uc *SubjectService) ListSchoolSubjects(ctx context.Context, schoolID, sessionID, levelID string) ([]*domain.SchoolSubject, error) {
 	return uc.schoolSubjects.ListBySchool(ctx, schoolID, sessionID, levelID)
 }
 
-func (uc *SubjectUseCase) UpdateSchoolSubject(ctx context.Context, id string, req dto.UpdateSchoolSubjectRequest, updatedBy string) (*domain.SchoolSubject, error) {
+func (uc *SubjectService) UpdateSchoolSubject(ctx context.Context, id string, req dto.UpdateSchoolSubjectRequest, updatedBy string) (*domain.SchoolSubject, error) {
 	ss, err := uc.schoolSubjects.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -572,7 +572,7 @@ func (uc *SubjectUseCase) UpdateSchoolSubject(ctx context.Context, id string, re
 	return ss, uc.schoolSubjects.Update(ctx, ss)
 }
 
-func (uc *SubjectUseCase) RemoveSchoolSubject(ctx context.Context, id string) error {
+func (uc *SubjectService) RemoveSchoolSubject(ctx context.Context, id string) error {
 	return uc.schoolSubjects.Delete(ctx, id)
 }
 
@@ -580,21 +580,21 @@ func (uc *SubjectUseCase) RemoveSchoolSubject(ctx context.Context, id string) er
 // PERSONNEL USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type PersonnelUseCase struct {
+type PersonnelService struct {
 	personnel domain.PersonnelRepository
 	transfers domain.PersonnelTransferRepository
 	schools   domain.SchoolRepository
 }
 
-func NewPersonnelUseCase(
+func NewPersonnelService(
 	personnel domain.PersonnelRepository,
 	transfers domain.PersonnelTransferRepository,
 	schools domain.SchoolRepository,
-) *PersonnelUseCase {
-	return &PersonnelUseCase{personnel: personnel, transfers: transfers, schools: schools}
+) *PersonnelService {
+	return &PersonnelService{personnel: personnel, transfers: transfers, schools: schools}
 }
 
-func (uc *PersonnelUseCase) Create(ctx context.Context, stateID string, req dto.CreatePersonnelRequest, createdBy string) (*domain.Personnel, error) {
+func (uc *PersonnelService) Create(ctx context.Context, stateID string, req dto.CreatePersonnelRequest, createdBy string) (*domain.Personnel, error) {
 	v := validator.New().
 		Required(req.SchoolID, "school_id").
 		Required(req.StaffID, "staff_id").
@@ -618,15 +618,15 @@ func (uc *PersonnelUseCase) Create(ctx context.Context, stateID string, req dto.
 	return p, uc.personnel.Create(ctx, p)
 }
 
-func (uc *PersonnelUseCase) GetByID(ctx context.Context, id string) (*domain.Personnel, error) {
+func (uc *PersonnelService) GetByID(ctx context.Context, id string) (*domain.Personnel, error) {
 	return uc.personnel.GetByID(ctx, id)
 }
 
-func (uc *PersonnelUseCase) List(ctx context.Context, f domain.PersonnelFilter, p pagination.Params) ([]*domain.Personnel, int, error) {
+func (uc *PersonnelService) List(ctx context.Context, f domain.PersonnelFilter, p pagination.Params) ([]*domain.Personnel, int, error) {
 	return uc.personnel.List(ctx, f, p)
 }
 
-func (uc *PersonnelUseCase) Update(ctx context.Context, id string, req dto.UpdatePersonnelRequest, updatedBy string) (*domain.Personnel, error) {
+func (uc *PersonnelService) Update(ctx context.Context, id string, req dto.UpdatePersonnelRequest, updatedBy string) (*domain.Personnel, error) {
 	p, err := uc.personnel.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -653,12 +653,12 @@ func (uc *PersonnelUseCase) Update(ctx context.Context, id string, req dto.Updat
 	return p, uc.personnel.Update(ctx, p)
 }
 
-func (uc *PersonnelUseCase) Delete(ctx context.Context, id string) error {
+func (uc *PersonnelService) Delete(ctx context.Context, id string) error {
 	return uc.personnel.Delete(ctx, id)
 }
 
 // Transfer moves a staff member to another school and updates their school_id.
-func (uc *PersonnelUseCase) Transfer(ctx context.Context, personnelID string, req dto.TransferPersonnelRequest, createdBy string) (*domain.PersonnelTransfer, error) {
+func (uc *PersonnelService) Transfer(ctx context.Context, personnelID string, req dto.TransferPersonnelRequest, createdBy string) (*domain.PersonnelTransfer, error) {
 	v := validator.New().
 		Required(req.ToSchoolID, "to_school_id").
 		Check(!req.TransferDate.IsZero(), "transfer_date", "is required")
@@ -702,11 +702,11 @@ func (uc *PersonnelUseCase) Transfer(ctx context.Context, personnelID string, re
 	return transfer, nil
 }
 
-func (uc *PersonnelUseCase) ListTransfers(ctx context.Context, personnelID string) ([]*domain.PersonnelTransfer, error) {
+func (uc *PersonnelService) ListTransfers(ctx context.Context, personnelID string) ([]*domain.PersonnelTransfer, error) {
 	return uc.transfers.ListByPersonnel(ctx, personnelID)
 }
 
-func (uc *PersonnelUseCase) ListSchoolTransfers(ctx context.Context, schoolID string) ([]*domain.PersonnelTransfer, error) {
+func (uc *PersonnelService) ListSchoolTransfers(ctx context.Context, schoolID string) ([]*domain.PersonnelTransfer, error) {
 	return uc.transfers.ListBySchool(ctx, schoolID)
 }
 
@@ -714,28 +714,28 @@ func (uc *PersonnelUseCase) ListSchoolTransfers(ctx context.Context, schoolID st
 // STUDENT USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type StudentUseCase struct {
-	students    domain.StudentRepository
-	enrollments domain.EnrollmentRepository
-	subLevels   domain.SubLevelRepository
+type StudentService struct {
+	students     domain.StudentRepository
+	enrollments  domain.EnrollmentRepository
+	subLevels    domain.SubLevelRepository
 	progressions domain.LevelProgressionRepository
-	levels      domain.LevelRepository
+	levels       domain.LevelRepository
 }
 
-func NewStudentUseCase(
+func NewStudentService(
 	students domain.StudentRepository,
 	enrollments domain.EnrollmentRepository,
 	subLevels domain.SubLevelRepository,
 	progressions domain.LevelProgressionRepository,
 	levels domain.LevelRepository,
-) *StudentUseCase {
-	return &StudentUseCase{
+) *StudentService {
+	return &StudentService{
 		students: students, enrollments: enrollments,
 		subLevels: subLevels, progressions: progressions, levels: levels,
 	}
 }
 
-func (uc *StudentUseCase) Register(ctx context.Context, stateID string, req dto.CreateStudentRequest, createdBy string) (*domain.Student, error) {
+func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.CreateStudentRequest, createdBy string) (*domain.Student, error) {
 	v := validator.New().
 		Required(req.AdmissionNo, "admission_no").
 		Required(req.FirstName, "first_name").
@@ -760,15 +760,15 @@ func (uc *StudentUseCase) Register(ctx context.Context, stateID string, req dto.
 	return s, uc.students.Create(ctx, s)
 }
 
-func (uc *StudentUseCase) GetByID(ctx context.Context, id string) (*domain.Student, error) {
+func (uc *StudentService) GetByID(ctx context.Context, id string) (*domain.Student, error) {
 	return uc.students.GetByID(ctx, id)
 }
 
-func (uc *StudentUseCase) List(ctx context.Context, f domain.StudentFilter, p pagination.Params) ([]*domain.Student, int, error) {
+func (uc *StudentService) List(ctx context.Context, f domain.StudentFilter, p pagination.Params) ([]*domain.Student, int, error) {
 	return uc.students.List(ctx, f, p)
 }
 
-func (uc *StudentUseCase) Update(ctx context.Context, id string, req dto.UpdateStudentRequest, updatedBy string) (*domain.Student, error) {
+func (uc *StudentService) Update(ctx context.Context, id string, req dto.UpdateStudentRequest, updatedBy string) (*domain.Student, error) {
 	s, err := uc.students.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -796,12 +796,12 @@ func (uc *StudentUseCase) Update(ctx context.Context, id string, req dto.UpdateS
 	return s, uc.students.Update(ctx, s)
 }
 
-func (uc *StudentUseCase) Delete(ctx context.Context, id string) error {
+func (uc *StudentService) Delete(ctx context.Context, id string) error {
 	return uc.students.Delete(ctx, id)
 }
 
 // Enroll registers a student into a school/session/level.
-func (uc *StudentUseCase) Enroll(ctx context.Context, req dto.EnrollStudentRequest, createdBy string) (*domain.Enrollment, error) {
+func (uc *StudentService) Enroll(ctx context.Context, req dto.EnrollStudentRequest, createdBy string) (*domain.Enrollment, error) {
 	v := validator.New().
 		Required(req.StudentID, "student_id").
 		Required(req.SchoolID, "school_id").
@@ -842,21 +842,21 @@ func (uc *StudentUseCase) Enroll(ctx context.Context, req dto.EnrollStudentReque
 	e := &domain.Enrollment{
 		StudentID: req.StudentID, SchoolID: req.SchoolID, SessionID: req.SessionID,
 		LevelID: req.LevelID, SubLevelID: req.SubLevelID,
-		Status: domain.EnrollmentStatusActive,
+		Status:      domain.EnrollmentStatusActive,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 	return e, uc.enrollments.Create(ctx, e)
 }
 
-func (uc *StudentUseCase) GetEnrollment(ctx context.Context, id string) (*domain.Enrollment, error) {
+func (uc *StudentService) GetEnrollment(ctx context.Context, id string) (*domain.Enrollment, error) {
 	return uc.enrollments.GetByID(ctx, id)
 }
 
-func (uc *StudentUseCase) ListEnrollments(ctx context.Context, f domain.EnrollmentFilter, p pagination.Params) ([]*domain.Enrollment, int, error) {
+func (uc *StudentService) ListEnrollments(ctx context.Context, f domain.EnrollmentFilter, p pagination.Params) ([]*domain.Enrollment, int, error) {
 	return uc.enrollments.List(ctx, f, p)
 }
 
-func (uc *StudentUseCase) UpdateEnrollment(ctx context.Context, id string, req dto.UpdateEnrollmentRequest, updatedBy string) (*domain.Enrollment, error) {
+func (uc *StudentService) UpdateEnrollment(ctx context.Context, id string, req dto.UpdateEnrollmentRequest, updatedBy string) (*domain.Enrollment, error) {
 	e, err := uc.enrollments.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -872,7 +872,7 @@ func (uc *StudentUseCase) UpdateEnrollment(ctx context.Context, id string, req d
 }
 
 // RecordProgression records end-of-session promotion/repeat/graduation.
-func (uc *StudentUseCase) RecordProgression(ctx context.Context, schoolID string, req dto.RecordProgressionRequest, createdBy string) (*domain.LevelProgression, error) {
+func (uc *StudentService) RecordProgression(ctx context.Context, schoolID string, req dto.RecordProgressionRequest, createdBy string) (*domain.LevelProgression, error) {
 	v := validator.New().
 		Required(req.StudentID, "student_id").
 		Required(req.FromSessionID, "from_session_id").
@@ -896,9 +896,9 @@ func (uc *StudentUseCase) RecordProgression(ctx context.Context, schoolID string
 		StudentID: req.StudentID, SchoolID: schoolID,
 		FromSessionID: req.FromSessionID, ToSessionID: req.ToSessionID,
 		FromLevelID: req.FromLevelID, ToLevelID: toLevel,
-		Decision: domain.ProgressionDecision(req.Decision),
+		Decision:  domain.ProgressionDecision(req.Decision),
 		DecidedBy: createdBy, DecisionDate: req.DecisionDate,
-		Remarks: req.Remarks,
+		Remarks:     req.Remarks,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 
@@ -915,11 +915,11 @@ func (uc *StudentUseCase) RecordProgression(ctx context.Context, schoolID string
 	return lp, uc.progressions.Create(ctx, lp)
 }
 
-func (uc *StudentUseCase) ListProgressions(ctx context.Context, studentID string) ([]*domain.LevelProgression, error) {
+func (uc *StudentService) ListProgressions(ctx context.Context, studentID string) ([]*domain.LevelProgression, error) {
 	return uc.progressions.ListByStudent(ctx, studentID)
 }
 
-func (uc *StudentUseCase) ListSessionProgressions(ctx context.Context, schoolID, sessionID string) ([]*domain.LevelProgression, error) {
+func (uc *StudentService) ListSessionProgressions(ctx context.Context, schoolID, sessionID string) ([]*domain.LevelProgression, error) {
 	return uc.progressions.ListBySession(ctx, schoolID, sessionID)
 }
 

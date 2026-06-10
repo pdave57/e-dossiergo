@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/edossier/api/config"
-	"github.com/edossier/api/internal/application/usecase"
+	"github.com/edossier/api/internal/application/service"
 	infradb "github.com/edossier/api/internal/infrastructure/db"
 	"github.com/edossier/api/internal/infrastructure/repository"
 	"github.com/edossier/api/internal/interfaces/http/handler"
@@ -90,33 +90,33 @@ func main() {
 	scoreConfigRepo   := repository.NewScoreConfigRepository(db)
 
 	// ── Use Cases ─────────────────────────────────────────────────────────────
-	authUC := usecase.NewAuthUseCase(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
-	userUC := usecase.NewUserUseCase(userRepo, userRoleRepo, roleRepo)
-	roleUC := usecase.NewRoleUseCase(roleRepo, permRepo)
+	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
+	//userUC := service.NewUserService(userRepo, userRoleRepo, roleRepo)
+	roleUC := service.NewRoleService(roleRepo, permRepo)
 
-	geoUC      := usecase.NewGeoUseCase(stateRepo, zoneRepo, lgaRepo)
-	schoolUC   := usecase.NewSchoolUseCase(schoolRepo, facilityRepo)
-	academicUC := usecase.NewAcademicUseCase(sessionRepo, termRepo)
+	zoneUC      := service.NewZoneService(stateRepo, zoneRepo, lgaRepo)
+	schoolUC   := service.NewSchoolService(schoolRepo, facilityRepo)
+	academicUC := service.NewAcademicService(sessionRepo, termRepo)
 
-	levelUC := usecase.NewLevelUseCase(levelRepo, subLevelRepo, schoolLevelRepo)
-	subjectUC := usecase.NewSubjectUseCase(subjectRepo, schoolSubjectRepo)
+	levelUC := service.NewLevelService(levelRepo, subLevelRepo, schoolLevelRepo)
+	subjectUC := service.NewSubjectService(subjectRepo, schoolSubjectRepo)
 
-	personnelUC := usecase.NewPersonnelUseCase(personnelRepo, transferRepo, schoolRepo)
+	personnelUC := service.NewPersonnelService(personnelRepo, transferRepo, schoolRepo)
 
-	studentUC := usecase.NewStudentUseCase(
+	studentUC := service.NewStudentService(
 		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo,
 	)
 
-	resultUC := usecase.NewResultUseCase(
+	resultUC := service.NewResultService(
 		scoreSheetRepo, reportCardRepo, gradeConfigRepo, scoreConfigRepo,
 		enrollmentRepo, subLevelRepo, termRepo,
 	)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler      := handler.NewAuthHandler(authUC)
-	userHandler      := handler.NewUserHandler(userUC, userRepo)
+	//userHandler      := handler.NewUserHandler(userUC, userRepo)
 	roleHandler      := handler.NewRoleHandler(roleUC)
-	geoHandler       := handler.NewGeoHandler(geoUC)
+	zoneHandler       := handler.NewZoneHandler(zoneUC)
 	schoolHandler    := handler.NewSchoolHandler(schoolUC)
 	academicHandler  := handler.NewAcademicHandler(academicUC)
 	levelHandler     := handler.NewLevelHandler(levelUC)
@@ -131,9 +131,9 @@ func main() {
 		TokenMaker:  tokenMaker,
 		RoleChecker: userRoleRepo,
 		Auth:        authHandler,
-		User:        userHandler,
+		//User:        userHandler,
 		Role:        roleHandler,
-		Geo:         geoHandler,
+		Zone: zoneHandler,
 		School:      schoolHandler,
 		Academic:    academicHandler,
 		Level:       levelHandler,

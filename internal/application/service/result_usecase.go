@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"github.com/edossier/api/pkg/validator"
 )
 
-// ResultUseCase orchestrates score entry, grade evaluation, and report card generation.
-type ResultUseCase struct {
+// ResultService orchestrates score entry, grade evaluation, and report card generation.
+type ResultService struct {
 	scores       domain.ScoreSheetRepository
 	reportCards  domain.ReportCardRepository
 	gradeConfigs domain.GradeConfigRepository
@@ -22,7 +22,7 @@ type ResultUseCase struct {
 	terms        domain.TermRepository
 }
 
-func NewResultUseCase(
+func NewResultService(
 	scores domain.ScoreSheetRepository,
 	reportCards domain.ReportCardRepository,
 	gradeConfigs domain.GradeConfigRepository,
@@ -30,8 +30,8 @@ func NewResultUseCase(
 	enrollments domain.EnrollmentRepository,
 	subLevels domain.SubLevelRepository,
 	terms domain.TermRepository,
-) *ResultUseCase {
-	return &ResultUseCase{
+) *ResultService {
+	return &ResultService{
 		scores: scores, reportCards: reportCards,
 		gradeConfigs: gradeConfigs, scoreConfigs: scoreConfigs,
 		enrollments: enrollments, subLevels: subLevels, terms: terms,
@@ -42,7 +42,7 @@ func NewResultUseCase(
 // SCORE CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
 
-func (uc *ResultUseCase) UpsertScoreConfig(ctx context.Context, stateID string, req dto.UpsertScoreConfigRequest, createdBy string) (*domain.ScoreConfig, error) {
+func (uc *ResultService) UpsertScoreConfig(ctx context.Context, stateID string, req dto.UpsertScoreConfigRequest, createdBy string) (*domain.ScoreConfig, error) {
 	v := validator.New().
 		Check(req.CA1Max > 0, "ca1_max", "must be greater than 0").
 		Check(req.CA2Max > 0, "ca2_max", "must be greater than 0").
@@ -66,7 +66,7 @@ func (uc *ResultUseCase) UpsertScoreConfig(ctx context.Context, stateID string, 
 	return sc, uc.scoreConfigs.Upsert(ctx, sc)
 }
 
-func (uc *ResultUseCase) GetScoreConfig(ctx context.Context, schoolID, stateID string) (*domain.ScoreConfig, error) {
+func (uc *ResultService) GetScoreConfig(ctx context.Context, schoolID, stateID string) (*domain.ScoreConfig, error) {
 	sc, err := uc.scoreConfigs.GetBySchool(ctx, schoolID)
 	if err != nil {
 		// Fall back to state default
@@ -79,7 +79,7 @@ func (uc *ResultUseCase) GetScoreConfig(ctx context.Context, schoolID, stateID s
 // GRADE CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
 
-func (uc *ResultUseCase) UpsertGradeConfig(ctx context.Context, stateID string, req dto.UpsertGradeConfigRequest, createdBy string) (*domain.GradeConfig, error) {
+func (uc *ResultService) UpsertGradeConfig(ctx context.Context, stateID string, req dto.UpsertGradeConfigRequest, createdBy string) (*domain.GradeConfig, error) {
 	v := validator.New().
 		Required(req.Grade, "grade").
 		Required(req.Remark, "remark").
@@ -96,7 +96,7 @@ func (uc *ResultUseCase) UpsertGradeConfig(ctx context.Context, stateID string, 
 	return gc, uc.gradeConfigs.Upsert(ctx, gc)
 }
 
-func (uc *ResultUseCase) ListGradeConfigs(ctx context.Context, schoolID, stateID string) ([]*domain.GradeConfig, error) {
+func (uc *ResultService) ListGradeConfigs(ctx context.Context, schoolID, stateID string) ([]*domain.GradeConfig, error) {
 	configs, err := uc.gradeConfigs.ListBySchool(ctx, schoolID)
 	if err != nil || len(configs) == 0 {
 		return uc.gradeConfigs.ListStateDefault(ctx, stateID)
@@ -110,7 +110,7 @@ func (uc *ResultUseCase) ListGradeConfigs(ctx context.Context, schoolID, stateID
 
 // UpsertScore records or updates a student's score for one subject+term.
 // It validates component maximums, computes the total, evaluates the grade.
-func (uc *ResultUseCase) UpsertScore(ctx context.Context, stateID string, req dto.UpsertScoreRequest, recordedBy string) (*domain.ScoreSheet, error) {
+func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dto.UpsertScoreRequest, recordedBy string) (*domain.ScoreSheet, error) {
 	v := validator.New().
 		Required(req.EnrollmentID, "enrollment_id").
 		Required(req.SubjectID, "subject_id").
@@ -173,7 +173,7 @@ func (uc *ResultUseCase) UpsertScore(ctx context.Context, stateID string, req dt
 }
 
 // BulkUpsertScores processes multiple score entries in one call.
-func (uc *ResultUseCase) BulkUpsertScores(ctx context.Context, stateID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
+func (uc *ResultService) BulkUpsertScores(ctx context.Context, stateID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
 	results := make([]*domain.ScoreSheet, 0, len(req.Scores))
 	errs := make([]error, 0)
 	for _, s := range req.Scores {
@@ -187,20 +187,20 @@ func (uc *ResultUseCase) BulkUpsertScores(ctx context.Context, stateID string, r
 	return results, errs
 }
 
-func (uc *ResultUseCase) GetScore(ctx context.Context, id string) (*domain.ScoreSheet, error) {
+func (uc *ResultService) GetScore(ctx context.Context, id string) (*domain.ScoreSheet, error) {
 	return uc.scores.GetByID(ctx, id)
 }
 
-func (uc *ResultUseCase) GetStudentScores(ctx context.Context, studentID, sessionID string) ([]*domain.ScoreSheet, error) {
+func (uc *ResultService) GetStudentScores(ctx context.Context, studentID, sessionID string) ([]*domain.ScoreSheet, error) {
 	return uc.scores.ListByStudent(ctx, studentID, sessionID)
 }
 
-func (uc *ResultUseCase) ListScores(ctx context.Context, f domain.ScoreSheetFilter, p pagination.Params) ([]*domain.ScoreSheet, int, error) {
+func (uc *ResultService) ListScores(ctx context.Context, f domain.ScoreSheetFilter, p pagination.Params) ([]*domain.ScoreSheet, int, error) {
 	return uc.scores.List(ctx, f, p)
 }
 
 // ComputePositions re-ranks all students in a class arm for a given subject/term.
-func (uc *ResultUseCase) ComputePositions(ctx context.Context, termID, subLevelID, subjectID string) error {
+func (uc *ResultService) ComputePositions(ctx context.Context, termID, subLevelID, subjectID string) error {
 	if termID == "" || subLevelID == "" || subjectID == "" {
 		return apperror.BadRequest("term_id, sub_level_id, and subject_id are required")
 	}
@@ -213,7 +213,7 @@ func (uc *ResultUseCase) ComputePositions(ctx context.Context, termID, subLevelI
 
 // GenerateReportCards computes and persists report cards for all students
 // in a given sub-level for the specified term. Idempotent — safe to re-run.
-func (uc *ResultUseCase) GenerateReportCards(ctx context.Context, stateID string, req dto.GenerateReportCardRequest) (int, error) {
+func (uc *ResultService) GenerateReportCards(ctx context.Context, stateID string, req dto.GenerateReportCardRequest) (int, error) {
 	v := validator.New().
 		Required(req.SchoolID, "school_id").
 		Required(req.SessionID, "session_id").
@@ -294,7 +294,7 @@ func (uc *ResultUseCase) GenerateReportCards(ctx context.Context, stateID string
 }
 
 // computeReportCardPositions ranks report cards by average score within a class.
-func (uc *ResultUseCase) computeReportCardPositions(ctx context.Context, schoolID, termID string) {
+func (uc *ResultService) computeReportCardPositions(ctx context.Context, schoolID, termID string) {
 	rcs, _, err := uc.reportCards.ListByTerm(ctx, schoolID, termID, pagination.Params{Page: 1, PerPage: 1000})
 	if err != nil {
 		return
@@ -307,23 +307,23 @@ func (uc *ResultUseCase) computeReportCardPositions(ctx context.Context, schoolI
 	}
 }
 
-func (uc *ResultUseCase) GetReportCard(ctx context.Context, id string) (*domain.ReportCard, error) {
+func (uc *ResultService) GetReportCard(ctx context.Context, id string) (*domain.ReportCard, error) {
 	return uc.reportCards.GetByID(ctx, id)
 }
 
-func (uc *ResultUseCase) GetStudentReportCard(ctx context.Context, studentID, termID string) (*domain.ReportCard, error) {
+func (uc *ResultService) GetStudentReportCard(ctx context.Context, studentID, termID string) (*domain.ReportCard, error) {
 	return uc.reportCards.GetByStudentTerm(ctx, studentID, termID)
 }
 
-func (uc *ResultUseCase) ListReportCards(ctx context.Context, schoolID, termID string, p pagination.Params) ([]*domain.ReportCard, int, error) {
+func (uc *ResultService) ListReportCards(ctx context.Context, schoolID, termID string, p pagination.Params) ([]*domain.ReportCard, int, error) {
 	return uc.reportCards.ListByTerm(ctx, schoolID, termID, p)
 }
 
-func (uc *ResultUseCase) GetStudentAllReports(ctx context.Context, studentID string) ([]*domain.ReportCard, error) {
+func (uc *ResultService) GetStudentAllReports(ctx context.Context, studentID string) ([]*domain.ReportCard, error) {
 	return uc.reportCards.ListByStudent(ctx, studentID)
 }
 
-func (uc *ResultUseCase) UpdateRemarks(ctx context.Context, id string, req dto.UpdateReportCardRemarksRequest, updatedBy string) (*domain.ReportCard, error) {
+func (uc *ResultService) UpdateRemarks(ctx context.Context, id string, req dto.UpdateReportCardRemarksRequest, updatedBy string) (*domain.ReportCard, error) {
 	rc, err := uc.reportCards.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -344,7 +344,7 @@ func (uc *ResultUseCase) UpdateRemarks(ctx context.Context, id string, req dto.U
 }
 
 // Publish makes a report card visible to students/parents.
-func (uc *ResultUseCase) Publish(ctx context.Context, id string) error {
+func (uc *ResultService) Publish(ctx context.Context, id string) error {
 	rc, err := uc.reportCards.GetByID(ctx, id)
 	if err != nil {
 		return err

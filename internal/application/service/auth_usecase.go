@@ -1,6 +1,6 @@
-// Package usecase contains all application business logic.
+// Package service contains all application business logic.
 // Use cases orchestrate domain entities via repository interfaces.
-package usecase
+package service
 
 import (
 	"context"
@@ -16,8 +16,8 @@ import (
 	"github.com/edossier/api/pkg/validator"
 )
 
-// AuthUseCase handles authentication and token lifecycle.
-type AuthUseCase struct {
+// AuthService handles authentication and token lifecycle.
+type AuthService struct {
 	users         domain.UserRepository
 	userRoles     domain.UserRoleRepository
 	roles         domain.RoleRepository
@@ -25,14 +25,14 @@ type AuthUseCase struct {
 	tokenMaker    *token.Maker
 }
 
-func NewAuthUseCase(
+func NewAuthService(
 	users domain.UserRepository,
 	userRoles domain.UserRoleRepository,
 	roles domain.RoleRepository,
 	refreshTokens domain.RefreshTokenRepository,
 	tokenMaker *token.Maker,
-) *AuthUseCase {
-	return &AuthUseCase{
+) *AuthService {
+	return &AuthService{
 		users:         users,
 		userRoles:     userRoles,
 		roles:         roles,
@@ -42,7 +42,7 @@ func NewAuthUseCase(
 }
 
 // Register creates a new user account.
-func (uc *AuthUseCase) Register(ctx context.Context, req dto.RegisterRequest) (*dto.AuthResponse, error) {
+func (uc *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (*dto.AuthResponse, error) {
 	v := validator.New().
 		Required(req.StateID, "state_id").
 		Required(req.Email, "email").
@@ -75,7 +75,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, req dto.RegisterRequest) (*
 }
 
 // Login authenticates a user and issues tokens.
-func (uc *AuthUseCase) Login(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error) {
+func (uc *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error) {
 	v := validator.New().
 		Required(req.Email, "email").
 		Required(req.Password, "password")
@@ -101,7 +101,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, req dto.LoginRequest) (*dto.Au
 }
 
 // Refresh issues a new access token from a valid refresh token.
-func (uc *AuthUseCase) Refresh(ctx context.Context, req dto.RefreshRequest) (*dto.AuthResponse, error) {
+func (uc *AuthService) Refresh(ctx context.Context, req dto.RefreshRequest) (*dto.AuthResponse, error) {
 	userID, err := uc.tokenMaker.VerifyRefresh(req.RefreshToken)
 	if err != nil {
 		return nil, apperror.Unauthorized("invalid or expired refresh token")
@@ -126,12 +126,12 @@ func (uc *AuthUseCase) Refresh(ctx context.Context, req dto.RefreshRequest) (*dt
 }
 
 // Logout revokes the user's refresh token.
-func (uc *AuthUseCase) Logout(ctx context.Context, userID string) error {
+func (uc *AuthService) Logout(ctx context.Context, userID string) error {
 	return uc.refreshTokens.Revoke(ctx, userID)
 }
 
 // ChangePassword validates the current password and updates it.
-func (uc *AuthUseCase) ChangePassword(ctx context.Context, userID string, req dto.ChangePasswordRequest) error {
+func (uc *AuthService) ChangePassword(ctx context.Context, userID string, req dto.ChangePasswordRequest) error {
 	v := validator.New().
 		Required(req.CurrentPassword, "current_password").
 		StrongPassword(req.NewPassword, "new_password")
@@ -156,7 +156,7 @@ func (uc *AuthUseCase) ChangePassword(ctx context.Context, userID string, req dt
 }
 
 // buildAuthResponse mints both tokens, stores the refresh, and builds the DTO.
-func (uc *AuthUseCase) buildAuthResponse(ctx context.Context, user *domain.User) (*dto.AuthResponse, error) {
+func (uc *AuthService) buildAuthResponse(ctx context.Context, user *domain.User) (*dto.AuthResponse, error) {
 	roles, _ := uc.userRoles.GetRolesForUser(ctx, user.ID)
 	roleCodes := make([]string, len(roles))
 	for i, r := range roles {
@@ -204,21 +204,21 @@ func (uc *AuthUseCase) buildAuthResponse(ctx context.Context, user *domain.User)
 // USER MANAGEMENT USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type UserUseCase struct {
+type UserService struct {
 	users     domain.UserRepository
 	userRoles domain.UserRoleRepository
 	roles     domain.RoleRepository
 }
 
-func NewUserUseCase(
+func NewUserService(
 	users domain.UserRepository,
 	userRoles domain.UserRoleRepository,
 	roles domain.RoleRepository,
-) *UserUseCase {
-	return &UserUseCase{users: users, userRoles: userRoles, roles: roles}
+) *UserService {
+	return &UserService{users: users, userRoles: userRoles, roles: roles}
 }
 
-func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*dto.UserResponse, error) {
+func (uc *UserService) GetByID(ctx context.Context, id string) (*dto.UserResponse, error) {
 	user, err := uc.users.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -227,11 +227,11 @@ func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*dto.UserRespons
 	return toUserResponse(user, roles), nil
 }
 
-func (uc *UserUseCase) List(ctx context.Context, f domain.UserFilter, p interface{}) ([]*dto.UserResponse, int, error) {
+func (uc *UserService) List(ctx context.Context, f domain.UserFilter, p interface{}) ([]*dto.UserResponse, int, error) {
 	return nil, 0, nil // delegated to handler with pagination
 }
 
-func (uc *UserUseCase) Update(ctx context.Context, id string, req dto.UpdateUserRequest, updatedBy string) error {
+func (uc *UserService) Update(ctx context.Context, id string, req dto.UpdateUserRequest, updatedBy string) error {
 	user, err := uc.users.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -248,11 +248,11 @@ func (uc *UserUseCase) Update(ctx context.Context, id string, req dto.UpdateUser
 	return uc.users.Update(ctx, user)
 }
 
-func (uc *UserUseCase) Delete(ctx context.Context, id string) error {
+func (uc *UserService) Delete(ctx context.Context, id string) error {
 	return uc.users.Delete(ctx, id)
 }
 
-func (uc *UserUseCase) AssignRole(ctx context.Context, userID string, req dto.AssignRoleRequest, assignedBy string) error {
+func (uc *UserService) AssignRole(ctx context.Context, userID string, req dto.AssignRoleRequest, assignedBy string) error {
 	return uc.userRoles.Assign(ctx, &domain.UserRole{
 		UserID:     userID,
 		RoleID:     req.RoleID,
@@ -262,11 +262,11 @@ func (uc *UserUseCase) AssignRole(ctx context.Context, userID string, req dto.As
 	})
 }
 
-func (uc *UserUseCase) RevokeRole(ctx context.Context, userID, roleID string) error {
+func (uc *UserService) RevokeRole(ctx context.Context, userID, roleID string) error {
 	return uc.userRoles.Revoke(ctx, userID, roleID)
 }
 
-func (uc *UserUseCase) GetRoles(ctx context.Context, userID string) ([]*dto.RoleResponse, error) {
+func (uc *UserService) GetRoles(ctx context.Context, userID string) ([]*dto.RoleResponse, error) {
 	roles, err := uc.userRoles.GetRolesForUser(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -301,16 +301,16 @@ func toUserResponse(u *domain.User, roles []*domain.Role) *dto.UserResponse {
 // ROLE / PERMISSION USE CASE
 // ─────────────────────────────────────────────────────────────────────────────
 
-type RoleUseCase struct {
+type RoleService struct {
 	roles       domain.RoleRepository
 	permissions domain.PermissionRepository
 }
 
-func NewRoleUseCase(roles domain.RoleRepository, permissions domain.PermissionRepository) *RoleUseCase {
-	return &RoleUseCase{roles: roles, permissions: permissions}
+func NewRoleService(roles domain.RoleRepository, permissions domain.PermissionRepository) *RoleService {
+	return &RoleService{roles: roles, permissions: permissions}
 }
 
-func (uc *RoleUseCase) Create(ctx context.Context, stateID string, req dto.CreateRoleRequest, createdBy string) (*dto.RoleResponse, error) {
+func (uc *RoleService) Create(ctx context.Context, stateID string, req dto.CreateRoleRequest, createdBy string) (*dto.RoleResponse, error) {
 	v := validator.New().Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -328,7 +328,7 @@ func (uc *RoleUseCase) Create(ctx context.Context, stateID string, req dto.Creat
 	return toRoleResponse(role, nil), nil
 }
 
-func (uc *RoleUseCase) GetByID(ctx context.Context, id string) (*dto.RoleResponse, error) {
+func (uc *RoleService) GetByID(ctx context.Context, id string) (*dto.RoleResponse, error) {
 	role, err := uc.roles.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -337,7 +337,7 @@ func (uc *RoleUseCase) GetByID(ctx context.Context, id string) (*dto.RoleRespons
 	return toRoleResponse(role, perms), nil
 }
 
-func (uc *RoleUseCase) List(ctx context.Context, stateID string) ([]*dto.RoleResponse, error) {
+func (uc *RoleService) List(ctx context.Context, stateID string) ([]*dto.RoleResponse, error) {
 	roles, err := uc.roles.List(ctx, stateID)
 	if err != nil {
 		return nil, err
@@ -349,7 +349,7 @@ func (uc *RoleUseCase) List(ctx context.Context, stateID string) ([]*dto.RoleRes
 	return out, nil
 }
 
-func (uc *RoleUseCase) Update(ctx context.Context, id string, req dto.UpdateRoleRequest, updatedBy string) error {
+func (uc *RoleService) Update(ctx context.Context, id string, req dto.UpdateRoleRequest, updatedBy string) error {
 	role, err := uc.roles.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -363,7 +363,7 @@ func (uc *RoleUseCase) Update(ctx context.Context, id string, req dto.UpdateRole
 	return uc.roles.Update(ctx, role)
 }
 
-func (uc *RoleUseCase) Delete(ctx context.Context, id string) error {
+func (uc *RoleService) Delete(ctx context.Context, id string) error {
 	role, err := uc.roles.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -374,7 +374,7 @@ func (uc *RoleUseCase) Delete(ctx context.Context, id string) error {
 	return uc.roles.Delete(ctx, id)
 }
 
-func (uc *RoleUseCase) AddPermission(ctx context.Context, roleID string, req dto.AddPermissionRequest, grantedBy string) error {
+func (uc *RoleService) AddPermission(ctx context.Context, roleID string, req dto.AddPermissionRequest, grantedBy string) error {
 	return uc.roles.AddPermission(ctx, &domain.RolePermission{
 		RoleID:       roleID,
 		PermissionID: req.PermissionID,
@@ -383,11 +383,11 @@ func (uc *RoleUseCase) AddPermission(ctx context.Context, roleID string, req dto
 	})
 }
 
-func (uc *RoleUseCase) RemovePermission(ctx context.Context, roleID, permissionID string) error {
+func (uc *RoleService) RemovePermission(ctx context.Context, roleID, permissionID string) error {
 	return uc.roles.RemovePermission(ctx, roleID, permissionID)
 }
 
-func (uc *RoleUseCase) ListPermissions(ctx context.Context) ([]*dto.PermissionResponse, error) {
+func (uc *RoleService) ListPermissions(ctx context.Context) ([]*dto.PermissionResponse, error) {
 	perms, err := uc.permissions.List(ctx)
 	if err != nil {
 		return nil, err

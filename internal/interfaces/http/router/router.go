@@ -23,7 +23,7 @@ type Deps struct {
 	Auth      *handler.AuthHandler
 	User      *handler.UserHandler
 	Role      *handler.RoleHandler
-	Geo       *handler.GeoHandler
+	Zone      *handler.ZoneHandler
 	School    *handler.SchoolHandler
 	Academic  *handler.AcademicHandler
 	Level     *handler.LevelHandler
@@ -94,30 +94,30 @@ func New(d Deps) http.Handler {
 			})
 			r.With(authorize(d, "roles", "read")).Get("/permissions", d.Role.ListPermissions)
 
-			// ── GEO: STATES ───────────────────────────────────────────────────
+			// ── ZONE: STATES ───────────────────────────────────────────────────
 			r.Route("/states", func(r chi.Router) {
-				r.Get("/", d.Geo.ListStates) // open within auth - needed by all
-				r.With(authorize(d, "schools", "create")).Post("/", d.Geo.CreateState)
-				r.Get("/{id}", d.Geo.GetState)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Geo.UpdateState)
+				r.Get("/", d.Zone.ListStates) // open within auth - needed by all
+				r.With(authorize(d, "schools", "create")).Post("/", d.Zone.CreateState)
+				r.Get("/{id}", d.Zone.GetState)
+				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateState)
 
 				// Zones
-				r.Get("/{stateId}/zones", d.Geo.ListZones)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Geo.CreateZone)
+				r.Get("/{stateId}/zones", d.Zone.ListZones)
+				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)
 
 				// LGAs
-				r.Get("/{stateId}/lgas", d.Geo.ListLGAs)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.Geo.CreateLGA)
+				r.Get("/{stateId}/lgas", d.Zone.ListLGAs)
+				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.Zone.CreateLGA)
 			})
 
 			r.Route("/zones", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Geo.UpdateZone)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Geo.DeleteZone)
+				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
+				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
 			})
 
 			r.Route("/lgas", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Geo.UpdateLGA)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Geo.DeleteLGA)
+				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateLGA)
+				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteLGA)
 			})
 
 			// ── SCHOOLS ───────────────────────────────────────────────────────

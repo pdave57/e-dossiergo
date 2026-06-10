@@ -173,9 +173,7 @@ CREATE TABLE IF NOT EXISTS schools (
     category     TEXT NOT NULL,
     ownership    TEXT NOT NULL,
     status       TEXT NOT NULL DEFAULT 'ACTIVE',
-    address      TEXT,
-    email        TEXT,
-    phone        TEXT,
+    address      TEXT,  
     head_teacher TEXT,
     founded      INTEGER,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -210,7 +208,7 @@ CREATE TABLE IF NOT EXISTS school_facilities (
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS academic_sessions (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    state_id    TEXT NOT NULL REFERENCES states(id),
+    school_id   TEXT NOT NULL REFERENCES schools(id),
     name        TEXT NOT NULL,
     start_year  INTEGER NOT NULL,
     end_year    INTEGER NOT NULL,
@@ -222,8 +220,10 @@ CREATE TABLE IF NOT EXISTS academic_sessions (
     deleted_at  TIMESTAMPTZ,
     created_by  TEXT,
     updated_by  TEXT,
-    UNIQUE (state_id, name)
+    UNIQUE (school_id, name)
 );
+
+CREATE INDEX IF NOT EXISTS idx_academic_sessions_school_id ON academic_sessions(school_id);
 
 CREATE TABLE IF NOT EXISTS terms (
     id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,

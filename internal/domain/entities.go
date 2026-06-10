@@ -54,8 +54,8 @@ func (u *User) IsActive() bool { return u.Status == UserStatusActive }
 type Role struct {
 	ID          string `json:"id"`
 	StateID     string `json:"state_id"`
-	Name        string `json:"name"`        // "PRINCIPAL", "TEACHER", "STATE_ADMIN"
-	Code        string `json:"code"`        // unique slug
+	Name        string `json:"name"` // "PRINCIPAL", "TEACHER", "STATE_ADMIN"
+	Code        string `json:"code"` // unique slug
 	Description string `json:"description,omitempty"`
 	IsSystem    bool   `json:"is_system"` // system roles cannot be deleted
 	AuditFields
@@ -79,9 +79,9 @@ type RolePermission struct {
 
 // UserRole links a user to a role, optionally scoped to a school.
 type UserRole struct {
-	UserID    string    `json:"user_id"`
-	RoleID    string    `json:"role_id"`
-	SchoolID  string    `json:"school_id,omitempty"`
+	UserID     string    `json:"user_id"`
+	RoleID     string    `json:"role_id"`
+	SchoolID   string    `json:"school_id,omitempty"`
 	AssignedAt time.Time `json:"assigned_at"`
 	AssignedBy string    `json:"assigned_by"`
 }
@@ -160,20 +160,20 @@ const (
 )
 
 type School struct {
-	ID          string          `json:"id"`
-	StateID     string          `json:"state_id"`
-	ZoneID      string          `json:"zone_id"`
-	LGAID       string          `json:"lga_id"`
-	Name        string          `json:"name"`
-	Code        string          `json:"code"`
-	Category    SchoolCategory  `json:"category"`
-	Ownership   SchoolOwnership `json:"ownership"`
-	Status      SchoolStatus    `json:"status"`
-	NumberOfClassrooms int		`json:"Number_of_classrooms"`
-    TotalStudents int			`json:"total_students"`
-	Address     string          `json:"address"`
-	HeadTeacher string          `json:"head_teacher,omitempty"`
-	Founded     *int            `json:"founded,omitempty"`
+	ID                 string          `json:"id"`
+	StateID            string          `json:"state_id"`
+	ZoneID             string          `json:"zone_id"`
+	LGAID              string          `json:"lga_id"`
+	Name               string          `json:"name"`
+	Code               string          `json:"code"`
+	Category           SchoolCategory  `json:"category"`
+	Ownership          SchoolOwnership `json:"ownership"`
+	Status             SchoolStatus    `json:"status"`
+	NumberOfClassrooms int             `json:"Number_of_classrooms"`
+	TotalStudents      int             `json:"total_students"`
+	Address            string          `json:"address"`
+	HeadTeacher        string          `json:"head_teacher,omitempty"`
+	Founded            *int            `json:"founded,omitempty"`
 	AuditFields
 }
 
@@ -226,7 +226,7 @@ const (
 // AcademicSession represents a school year e.g. 2024/2025.
 type AcademicSession struct {
 	ID        string        `json:"id"`
-	StateID   string        `json:"state_id"`
+	SchoolID  string        `json:"school_id"`
 	Name      string        `json:"name"`
 	StartYear int           `json:"start_year"`
 	EndYear   int           `json:"end_year"`
@@ -335,15 +335,15 @@ type SchoolSubject struct {
 type StaffRole string
 
 const (
-	StaffRoleTeacher        StaffRole = "TEACHER"
-	StaffRoleHeadTeacher    StaffRole = "HEAD_TEACHER"
-	StaffRolePrincipal      StaffRole = "PRINCIPAL"
-	StaffRoleVicePrincipal  StaffRole = "VICE_PRINCIPAL"
-	StaffRoleAdmin          StaffRole = "ADMIN_OFFICER"
-	StaffRoleCounselor      StaffRole = "COUNSELOR"
-	StaffRoleLibrarian      StaffRole = "LIBRARIAN"
-	StaffRoleLabTechnician  StaffRole = "LAB_TECHNICIAN"
-	StaffRoleOther          StaffRole = "OTHER"
+	StaffRoleTeacher       StaffRole = "TEACHER"
+	StaffRoleHeadTeacher   StaffRole = "HEAD_TEACHER"
+	StaffRolePrincipal     StaffRole = "PRINCIPAL"
+	StaffRoleVicePrincipal StaffRole = "VICE_PRINCIPAL"
+	StaffRoleAdmin         StaffRole = "ADMIN_OFFICER"
+	StaffRoleCounselor     StaffRole = "COUNSELOR"
+	StaffRoleLibrarian     StaffRole = "LIBRARIAN"
+	StaffRoleLabTechnician StaffRole = "LAB_TECHNICIAN"
+	StaffRoleOther         StaffRole = "OTHER"
 )
 
 type StaffStatus string

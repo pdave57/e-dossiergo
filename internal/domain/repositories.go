@@ -169,11 +169,11 @@ type SchoolFacilityRepository interface {
 type AcademicSessionRepository interface {
 	Create(ctx context.Context, s *AcademicSession) error
 	GetByID(ctx context.Context, id string) (*AcademicSession, error)
-	GetActive(ctx context.Context, stateID string) (*AcademicSession, error)
+	GetActive(ctx context.Context, schoolID string) (*AcademicSession, error)
 	Update(ctx context.Context, s *AcademicSession) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context, stateID string, p pagination.Params) ([]*AcademicSession, int, error)
-	SetActive(ctx context.Context, id, stateID string) error
+	List(ctx context.Context, schoolID string, p pagination.Params) ([]*AcademicSession, int, error)
+	SetActive(ctx context.Context, id, schoolID string) error
 }
 
 type TermRepository interface {
