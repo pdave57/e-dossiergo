@@ -23,7 +23,9 @@ func NewAcademicSessionRepository(db *sql.DB) domain.AcademicSessionRepository {
 }
 
 func (r *sessionRepo) Create(ctx context.Context, s *domain.AcademicSession) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -145,7 +147,9 @@ type termRepo struct{ db *sql.DB }
 func NewTermRepository(db *sql.DB) domain.TermRepository { return &termRepo{db: db} }
 
 func (r *termRepo) Create(ctx context.Context, t *domain.Term) error {
-	t.ID = uuid.NewString()
+	if t.ID == "" {
+		t.ID = uuid.NewString()
+	}
 	now := time.Now()
 	t.CreatedAt, t.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -253,7 +257,9 @@ type levelRepo struct{ db *sql.DB }
 func NewLevelRepository(db *sql.DB) domain.LevelRepository { return &levelRepo{db: db} }
 
 func (r *levelRepo) Create(ctx context.Context, l *domain.Level) error {
-	l.ID = uuid.NewString()
+	if l.ID == "" {
+		l.ID = uuid.NewString()
+	}
 	now := time.Now()
 	l.CreatedAt, l.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -347,7 +353,9 @@ type subLevelRepo struct{ db *sql.DB }
 func NewSubLevelRepository(db *sql.DB) domain.SubLevelRepository { return &subLevelRepo{db: db} }
 
 func (r *subLevelRepo) Create(ctx context.Context, s *domain.SubLevel) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -494,7 +502,9 @@ type subjectRepo struct{ db *sql.DB }
 func NewSubjectRepository(db *sql.DB) domain.SubjectRepository { return &subjectRepo{db: db} }
 
 func (r *subjectRepo) Create(ctx context.Context, s *domain.Subject) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -583,7 +593,9 @@ func NewSchoolSubjectRepository(db *sql.DB) domain.SchoolSubjectRepository {
 }
 
 func (r *schoolSubjectRepo) Create(ctx context.Context, ss *domain.SchoolSubject) error {
-	ss.ID = uuid.NewString()
+	if ss.ID == "" {
+		ss.ID = uuid.NewString()
+	}
 	now := time.Now()
 	ss.CreatedAt, ss.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,

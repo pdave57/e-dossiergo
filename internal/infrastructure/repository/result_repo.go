@@ -22,7 +22,9 @@ type personnelRepo struct{ db *sql.DB }
 func NewPersonnelRepository(db *sql.DB) domain.PersonnelRepository { return &personnelRepo{db: db} }
 
 func (r *personnelRepo) Create(ctx context.Context, p *domain.Personnel) error {
-	p.ID = uuid.NewString()
+	if p.ID == "" {
+		p.ID = uuid.NewString()
+	}
 	now := time.Now()
 	p.CreatedAt, p.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -159,7 +161,9 @@ func NewPersonnelTransferRepository(db *sql.DB) domain.PersonnelTransferReposito
 }
 
 func (r *personnelTransferRepo) Create(ctx context.Context, t *domain.PersonnelTransfer) error {
-	t.ID = uuid.NewString()
+	if t.ID == "" {
+		t.ID = uuid.NewString()
+	}
 	now := time.Now()
 	t.CreatedAt, t.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -224,7 +228,9 @@ type studentRepo struct{ db *sql.DB }
 func NewStudentRepository(db *sql.DB) domain.StudentRepository { return &studentRepo{db: db} }
 
 func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -444,7 +450,9 @@ type enrollmentRepo struct{ db *sql.DB }
 func NewEnrollmentRepository(db *sql.DB) domain.EnrollmentRepository { return &enrollmentRepo{db: db} }
 
 func (r *enrollmentRepo) Create(ctx context.Context, e *domain.Enrollment) error {
-	e.ID = uuid.NewString()
+	if e.ID == "" {
+		e.ID = uuid.NewString()
+	}
 	now := time.Now()
 	e.CreatedAt, e.UpdatedAt, e.EnrolledAt = now, now, now
 	_, err := r.db.ExecContext(ctx,
@@ -567,7 +575,9 @@ func NewLevelProgressionRepository(db *sql.DB) domain.LevelProgressionRepository
 }
 
 func (r *levelProgressionRepo) Create(ctx context.Context, lp *domain.LevelProgression) error {
-	lp.ID = uuid.NewString()
+	if lp.ID == "" {
+		lp.ID = uuid.NewString()
+	}
 	now := time.Now()
 	lp.CreatedAt, lp.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,

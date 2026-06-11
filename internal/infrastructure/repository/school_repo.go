@@ -22,7 +22,9 @@ type stateRepo struct{ db *sql.DB }
 func NewStateRepository(db *sql.DB) domain.StateRepository { return &stateRepo{db: db} }
 
 func (r *stateRepo) Create(ctx context.Context, s *domain.State) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -102,7 +104,9 @@ type zoneRepo struct{ db *sql.DB }
 func NewZoneRepository(db *sql.DB) domain.ZoneRepository { return &zoneRepo{db: db} }
 
 func (r *zoneRepo) Create(ctx context.Context, z *domain.Zone) error {
-	z.ID = uuid.NewString()
+	if z.ID == "" {
+		z.ID = uuid.NewString()
+	}
 	now := time.Now()
 	z.CreatedAt, z.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -181,7 +185,9 @@ type lgaRepo struct{ db *sql.DB }
 func NewLGARepository(db *sql.DB) domain.LGARepository { return &lgaRepo{db: db} }
 
 func (r *lgaRepo) Create(ctx context.Context, l *domain.LGA) error {
-	l.ID = uuid.NewString()
+	if l.ID == "" {
+		l.ID = uuid.NewString()
+	}
 	now := time.Now()
 	l.CreatedAt, l.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
@@ -277,14 +283,16 @@ type schoolRepo struct{ db *sql.DB }
 func NewSchoolRepository(db *sql.DB) domain.SchoolRepository { return &schoolRepo{db: db} }
 
 func (r *schoolRepo) Create(ctx context.Context, s *domain.School) error {
-	s.ID = uuid.NewString()
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
 	now := time.Now()
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO schools
 		 (id,state_id,zone_id,lga_id,name,code,category,ownership,status,address,
-		  email,phone,head_teacher,founded,created_at,updated_at,created_by)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+		  head_teacher,founded,created_at,updated_at,created_by)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
 		s.ID, s.StateID, s.ZoneID, s.LGAID, s.Name, s.Code,
 		s.Category, s.Ownership, s.Status, s.Address,
 		nullableString(s.HeadTeacher),
@@ -310,8 +318,8 @@ func (r *schoolRepo) Update(ctx context.Context, s *domain.School) error {
 	s.UpdatedAt = time.Now()
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE schools SET zone_id=$1,lga_id=$2,name=$3,category=$4,ownership=$5,status=$6,
-		  address=$7,email=$8,phone=$9,head_teacher=$10,founded=$11,updated_at=$12,updated_by=$13
-		 WHERE id=$14 AND deleted_at IS NULL`,
+		  address=$7,head_teacher=$8,founded=$9,updated_at=$10,updated_by=$11
+		 WHERE id=$12 AND deleted_at IS NULL`,
 		s.ZoneID, s.LGAID, s.Name, s.Category, s.Ownership, s.Status,
 		s.Address, nullableString(s.HeadTeacher), s.Founded, s.UpdatedAt, s.UpdatedBy, s.ID)
 	return checkRowsAffected(res, err, "school", s.ID)
@@ -379,8 +387,8 @@ func (r *schoolRepo) List(ctx context.Context, f domain.SchoolFilter, p paginati
 
 const schoolSelectSQL = `
 	SELECT s.id,s.state_id,s.zone_id,s.lga_id,s.name,s.code,s.category,s.ownership,s.status,
-	       COALESCE(s.address,''),COALESCE(s.email,''),COALESCE(s.phone,''),
-	       COALESCE(s.head_teacher,''),s.founded,s.created_at,s.updated_at,
+	       COALESCE(s.address,''),COALESCE(s.head_teacher,''),s.founded,
+	       s.created_at,s.updated_at,
 	       COALESCE(s.created_by,''),COALESCE(s.updated_by,'')
 	FROM schools s`
 
@@ -412,7 +420,9 @@ func NewSchoolFacilityRepository(db *sql.DB) domain.SchoolFacilityRepository {
 }
 
 func (r *schoolFacilityRepo) Create(ctx context.Context, f *domain.SchoolFacility) error {
-	f.ID = uuid.NewString()
+	if f.ID == "" {
+		f.ID = uuid.NewString()
+	}
 	now := time.Now()
 	f.CreatedAt, f.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,

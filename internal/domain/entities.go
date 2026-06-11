@@ -97,7 +97,7 @@ type RefreshToken struct {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GEO / ADMINISTRATIVE
+// ZONES / ADMINISTRATIVE
 // ─────────────────────────────────────────────────────────────────────────────
 
 // State is the top-level administrative scope.

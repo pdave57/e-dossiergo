@@ -22,7 +22,9 @@ type userRepo struct{ db *sql.DB }
 func NewUserRepository(db *sql.DB) domain.UserRepository { return &userRepo{db: db} }
 
 func (r *userRepo) Create(ctx context.Context, u *domain.User) error {
-	u.ID = uuid.NewString()
+	if u.ID == "" {
+		u.ID = uuid.NewString()
+	}
 	now := time.Now()
 	u.CreatedAt = now
 	u.UpdatedAt = now
@@ -156,7 +158,9 @@ type roleRepo struct{ db *sql.DB }
 func NewRoleRepository(db *sql.DB) domain.RoleRepository { return &roleRepo{db: db} }
 
 func (r *roleRepo) Create(ctx context.Context, role *domain.Role) error {
-	role.ID = uuid.NewString()
+	if role.ID == "" {
+		role.ID = uuid.NewString()
+	}
 	now := time.Now()
 	role.CreatedAt = now
 	role.UpdatedAt = now
@@ -291,7 +295,9 @@ type permRepo struct{ db *sql.DB }
 func NewPermissionRepository(db *sql.DB) domain.PermissionRepository { return &permRepo{db: db} }
 
 func (r *permRepo) Create(ctx context.Context, p *domain.Permission) error {
-	p.ID = uuid.NewString()
+	if p.ID == "" {
+		p.ID = uuid.NewString()
+	}
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO permissions (id,resource,action,description) VALUES ($1,$2,$3,$4)
 		 ON CONFLICT (resource,action) DO NOTHING`,
@@ -411,7 +417,9 @@ func NewRefreshTokenRepository(db *sql.DB) domain.RefreshTokenRepository {
 }
 
 func (r *refreshTokenRepo) Save(ctx context.Context, rt *domain.RefreshToken) error {
-	rt.ID = uuid.NewString()
+	if rt.ID == "" {
+		rt.ID = uuid.NewString()
+	}
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO refresh_tokens (id,user_id,token_hash,expires_at,created_at,revoked)
 		 VALUES ($1,$2,$3,$4,NOW(),FALSE)
