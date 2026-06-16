@@ -39,10 +39,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PORT: "8091:8090"
+      PORT: "8091"
       APP_ENV: development
       DATABASE_URL: postgres://edossier:secret@postgres:5432/edossier?sslmode=disable
-      JWT_SECRET: Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa
+      JWT_SECRET: Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0QaYf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa
       ACCESS_TOKEN_TTL: 15m
       REFRESH_TOKEN_TTL: 168h
       LOG_LEVEL: debug
@@ -50,9 +50,9 @@ services:
       DB_MAX_IDLE_CONNS: "10"
       DB_CONN_MAX_LIFE: 5m
     ports:
-      - "8091:8090"
+      - "8091"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8091/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -91,7 +91,7 @@ func main() {
 
 	// ── Use Cases ─────────────────────────────────────────────────────────────
 	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
-	//userUC := service.NewUserService(userRepo, userRoleRepo, roleRepo)
+	userUC := service.NewUserService(userRepo, userRoleRepo, roleRepo)
 	roleUC := service.NewRoleService(roleRepo, permRepo)
 
 	zoneUC      := service.NewZoneService(stateRepo, zoneRepo, lgaRepo)
@@ -114,9 +114,9 @@ func main() {
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler      := handler.NewAuthHandler(authUC)
-	//userHandler      := handler.NewUserHandler(userUC, userRepo)
+	userHandler      := handler.NewUserHandler(userUC, userRepo)
 	roleHandler      := handler.NewRoleHandler(roleUC)
-	zoneHandler       := handler.NewZoneHandler(zoneUC)
+	zoneHandler      := handler.NewZoneHandler(zoneUC)
 	schoolHandler    := handler.NewSchoolHandler(schoolUC)
 	academicHandler  := handler.NewAcademicHandler(academicUC)
 	levelHandler     := handler.NewLevelHandler(levelUC)
@@ -131,9 +131,9 @@ func main() {
 		TokenMaker:  tokenMaker,
 		RoleChecker: userRoleRepo,
 		Auth:        authHandler,
-		//User:        userHandler,
+		User:        userHandler,
 		Role:        roleHandler,
-		Zone: zoneHandler,
+		Zone:        zoneHandler,
 		School:      schoolHandler,
 		Academic:    academicHandler,
 		Level:       levelHandler,
