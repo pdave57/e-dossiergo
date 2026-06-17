@@ -344,7 +344,8 @@ type TransferPersonnelRequest struct {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type CreateStudentRequest struct {
-	AdmissionNo      string    `json:"admission_no"      validate:"required"`
+	SchoolID         string    `json:"school_id"         validate:"required"`
+	EnrollmentYear   int       `json:"enrollment_year"   validate:"required"`
 	FirstName        string    `json:"first_name"        validate:"required"`
 	MiddleName       string    `json:"middle_name"`
 	LastName         string    `json:"last_name"         validate:"required"`

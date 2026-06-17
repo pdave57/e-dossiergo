@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/edossier/api/internal/application/dto"
@@ -720,6 +721,7 @@ type StudentService struct {
 	subLevels    domain.SubLevelRepository
 	progressions domain.LevelProgressionRepository
 	levels       domain.LevelRepository
+	schools      domain.SchoolRepository
 }
 
 func NewStudentService(
@@ -728,16 +730,18 @@ func NewStudentService(
 	subLevels domain.SubLevelRepository,
 	progressions domain.LevelProgressionRepository,
 	levels domain.LevelRepository,
+	schools domain.SchoolRepository,
 ) *StudentService {
 	return &StudentService{
 		students: students, enrollments: enrollments,
 		subLevels: subLevels, progressions: progressions, levels: levels,
+		schools: schools,
 	}
 }
 
 func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.CreateStudentRequest, createdBy string) (*domain.Student, error) {
 	v := validator.New().
-		Required(req.AdmissionNo, "admission_no").
+		Required(req.SchoolID, "school_id").
 		Required(req.FirstName, "first_name").
 		Required(req.LastName, "last_name").
 		OneOf(req.Gender, []string{"MALE", "FEMALE", "OTHER"}, "gender").
@@ -747,8 +751,23 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
 	}
+
+	school, err := uc.schools.GetByID(ctx, req.SchoolID)
+	if err != nil {
+		return nil, apperror.NotFound("school", req.SchoolID)
+	}
+
+	count, err := uc.students.CountBySchoolCode(ctx, school.Code)
+	if err != nil {
+		return nil, apperror.Internal(err)
+	}
+
+	year := time.Now().Year()
+	serialNo := count + 1
+	enrollmentNo := fmt.Sprintf("%s/%d/%04d", school.Code, year, serialNo)
+
 	s := &domain.Student{
-		StateID: stateID, AdmissionNo: req.AdmissionNo,
+		StateID: stateID, EnrollmentNo: enrollmentNo,
 		FirstName: req.FirstName, MiddleName: req.MiddleName, LastName: req.LastName,
 		Gender: domain.Gender(req.Gender), DateOfBirth: req.DateOfBirth,
 		StateOfOrigin: req.StateOfOrigin, LGAID: req.LGAID, Religion: req.Religion,

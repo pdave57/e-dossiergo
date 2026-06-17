@@ -263,11 +263,11 @@ type PersonnelTransferRepository interface {
 type StudentRepository interface {
 	Create(ctx context.Context, s *Student) error
 	GetByID(ctx context.Context, id string) (*Student, error)
-	GetByAdmissionNo(ctx context.Context, admNo string) (*Student, error)
+	GetByEnrollmentNo(ctx context.Context, admNo string) (*Student, error)
 	Update(ctx context.Context, s *Student) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter StudentFilter, p pagination.Params) ([]*Student, int, error)
-	GetAllStudents(ctx context.Context, lgaID, schoolID string) ([]*Student, error)
+	CountBySchoolCode(ctx context.Context, schoolCode string) (int, error)
 }
 
 type EnrollmentRepository interface {
@@ -320,4 +320,13 @@ type ReportCardRepository interface {
 	ListByTerm(ctx context.Context, schoolID, termID string, p pagination.Params) ([]*ReportCard, int, error)
 	ListByStudent(ctx context.Context, studentID string) ([]*ReportCard, error)
 	Publish(ctx context.Context, id string) error
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPORTS & ANALYTICS
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ReportRepository interface {
+	GetDashboardStats(ctx context.Context, stateID, schoolID string) (*DashboardStats, error)
+	GetTotalTeachingPersonnel(ctx context.Context) (int, error)
 }

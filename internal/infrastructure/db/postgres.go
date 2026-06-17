@@ -37,7 +37,7 @@ func Migrate(db *sql.DB) error {
 		// EXTENSIONS
 		`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`,
 
-		// GEO / ADMINISTRATIVE
+		// ZONES/ ADMINISTRATIVE
 		`CREATE TABLE IF NOT EXISTS states (
 			id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
 			name       TEXT NOT NULL,
@@ -372,7 +372,8 @@ func Migrate(db *sql.DB) error {
         `CREATE TABLE IF NOT EXISTS students (
             id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id          TEXT NOT NULL REFERENCES states(id),
-            admission_no      TEXT NOT NULL UNIQUE,
+            enrollment_year   INT NOT NULL,
+            enrollment_no     TEXT NOT NULL UNIQUE,
             first_name        TEXT NOT NULL,
             middle_name       TEXT,
             last_name         TEXT NOT NULL,
@@ -396,7 +397,7 @@ func Migrate(db *sql.DB) error {
         )`,
 
         `CREATE INDEX IF NOT EXISTS idx_students_state_id ON students(state_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_students_admission_no ON students(admission_no)`,
+        `CREATE INDEX IF NOT EXISTS idx_students_enrollment_no ON students(enrollment_no)`,
 
         `CREATE TABLE IF NOT EXISTS enrollments (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -552,8 +553,10 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'roles',      'create',  'Create roles'),
         (gen_random_uuid()::TEXT, 'roles',      'read',    'View roles'),
         (gen_random_uuid()::TEXT, 'roles',      'update',  'Update roles'),
-        (gen_random_uuid()::TEXT, 'roles',      'delete',  'Delete roles')
+        (gen_random_uuid()::TEXT, 'roles',      'delete',  'Delete roles'),
+        (gen_random_uuid()::TEXT, 'reports',    'read',    'View reports and dashboards')
         ON CONFLICT (resource, action) DO NOTHING;`,
+
 
 	}
 
@@ -908,7 +911,8 @@ CREATE TABLE IF NOT EXISTS personnel_transfers (
 CREATE TABLE IF NOT EXISTS students (
     id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     state_id          TEXT NOT NULL REFERENCES states(id),
-    admission_no      TEXT NOT NULL UNIQUE,
+    enrollment_year   INT NOT NULL,
+    enrollment_no     TEXT NOT NULL UNIQUE,
     first_name        TEXT NOT NULL,
     middle_name       TEXT,
     last_name         TEXT NOT NULL,
@@ -932,7 +936,7 @@ CREATE TABLE IF NOT EXISTS students (
 );
 
 CREATE INDEX IF NOT EXISTS idx_students_state_id     ON students(state_id);
-CREATE INDEX IF NOT EXISTS idx_students_admission_no ON students(admission_no);
+CREATE INDEX IF NOT EXISTS idx_students_enrollment_no ON students(enrollment_no);
 
 CREATE TABLE IF NOT EXISTS enrollments (
     id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,

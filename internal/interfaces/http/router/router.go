@@ -31,6 +31,7 @@ type Deps struct {
 	Personnel *handler.PersonnelHandler
 	Student   *handler.StudentHandler
 	Result    *handler.ResultHandler
+	Report    *handler.ReportHandler
 }
 
 // New builds and returns the fully-configured HTTP router.
@@ -52,6 +53,11 @@ func New(d Deps) http.Handler {
 
 	// ── API v1 ────────────────────────────────────────────────────────────────
 	r.Route("/api/v1", func(r chi.Router) {
+
+		// ── PUBLIC REPORTS ────────────────────────────────────────────────────
+		r.Route("/reports/public", func(r chi.Router) {
+			r.Get("/teaching-personnel", d.Report.GetPublicTeachingPersonnel)
+		})
 
 		// ── AUTH (public) ─────────────────────────────────────────────────────
 		r.Route("/auth", func(r chi.Router) {
@@ -256,8 +262,16 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "results", "update")).Post("/grade-config", d.Result.UpsertGradeConfig)
 				r.With(authorize(d, "results", "read")).Get("/grade-config", d.Result.ListGradeConfigs)
 			})
+
+			// ── REPORTS ───────────────────────────────────────────────────────
+			r.Route("/reports", func(r chi.Router) {
+				// Reports usually require a specific permission, e.g., 'reports', 'read'
+				// Add 'reports' resource to RBAC if needed, or re-use 'results'/'schools'
+				r.With(authorize(d, "reports", "read")).Get("/dashboard", d.Report.GetDashboardStats)
+			})
 		})
 	})
+
 
 	return r
 }

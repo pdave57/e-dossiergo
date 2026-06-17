@@ -235,13 +235,13 @@ func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO students
-		 (id,state_id,admission_no,first_name,middle_name,last_name,gender,date_of_birth,
+		 (id,state_id,enrollment_no,first_name,middle_name,last_name,gender,date_of_birth,
 		  state_of_origin,lga_id,religion,phone,email,address,
 		  guardian_name,guardian_phone,guardian_relation,status,created_at,updated_at,created_by)
 		 VALUES ($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,NULLIF($9,''),NULLIF($10,''),
 		         NULLIF($11,''),NULLIF($12,''),NULLIF($13,''),NULLIF($14,''),
 		         $15,$16,NULLIF($17,''),$18,$19,$20,$21)`,
-		s.ID, s.StateID, s.AdmissionNo, s.FirstName, s.MiddleName, s.LastName,
+		s.ID, s.StateID, s.EnrollmentNo, s.FirstName, s.MiddleName, s.LastName,
 		s.Gender, s.DateOfBirth, s.StateOfOrigin, s.LGAID,
 		s.Religion, s.Phone, s.Email, s.Address,
 		s.GuardianName, s.GuardianPhone, s.GuardianRelation,
@@ -260,9 +260,9 @@ func (r *studentRepo) GetByID(ctx context.Context, id string) (*domain.Student, 
 		studentSelect+" WHERE id=$1 AND deleted_at IS NULL", id))
 }
 
-func (r *studentRepo) GetByAdmissionNo(ctx context.Context, admNo string) (*domain.Student, error) {
+func (r *studentRepo) GetByEnrollmentNo(ctx context.Context, admNo string) (*domain.Student, error) {
 	return scanStudent(r.db.QueryRowContext(ctx,
-		studentSelect+" WHERE admission_no=$1 AND deleted_at IS NULL", admNo))
+		studentSelect+" WHERE enrollment_no=$1 AND deleted_at IS NULL", admNo))
 }
 
 func (r *studentRepo) Update(ctx context.Context, s *domain.Student) error {
@@ -286,6 +286,21 @@ func (r *studentRepo) Delete(ctx context.Context, id string) error {
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE students SET deleted_at=NOW() WHERE id=$1 AND deleted_at IS NULL`, id)
 	return checkRowsAffected(res, err, "student", id)
+}
+
+func (r *studentRepo) CountBySchoolCode(ctx context.Context, schoolCode string) (int, error) {
+	var count int
+	// Count students whose enrollment_no starts with the school code
+	// Format: SCHOOLCODE/YYYY/SERIAL
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(id) 
+		FROM students 
+		WHERE enrollment_no LIKE $1 || '/%' AND deleted_at IS NULL
+	`, schoolCode).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (r *studentRepo) List(ctx context.Context, f domain.StudentFilter, p pagination.Params) ([]*domain.Student, int, error) {
@@ -314,7 +329,7 @@ func (r *studentRepo) List(ctx context.Context, f domain.StudentFilter, p pagina
 	}
 	if f.Search != "" {
 		where = append(where, fmt.Sprintf(
-			"(s.first_name ILIKE $%d OR s.last_name ILIKE $%d OR s.admission_no ILIKE $%d)", idx, idx, idx))
+			"(s.first_name ILIKE $%d OR s.last_name ILIKE $%d OR s.enrollment_no ILIKE $%d)", idx, idx, idx))
 		args = append(args, "%"+f.Search+"%"); idx++
 	}
 	clause := "WHERE " + strings.Join(where, " AND ")
@@ -400,7 +415,7 @@ func (r *studentRepo) GetAllStudents(ctx context.Context, lgaID, schoolID string
 
 // studentSelect is used when querying the students table directly (no alias).
 const studentSelect = `
-	SELECT id,state_id,admission_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,
+	SELECT id,state_id,enrollment_year,enrollment_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,
 	       COALESCE(state_of_origin,''),COALESCE(lga_id,''),COALESCE(religion,''),
 	       COALESCE(phone,''),COALESCE(email,''),COALESCE(address,''),
 	       guardian_name,guardian_phone,COALESCE(guardian_relation,''),
@@ -409,7 +424,7 @@ const studentSelect = `
 
 // studentSelectAlias is used when students is aliased as "s" (e.g. in JOINs).
 const studentSelectAlias = `
-	s.id,s.state_id,s.admission_no,s.first_name,COALESCE(s.middle_name,''),s.last_name,s.gender,s.date_of_birth,
+	s.id,s.state_id,s.enrollment_year,s.enrollment_no,s.first_name,COALESCE(s.middle_name,''),s.last_name,s.gender,s.date_of_birth,
 	COALESCE(s.state_of_origin,''),COALESCE(s.lga_id,''),COALESCE(s.religion,''),
 	COALESCE(s.phone,''),COALESCE(s.email,''),COALESCE(s.address,''),
 	s.guardian_name,s.guardian_phone,COALESCE(s.guardian_relation,''),
@@ -424,7 +439,7 @@ func scanStudent(s scanner) (*domain.Student, error) {
 func scanStudentAlias(s scanner) (*domain.Student, error) {
 	st := &domain.Student{}
 	err := s.Scan(
-		&st.ID, &st.StateID, &st.AdmissionNo,
+		&st.ID, &st.StateID, &st.EnrollmentYear, &st.EnrollmentNo,
 		&st.FirstName, &st.MiddleName, &st.LastName,
 		&st.Gender, &st.DateOfBirth,
 		&st.StateOfOrigin, &st.LGAID, &st.Religion,

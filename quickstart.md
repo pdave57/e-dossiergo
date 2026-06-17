@@ -106,10 +106,10 @@ ON CONFLICT DO NOTHING;
 Submit a registration request using the `state_id` seeded above:
 
 ```bash
-curl -X POST http://localhost:8090/api/v1/auth/register \
+curl -X POST http://localhost:34005/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "state_id": "fct-state-uuid-123456",
+    "state_id": "7b65a374-75e8-4152-8027-ea5f54f078c6",
     "email": "admin@edossier.gov.ng",
     "password": "Password@123",
     "first_name": "John",
@@ -137,7 +137,7 @@ Here are curl requests to test standard operations.
 
 ### 1. Login to get the JWT Access Token
 ```bash
-curl -X POST http://localhost:8090/api/v1/auth/login \
+curl -X POST http://localhost:8091/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@edossier.gov.ng",
@@ -149,7 +149,7 @@ curl -X POST http://localhost:8090/api/v1/auth/login \
 
 ### 2. Verify Your Admin Session (`/auth/me`)
 ```bash
-curl -H "Authorization: Bearer <access_token>" http://localhost:8090/api/v1/auth/me
+curl -H "Authorization: Bearer <access_token>" http://localhost:8091/api/v1/auth/me
 ```
 
 ### 3. Create an Educational Zone

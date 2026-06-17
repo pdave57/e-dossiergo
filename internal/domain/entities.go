@@ -429,7 +429,8 @@ const (
 type Student struct {
 	ID               string        `json:"id"`
 	StateID          string        `json:"state_id"`
-	AdmissionNo      string        `json:"admission_no"`
+	EnrollmentYear   int           `json:"enrollment_year"`
+	EnrollmentNo     string        `json:"enrollment_no"`
 	FirstName        string        `json:"first_name"`
 	MiddleName       string        `json:"middle_name,omitempty"`
 	LastName         string        `json:"last_name"`

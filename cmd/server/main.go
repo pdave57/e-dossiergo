@@ -89,6 +89,8 @@ func main() {
 	gradeConfigRepo   := repository.NewGradeConfigRepository(db)
 	scoreConfigRepo   := repository.NewScoreConfigRepository(db)
 
+	reportRepo        := repository.NewReportRepository(db)
+
 	// ── Use Cases ─────────────────────────────────────────────────────────────
 	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
 	userUC := service.NewUserService(userRepo, userRoleRepo, roleRepo)
@@ -104,13 +106,15 @@ func main() {
 	personnelUC := service.NewPersonnelService(personnelRepo, transferRepo, schoolRepo)
 
 	studentUC := service.NewStudentService(
-		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo,
+		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo, schoolRepo,
 	)
 
 	resultUC := service.NewResultService(
 		scoreSheetRepo, reportCardRepo, gradeConfigRepo, scoreConfigRepo,
 		enrollmentRepo, subLevelRepo, termRepo,
 	)
+
+	reportUC := service.NewReportService(reportRepo)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler      := handler.NewAuthHandler(authUC)
@@ -124,6 +128,7 @@ func main() {
 	personnelHandler := handler.NewPersonnelHandler(personnelUC)
 	studentHandler   := handler.NewStudentHandler(studentUC)
 	resultHandler    := handler.NewResultHandler(resultUC)
+	reportHandler    := handler.NewReportHandler(reportUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -141,6 +146,7 @@ func main() {
 		Personnel:   personnelHandler,
 		Student:     studentHandler,
 		Result:      resultHandler,
+		Report:      reportHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────
