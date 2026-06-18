@@ -27,6 +27,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /app/edossier /edossier
 
-EXPOSE 8090
+EXPOSE 34005
 
 ENTRYPOINT ["/edossier"]

@@ -235,13 +235,13 @@ func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
 	s.CreatedAt, s.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO students
-		 (id,state_id,enrollment_no,first_name,middle_name,last_name,gender,date_of_birth,
+		 (id,state_id,enrollment_year,enrollment_no,first_name,middle_name,last_name,gender,date_of_birth,
 		  state_of_origin,lga_id,religion,phone,email,address,
 		  guardian_name,guardian_phone,guardian_relation,status,created_at,updated_at,created_by)
-		 VALUES ($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,NULLIF($9,''),NULLIF($10,''),
-		         NULLIF($11,''),NULLIF($12,''),NULLIF($13,''),NULLIF($14,''),
-		         $15,$16,NULLIF($17,''),$18,$19,$20,$21)`,
-		s.ID, s.StateID, s.EnrollmentNo, s.FirstName, s.MiddleName, s.LastName,
+		 VALUES ($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,NULLIF($10,''),NULLIF($11,''),
+		         NULLIF($12,''),NULLIF($13,''),NULLIF($14,''),NULLIF($15,''),
+		         $16,$17,NULLIF($18,''),$19,$20,$21,$22)`,
+		s.ID, s.StateID, s.EnrollmentYear, s.EnrollmentNo, s.FirstName, s.MiddleName, s.LastName,
 		s.Gender, s.DateOfBirth, s.StateOfOrigin, s.LGAID,
 		s.Religion, s.Phone, s.Email, s.Address,
 		s.GuardianName, s.GuardianPhone, s.GuardianRelation,

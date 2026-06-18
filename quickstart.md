@@ -192,3 +192,33 @@ curl -X POST http://localhost:8090/api/v1/schools \
     "address": "Garki Area 10, Abuja"
   }'
 ```
+
+## 📚 API Endpoints
+
+| Method | Path | Description | Auth Required |
+|--------|------|-------------|---------------|
+| GET | /health | Basic health check returning service status. | No |
+| POST | /api/v1/auth/register | Register a new user (state admin). | No |
+| POST | /api/v1/auth/login | Authenticate and receive JWT access token. | No |
+| POST | /api/v1/auth/refresh | Refresh JWT token. | Yes |
+| GET | /api/v1/auth/me | Retrieve details of the currently authenticated user. | Yes |
+| POST | /api/v1/auth/logout | Invalidate the current JWT token. | Yes |
+| GET | /api/v1/users/ | List all users (requires `users:read`). | Yes |
+| GET | /api/v1/users/{id} | Get specific user by ID. | Yes |
+| PUT | /api/v1/users/{id} | Update user information. | Yes |
+| DELETE | /api/v1/users/{id} | Delete a user. | Yes |
+| POST | /api/v1/users/{id}/roles | Assign role to user. | Yes |
+| DELETE | /api/v1/users/{id}/roles/{roleId} | Revoke role from user. | Yes |
+| GET | /api/v1/roles/ | List roles. | Yes |
+| POST | /api/v1/roles/ | Create a new role. | Yes |
+| GET | /api/v1/roles/{id} | Get role by ID. | Yes |
+| PUT | /api/v1/roles/{id} | Update role. | Yes |
+| DELETE | /api/v1/roles/{id} | Delete role. | Yes |
+| GET | /api/v1/schools/ | List schools. | Yes |
+| POST | /api/v1/schools/ | Create a school. | Yes |
+| GET | /api/v1/schools/{id} | Get school details. | Yes |
+| PUT | /api/v1/schools/{id} | Update school. | Yes |
+| DELETE | /api/v1/schools/{id} | Delete school. | Yes |
+| GET | /api/v1/reports/public/teaching-personnel | Public endpoint listing teaching personnel counts. | No |
+
+*Endpoints listed are a representative subset; see the router implementation for the full list.*

@@ -757,17 +757,22 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		return nil, apperror.NotFound("school", req.SchoolID)
 	}
 
+	// Use provided enrollment year or default to current year.
+	year := req.EnrollmentYear
+	if year == 0 {
+		year = time.Now().Year()
+	}
+
 	count, err := uc.students.CountBySchoolCode(ctx, school.Code)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
 
-	year := time.Now().Year()
 	serialNo := count + 1
 	enrollmentNo := fmt.Sprintf("%s/%d/%04d", school.Code, year, serialNo)
 
 	s := &domain.Student{
-		StateID: stateID, EnrollmentNo: enrollmentNo,
+		StateID: stateID, EnrollmentYear: year, EnrollmentNo: enrollmentNo,
 		FirstName: req.FirstName, MiddleName: req.MiddleName, LastName: req.LastName,
 		Gender: domain.Gender(req.Gender), DateOfBirth: req.DateOfBirth,
 		StateOfOrigin: req.StateOfOrigin, LGAID: req.LGAID, Religion: req.Religion,
