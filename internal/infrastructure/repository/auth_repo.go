@@ -49,14 +49,16 @@ func (r *userRepo) Create(ctx context.Context, u *domain.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	q := `SELECT id,state_id,COALESCE(school_id,''),email,password_hash,
-		         first_name,last_name,status,last_login_at,created_at,updated_at,created_by,updated_by
+		         first_name,last_name,status,last_login_at,created_at,updated_at,
+		         COALESCE(created_by,''),COALESCE(updated_by,'')
 		  FROM users WHERE id=$1 AND deleted_at IS NULL`
 	return scanUser(r.db.QueryRowContext(ctx, q, id))
 }
 
 func (r *userRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	q := `SELECT id,state_id,COALESCE(school_id,''),email,password_hash,
-		         first_name,last_name,status,last_login_at,created_at,updated_at,created_by,updated_by
+		         first_name,last_name,status,last_login_at,created_at,updated_at,
+		         COALESCE(created_by,''),COALESCE(updated_by,'')
 		  FROM users WHERE email=$1 AND deleted_at IS NULL`
 	return scanUser(r.db.QueryRowContext(ctx, q, email))
 }

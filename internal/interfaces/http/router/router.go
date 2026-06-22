@@ -26,6 +26,7 @@ type Deps struct {
 	Zone      *handler.ZoneHandler
 	School    *handler.SchoolHandler
 	Academic  *handler.AcademicHandler
+	Gender    *handler.GenderHandler
 	Level     *handler.LevelHandler
 	Subject   *handler.SubjectHandler
 	Personnel *handler.PersonnelHandler
@@ -57,6 +58,9 @@ func New(d Deps) http.Handler {
 		// ── PUBLIC REPORTS ────────────────────────────────────────────────────
 		r.Route("/reports/public", func(r chi.Router) {
 			r.Get("/teaching-personnel", d.Report.GetPublicTeachingPersonnel)
+		})
+		r.Route("/reports/gender", func(r chi.Router) {
+			r.Get("/", d.Gender.CountByGender)
 		})
 
 		// ── AUTH (public) ─────────────────────────────────────────────────────
@@ -217,7 +221,8 @@ func New(d Deps) http.Handler {
 			})
 
 			// ── STUDENTS ──────────────────────────────────────────────────────
-			r.Route("/students", func(r chi.Router) {
+			r.Route("/students", func(r chi.Router) {	
+
 				r.With(authorize(d, "students", "read")).Get("/", d.Student.List)
 				r.With(authorize(d, "students", "create")).Post("/", d.Student.Create)
 				r.With(authorize(d, "students", "read")).Get("/{id}", d.Student.GetByID)

@@ -268,6 +268,7 @@ type StudentRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter StudentFilter, p pagination.Params) ([]*Student, int, error)
 	CountBySchoolCode(ctx context.Context, schoolCode string) (int, error)
+	CountByGender(ctx context.Context, stateID string) (male, female, other int, err error)
 }
 
 type EnrollmentRepository interface {

@@ -44,7 +44,7 @@ Docker Compose starts a PostgreSQL container and compiles/runs the Go API contai
 
 3. Verify the health check endpoint:
    ```bash
-   curl http://localhost:8090/health
+   curl http://localhost:34005/health
    ```
    **Expected Response:**
    ```json
@@ -137,7 +137,7 @@ Here are curl requests to test standard operations.
 
 ### 1. Login to get the JWT Access Token
 ```bash
-curl -X POST http://localhost:8091/api/v1/auth/login \
+curl -X POST http://localhost:34005/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@edossier.gov.ng",
@@ -149,12 +149,12 @@ curl -X POST http://localhost:8091/api/v1/auth/login \
 
 ### 2. Verify Your Admin Session (`/auth/me`)
 ```bash
-curl -H "Authorization: Bearer <access_token>" http://localhost:8091/api/v1/auth/me
+curl -H "Authorization: Bearer <access_token>" http://localhost:34005/api/v1/auth/me
 ```
 
 ### 3. Create an Educational Zone
 ```bash
-curl -X POST http://localhost:8090/api/v1/states/fct-state-uuid-123456/zones \
+curl -X POST http://localhost:34005/api/v1/states/fct-state-uuid-123456/zones \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -166,7 +166,7 @@ curl -X POST http://localhost:8090/api/v1/states/fct-state-uuid-123456/zones \
 
 ### 4. Create an LGA (Local Government Area)
 ```bash
-curl -X POST http://localhost:8090/api/v1/states/fct-state-uuid-123456/lgas \
+curl -X POST http://localhost:34005/api/v1/states/fct-state-uuid-123456/lgas \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -179,7 +179,7 @@ curl -X POST http://localhost:8090/api/v1/states/fct-state-uuid-123456/lgas \
 
 ### 5. Register a School
 ```bash
-curl -X POST http://localhost:8090/api/v1/schools \
+curl -X POST http://localhost:34005/api/v1/schools \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{

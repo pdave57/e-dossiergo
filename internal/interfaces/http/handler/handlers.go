@@ -1252,7 +1252,23 @@ func (h *StudentHandler) ListProgressions(w http.ResponseWriter, r *http.Request
 	}
 	presenter.JSON(w, http.StatusOK, lps)
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// GENDER HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
 
+type GenderHandler struct{ uc service.GenderService }
+
+func NewGenderHandler(uc service.GenderService) *GenderHandler { return &GenderHandler{uc: uc} }
+
+func (h *GenderHandler) CountByGender(w http.ResponseWriter, r *http.Request) {
+	stateID := r.URL.Query().Get("state_id")
+	counts, err := h.uc.CountByGender(r.Context(), stateID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, counts)
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // RESULT HANDLER
 // ─────────────────────────────────────────────────────────────────────────────

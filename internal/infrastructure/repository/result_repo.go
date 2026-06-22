@@ -413,6 +413,31 @@ func (r *studentRepo) GetAllStudents(ctx context.Context, lgaID, schoolID string
 	return out, rows.Err()
 }
 
+
+// CountByGender returns state-wide counts of ACTIVE students grouped by
+// gender, in a single aggregate query. Soft-deleted students are excluded.
+//
+// Uses conditional aggregation rather than three separate queries or a
+// GROUP BY + scan loop, since the result shape is fixed (exactly one row,
+// three known buckets) — this is the simplest correct form for that shape.
+func (r *studentRepo) CountByGender(ctx context.Context, stateID string) (male, female, other int, err error) {
+	const q = `
+		SELECT
+			COUNT(*) FILTER (WHERE gender = 'MALE')   AS male,
+			COUNT(*) FILTER (WHERE gender = 'FEMALE') AS female,
+			COUNT(*) FILTER (WHERE gender = 'OTHER')  AS other
+		FROM students
+		WHERE state_id = $1
+		  AND deleted_at IS NULL
+		  AND status = 'ACTIVE'`
+
+	err = r.db.QueryRowContext(ctx, q, stateID).Scan(&male, &female, &other)
+	if err != nil {
+		return 0, 0, 0, apperror.Internal(err)
+	}
+	return male, female, other, nil
+}
+
 // studentSelect is used when querying the students table directly (no alias).
 const studentSelect = `
 	SELECT id,state_id,enrollment_year,enrollment_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,

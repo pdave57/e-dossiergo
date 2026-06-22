@@ -12,3 +12,15 @@ type DashboardStats struct {
 type PublicTeachingPersonnel struct {
 	Total int `json:"total"`
 }
+
+// GenderReport represents gender distribution statistics.
+type GenderReport struct {
+	StateID     string `json:"state_id"`
+	Male        int    `json:"male"`
+	Female      int    `json:"female"`
+	Other       int    `json:"other"`
+	Total       int    `json:"total"`
+	MalePct     float64 `json:"male_pct"`
+	FemalePct   float64 `json:"female_pct"`
+	OtherPct    float64 `json:"other_pct"`
+}

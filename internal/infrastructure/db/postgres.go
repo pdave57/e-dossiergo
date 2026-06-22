@@ -76,7 +76,7 @@ func Migrate(db *sql.DB) error {
             updated_by  TEXT,
             UNIQUE (state_id, code)
         )`,
-        `CREATE TABLE IF NOT EXISTS users (
+		`CREATE TABLE IF NOT EXISTS users (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id      TEXT NOT NULL REFERENCES states(id),
             school_id     TEXT,
@@ -93,11 +93,11 @@ func Migrate(db *sql.DB) error {
             updated_by    TEXT
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_users_state_id ON users(state_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_users_school_id ON users(school_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_state_id ON users(state_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_school_id ON users(school_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`,
 
-        `CREATE TABLE IF NOT EXISTS roles (
+		`CREATE TABLE IF NOT EXISTS roles (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             name        TEXT NOT NULL,
@@ -112,7 +112,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (state_id, code)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS permissions (
+		`CREATE TABLE IF NOT EXISTS permissions (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             resource    TEXT NOT NULL,
             action      TEXT NOT NULL,
@@ -120,7 +120,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (resource, action)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS user_roles (
+		`CREATE TABLE IF NOT EXISTS user_roles (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             user_id     TEXT NOT NULL REFERENCES users(id),
             role_id     TEXT NOT NULL REFERENCES roles(id),
@@ -132,10 +132,10 @@ func Migrate(db *sql.DB) error {
             UNIQUE (user_id, role_id)
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);`,
 
-        `CREATE TABLE IF NOT EXISTS role_permissions (
+		`CREATE TABLE IF NOT EXISTS role_permissions (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             role_id     TEXT NOT NULL REFERENCES roles(id),
             permission_id TEXT NOT NULL REFERENCES permissions(id),
@@ -147,10 +147,16 @@ func Migrate(db *sql.DB) error {
             UNIQUE (role_id, permission_id)
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id);`,
 
-        `CREATE TABLE IF NOT EXISTS user_roles (
+		`ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS school_id TEXT`,
+		`ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
+		`ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS assigned_by TEXT`,
+		`ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
+		`ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS granted_by TEXT`,
+
+		`CREATE TABLE IF NOT EXISTS user_roles (
             user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             role_id     TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
             school_id   TEXT,
@@ -159,7 +165,7 @@ func Migrate(db *sql.DB) error {
             PRIMARY KEY (user_id, role_id)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS refresh_tokens (
+		`CREATE TABLE IF NOT EXISTS refresh_tokens (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             token_hash  TEXT NOT NULL,
@@ -169,7 +175,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (user_id)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS refresh_tokens (
+		`CREATE TABLE IF NOT EXISTS refresh_tokens (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             token_hash  TEXT NOT NULL,
@@ -178,7 +184,7 @@ func Migrate(db *sql.DB) error {
             revoked     BOOLEAN NOT NULL DEFAULT FALSE,
             UNIQUE (user_id)
         )`,
-        `CREATE TABLE IF NOT EXISTS schools (
+		`CREATE TABLE IF NOT EXISTS schools (
             id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id     TEXT NOT NULL REFERENCES states(id),
             zone_id      TEXT NOT NULL REFERENCES zones(id),
@@ -198,12 +204,12 @@ func Migrate(db *sql.DB) error {
             updated_by   TEXT
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_schools_state_id  ON schools(state_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_schools_zone_id   ON schools(zone_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_schools_lga_id    ON schools(lga_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_schools_status    ON schools(status)`,
+		`CREATE INDEX IF NOT EXISTS idx_schools_state_id  ON schools(state_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_schools_zone_id   ON schools(zone_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_schools_lga_id    ON schools(lga_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_schools_status    ON schools(status)`,
 
-        `CREATE TABLE IF NOT EXISTS school_facilities (
+		`CREATE TABLE IF NOT EXISTS school_facilities (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             school_id   TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
             type        TEXT NOT NULL,
@@ -218,7 +224,7 @@ func Migrate(db *sql.DB) error {
             updated_by  TEXT
         )`,
 
-        `CREATE TABLE IF NOT EXISTS academic_sessions (
+		`CREATE TABLE IF NOT EXISTS academic_sessions (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             school_id   TEXT NOT NULL REFERENCES schools(id),
             name        TEXT NOT NULL,
@@ -235,8 +241,8 @@ func Migrate(db *sql.DB) error {
             UNIQUE (school_id, name)
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_academic_sessions_school_id ON academic_sessions(school_id)`,
-        `CREATE TABLE IF NOT EXISTS terms (
+		`CREATE INDEX IF NOT EXISTS idx_academic_sessions_school_id ON academic_sessions(school_id)`,
+		`CREATE TABLE IF NOT EXISTS terms (
             id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             session_id   TEXT NOT NULL REFERENCES academic_sessions(id) ON DELETE CASCADE,
             term_number  INTEGER NOT NULL CHECK (term_number IN (1,2,3)),
@@ -252,7 +258,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (session_id, term_number)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS levels (
+		`CREATE TABLE IF NOT EXISTS levels (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             name        TEXT NOT NULL,
@@ -267,7 +273,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (state_id, code)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS sub_levels (
+		`CREATE TABLE IF NOT EXISTS sub_levels (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             school_id   TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
             level_id    TEXT NOT NULL REFERENCES levels(id),
@@ -282,7 +288,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (school_id, level_id, code)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS school_levels (
+		`CREATE TABLE IF NOT EXISTS school_levels (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             school_id   TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
             level_id    TEXT NOT NULL REFERENCES levels(id),
@@ -294,7 +300,7 @@ func Migrate(db *sql.DB) error {
             updated_by  TEXT,
             UNIQUE (school_id, level_id, session_id)
         )`,
-        `CREATE TABLE IF NOT EXISTS subjects (
+		`CREATE TABLE IF NOT EXISTS subjects (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             name        TEXT NOT NULL,
@@ -309,7 +315,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (state_id, code)
         )`,
 
-        `CREATE TABLE IF NOT EXISTS school_subjects (
+		`CREATE TABLE IF NOT EXISTS school_subjects (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             school_id   TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
             subject_id  TEXT NOT NULL REFERENCES subjects(id),
@@ -324,8 +330,7 @@ func Migrate(db *sql.DB) error {
             UNIQUE (school_id, subject_id, level_id, session_id)
         )`,
 
-
-        `CREATE TABLE IF NOT EXISTS personnel (
+		`CREATE TABLE IF NOT EXISTS personnel (
             id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id            TEXT NOT NULL REFERENCES states(id),
             school_id           TEXT NOT NULL REFERENCES schools(id),
@@ -351,11 +356,11 @@ func Migrate(db *sql.DB) error {
             updated_by          TEXT
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_personnel_school_id ON personnel(school_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_personnel_state_id  ON personnel(state_id);`,
-        `CREATE INDEX IF NOT EXISTS idx_personnel_staff_id  ON personnel(staff_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_personnel_school_id ON personnel(school_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_personnel_state_id  ON personnel(state_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_personnel_staff_id  ON personnel(staff_id);`,
 
-        `CREATE TABLE IF NOT EXISTS personnel_transfers (
+		`CREATE TABLE IF NOT EXISTS personnel_transfers (
             id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             personnel_id    TEXT NOT NULL REFERENCES personnel(id),
             from_school_id  TEXT NOT NULL REFERENCES schools(id),
@@ -369,7 +374,7 @@ func Migrate(db *sql.DB) error {
             updated_by      TEXT
         )`,
 
-        `CREATE TABLE IF NOT EXISTS students (
+		`CREATE TABLE IF NOT EXISTS students (
             id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id          TEXT NOT NULL REFERENCES states(id),
             enrollment_year   INT NOT NULL,
@@ -396,10 +401,10 @@ func Migrate(db *sql.DB) error {
             updated_by        TEXT
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_students_state_id ON students(state_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_students_enrollment_no ON students(enrollment_no)`,
+		`CREATE INDEX IF NOT EXISTS idx_students_state_id ON students(state_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_students_enrollment_no ON students(enrollment_no)`,
 
-        `CREATE TABLE IF NOT EXISTS enrollments (
+		`CREATE TABLE IF NOT EXISTS enrollments (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             student_id    TEXT NOT NULL REFERENCES students(id),
             school_id     TEXT NOT NULL REFERENCES schools(id),
@@ -415,11 +420,11 @@ func Migrate(db *sql.DB) error {
             UNIQUE (student_id, session_id)
         )`,
 
-        `CREATE INDEX IF NOT EXISTS idx_enrollments_school_id ON enrollments(school_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_enrollments_session_id ON enrollments(session_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_enrollments_school_id ON enrollments(school_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_enrollments_session_id ON enrollments(session_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments(student_id)`,
 
-        `CREATE TABLE IF NOT EXISTS level_progressions (
+		`CREATE TABLE IF NOT EXISTS level_progressions (
             id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             student_id      TEXT NOT NULL REFERENCES students(id),
             school_id       TEXT NOT NULL REFERENCES schools(id),
@@ -435,10 +440,9 @@ func Migrate(db *sql.DB) error {
             updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             created_by      TEXT,
             updated_by      TEXT
-        )`, 
-        
+        )`,
 
-        `CREATE TABLE IF NOT EXISTS score_configs (
+		`CREATE TABLE IF NOT EXISTS score_configs (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             school_id   TEXT REFERENCES schools(id),
@@ -452,9 +456,9 @@ func Migrate(db *sql.DB) error {
             created_by  TEXT,
             updated_by  TEXT,
             UNIQUE (state_id, school_id)
-        )`, 
+        )`,
 
-        `CREATE TABLE IF NOT EXISTS grade_configs (
+		`CREATE TABLE IF NOT EXISTS grade_configs (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             school_id   TEXT REFERENCES schools(id),
@@ -469,8 +473,8 @@ func Migrate(db *sql.DB) error {
             updated_by  TEXT,
             UNIQUE (state_id, school_id, grade)
         )`,
-        
-        `CREATE TABLE IF NOT EXISTS score_sheets (
+
+		`CREATE TABLE IF NOT EXISTS score_sheets (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             enrollment_id TEXT NOT NULL REFERENCES enrollments(id),
             student_id    TEXT NOT NULL REFERENCES students(id),
@@ -494,12 +498,12 @@ func Migrate(db *sql.DB) error {
             updated_by    TEXT,
             UNIQUE (student_id, subject_id, term_id)
         )`,
-        
-        `CREATE INDEX IF NOT EXISTS idx_score_sheets_student  ON score_sheets(student_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_score_sheets_term     ON score_sheets(term_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_score_sheets_school   ON score_sheets(school_id)`,
 
-        `CREATE TABLE IF NOT EXISTS report_cards (
+		`CREATE INDEX IF NOT EXISTS idx_score_sheets_student  ON score_sheets(student_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_score_sheets_term     ON score_sheets(term_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_score_sheets_school   ON score_sheets(school_id)`,
+
+		`CREATE TABLE IF NOT EXISTS report_cards (
             id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             student_id        TEXT NOT NULL REFERENCES students(id),
             school_id         TEXT NOT NULL REFERENCES schools(id),
@@ -522,9 +526,9 @@ func Migrate(db *sql.DB) error {
             created_by        TEXT,
             updated_by        TEXT,
             UNIQUE (student_id, term_id)
-        )`,
-        
-        `INSERT INTO permissions (id, resource, action, description) VALUES
+		)`,
+
+		`INSERT INTO permissions (id, resource, action, description) VALUES
         (gen_random_uuid()::TEXT, 'schools',    'create',  'Create a school'),
         (gen_random_uuid()::TEXT, 'schools',    'read',    'View school details'),
         (gen_random_uuid()::TEXT, 'schools',    'update',  'Update school details'),
@@ -545,7 +549,9 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'results',    'update',  'Modify scores'),
         (gen_random_uuid()::TEXT, 'results',    'publish', 'Publish report cards'),
         (gen_random_uuid()::TEXT, 'sessions',   'create',  'Create academic session'),
+        (gen_random_uuid()::TEXT, 'sessions',   'read',    'View academic sessions'),
         (gen_random_uuid()::TEXT, 'sessions',   'update',  'Update academic session'),
+        (gen_random_uuid()::TEXT, 'sessions',   'delete',  'Delete academic session'),
         (gen_random_uuid()::TEXT, 'users',      'create',  'Create user accounts'),
         (gen_random_uuid()::TEXT, 'users',      'read',    'View user accounts'),
         (gen_random_uuid()::TEXT, 'users',      'update',  'Update user accounts'),
@@ -557,7 +563,13 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'reports',    'read',    'View reports and dashboards')
         ON CONFLICT (resource, action) DO NOTHING;`,
 
-
+		`INSERT INTO role_permissions (role_id, permission_id, granted_at)
+        SELECT r.id, p.id, NOW()
+        FROM roles r
+        CROSS JOIN permissions p
+        WHERE r.code = 'STATE_ADMIN'
+          AND r.deleted_at IS NULL
+        ON CONFLICT (role_id, permission_id) DO NOTHING;`,
 	}
 
 	for _, stmt := range statements {
@@ -573,6 +585,38 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// SeedStateAdminRole ensures a system STATE_ADMIN role exists for the given
+// state and grants it every permission in the permissions table.
+// It is idempotent — safe to call on every startup.
+// Call this after Migrate(), passing the bootstrap state ID from config.
+func SeedStateAdminRole(db *sql.DB, stateID string) error {
+	// 1. Upsert the STATE_ADMIN role for this state.
+	_, err := db.Exec(`
+		INSERT INTO roles (id, state_id, name, code, description, is_system, created_at, updated_at)
+		VALUES (gen_random_uuid()::TEXT, $1,
+		        'State Administrator', 'STATE_ADMIN',
+		        'Full administrative access for this state', TRUE, NOW(), NOW())
+		ON CONFLICT (state_id, code) DO NOTHING`, stateID)
+	if err != nil {
+		return fmt.Errorf("SeedStateAdminRole: upsert role: %w", err)
+	}
+
+	// 2. Grant every permission to STATE_ADMIN for this state.
+	_, err = db.Exec(`
+		INSERT INTO role_permissions (role_id, permission_id, granted_at)
+		SELECT r.id, p.id, NOW()
+		FROM   roles r
+		CROSS JOIN permissions p
+		WHERE  r.code = 'STATE_ADMIN'
+		AND    r.state_id = $1
+		AND    r.deleted_at IS NULL
+		ON CONFLICT DO NOTHING`, stateID)
+	if err != nil {
+		return fmt.Errorf("SeedStateAdminRole: grant permissions: %w", err)
+	}
+	return nil
 }
 
 // schema contains the complete DDL for e-Dossier.
@@ -1089,6 +1133,7 @@ INSERT INTO permissions (id, resource, action, description) VALUES
   (gen_random_uuid()::TEXT, 'results',    'update',  'Modify scores'),
   (gen_random_uuid()::TEXT, 'results',    'publish', 'Publish report cards'),
   (gen_random_uuid()::TEXT, 'sessions',   'create',  'Create academic session'),
+  (gen_random_uuid()::TEXT, 'sessions',   'read',    'View academic sessions'),
   (gen_random_uuid()::TEXT, 'sessions',   'update',  'Update academic session'),
   (gen_random_uuid()::TEXT, 'users',      'create',  'Create user accounts'),
   (gen_random_uuid()::TEXT, 'users',      'read',    'View user accounts'),
@@ -1097,6 +1142,7 @@ INSERT INTO permissions (id, resource, action, description) VALUES
   (gen_random_uuid()::TEXT, 'roles',      'create',  'Create roles'),
   (gen_random_uuid()::TEXT, 'roles',      'read',    'View roles'),
   (gen_random_uuid()::TEXT, 'roles',      'update',  'Update roles'),
-  (gen_random_uuid()::TEXT, 'roles',      'delete',  'Delete roles')
+  (gen_random_uuid()::TEXT, 'roles',      'delete',  'Delete roles'),
+  (gen_random_uuid()::TEXT, 'reports',    'read',    'View reports and dashboards')
 ON CONFLICT (resource, action) DO NOTHING;
 `
