@@ -17,6 +17,7 @@ e-Dossier supports multi-level administrative scopes, granular Role-Based Access
   * Customizable continuous assessment (CA1, CA2, CA3) and examination weight configurations.
   * Define state-wide or school-specific grading scales (e.g., min/max ranges, remarks, points).
   * Automatically calculate student positions, average scores, and compile publishable report cards.
+* **Demographic & Analytics Reporting**: Aggregate system-wide and state-level statistics including gender distribution and teaching personnel counts.
 * **Clean Architecture**: Decoupled domain models, application use-cases, database repositories, and HTTP interfaces to ensure scalability and testability.
 
 ---

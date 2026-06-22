@@ -63,6 +63,10 @@ func New(d Deps) http.Handler {
 			r.Get("/", d.Gender.CountByGender)
 		})
 
+		r.Route("/reports/total", func(r chi.Router) {
+			r.Get("/", d.Student.CountTotalStudents)
+		})
+
 		// ── AUTH (public) ─────────────────────────────────────────────────────
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", d.Auth.Register)

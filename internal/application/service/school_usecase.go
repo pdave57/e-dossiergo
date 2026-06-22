@@ -947,5 +947,9 @@ func (uc *StudentService) ListSessionProgressions(ctx context.Context, schoolID,
 	return uc.progressions.ListBySession(ctx, schoolID, sessionID)
 }
 
+func (uc *StudentService) CountTotalStudents(ctx context.Context, stateID string) (int, error) {
+	return uc.students.CountTotalStudents(ctx, stateID)
+}
+
 // unused time import guard
 var _ = time.Now

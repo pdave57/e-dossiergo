@@ -1270,6 +1270,19 @@ func (h *GenderHandler) CountByGender(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, counts)
 }
 // ─────────────────────────────────────────────────────────────────────────────
+// TOTAL STUDENT HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+func (h *StudentHandler) CountTotalStudents(w http.ResponseWriter, r *http.Request) {
+	stateID := r.URL.Query().Get("state_id")
+	count, err := h.uc.CountTotalStudents(r.Context(), stateID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, count)
+}
+// ─────────────────────────────────────────────────────────────────────────────
 // RESULT HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 

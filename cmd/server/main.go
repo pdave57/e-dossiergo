@@ -108,6 +108,7 @@ func main() {
 	studentUC := service.NewStudentService(
 		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo, schoolRepo,
 	)
+	genderUC := service.NewGenderService(studentRepo)
 
 	resultUC := service.NewResultService(
 		scoreSheetRepo, reportCardRepo, gradeConfigRepo, scoreConfigRepo,
@@ -129,6 +130,7 @@ func main() {
 	studentHandler   := handler.NewStudentHandler(studentUC)
 	resultHandler    := handler.NewResultHandler(resultUC)
 	reportHandler    := handler.NewReportHandler(reportUC)
+	genderHandler    := handler.NewGenderHandler(genderUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -147,6 +149,7 @@ func main() {
 		Student:     studentHandler,
 		Result:      resultHandler,
 		Report:      reportHandler,
+		Gender:      genderHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

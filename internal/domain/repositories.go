@@ -269,6 +269,7 @@ type StudentRepository interface {
 	List(ctx context.Context, filter StudentFilter, p pagination.Params) ([]*Student, int, error)
 	CountBySchoolCode(ctx context.Context, schoolCode string) (int, error)
 	CountByGender(ctx context.Context, stateID string) (male, female, other int, err error)
+	CountTotalStudents(ctx context.Context, stateID string) (int, error)
 }
 
 type EnrollmentRepository interface {

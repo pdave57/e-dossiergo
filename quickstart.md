@@ -220,5 +220,6 @@ curl -X POST http://localhost:34005/api/v1/schools \
 | PUT | /api/v1/schools/{id} | Update school. | Yes |
 | DELETE | /api/v1/schools/{id} | Delete school. | Yes |
 | GET | /api/v1/reports/public/teaching-personnel | Public endpoint listing teaching personnel counts. | No |
+| GET | /api/v1/students/genders/report | Retrieve state-wide counts of students grouped by gender. | Yes |
 
 *Endpoints listed are a representative subset; see the router implementation for the full list.*

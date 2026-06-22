@@ -438,6 +438,21 @@ func (r *studentRepo) CountByGender(ctx context.Context, stateID string) (male, 
 	return male, female, other, nil
 }
 
+func (r *studentRepo) CountTotalStudents(ctx context.Context, stateID string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(id)
+		FROM students
+		WHERE state_id = $1
+		AND deleted_at IS NULL
+		AND status = 'ACTIVE'
+	`, stateID).Scan(&count)
+	if err != nil {
+		return 0, apperror.Internal(err)
+	}
+	return count, nil
+}
+
 // studentSelect is used when querying the students table directly (no alias).
 const studentSelect = `
 	SELECT id,state_id,enrollment_year,enrollment_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,
