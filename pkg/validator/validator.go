@@ -83,8 +83,8 @@ func (v *Validator) ValidEmail(value, field string) *Validator {
 
 // StrongPassword checks password strength.
 func (v *Validator) StrongPassword(value, field string) *Validator {
-	if len(value) < 8 {
-		return v.Check(false, field, "must be at least 8 characters")
+	if len(value) < 6 {
+		return v.Check(false, field, "must be at least 6 characters")
 	}
 	var hasUpper, hasLower, hasDigit bool
 	for _, r := range value {

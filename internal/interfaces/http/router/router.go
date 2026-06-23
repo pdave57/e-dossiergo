@@ -24,6 +24,8 @@ type Deps struct {
 	User      *handler.UserHandler
 	Role      *handler.RoleHandler
 	Zone      *handler.ZoneHandler
+	State     *handler.StateHandler
+	LGA       *handler.LGAHandler
 	School    *handler.SchoolHandler
 	Academic  *handler.AcademicHandler
 	Gender    *handler.GenderHandler
@@ -33,6 +35,7 @@ type Deps struct {
 	Student   *handler.StudentHandler
 	Result    *handler.ResultHandler
 	Report    *handler.ReportHandler
+	Avatar    *handler.AvatarHandler
 }
 
 // New builds and returns the fully-configured HTTP router.
@@ -65,6 +68,19 @@ func New(d Deps) http.Handler {
 
 		r.Route("/reports/total", func(r chi.Router) {
 			r.Get("/", d.Student.CountTotalStudents)
+		})
+
+		r.Route("/reports/personnel", func(r chi.Router) {
+			r.Get("/total", d.Personnel.CountTotalPersonnel)
+		})
+
+		r.Route("/reports/schools", func(r chi.Router) {
+			r.Get("/total", d.School.CountTotalSchools)
+		})
+
+		r.Route("/states", func(r chi.Router) {
+			r.Get("/", d.State.ListStates)
+			r.Get("/{id}", d.State.GetState)
 		})
 
 		// ── AUTH (public) ─────────────────────────────────────────────────────
@@ -110,28 +126,29 @@ func New(d Deps) http.Handler {
 
 			// ── ZONE: STATES ───────────────────────────────────────────────────
 			r.Route("/states", func(r chi.Router) {
-				r.Get("/", d.Zone.ListStates) // open within auth - needed by all
-				r.With(authorize(d, "schools", "create")).Post("/", d.Zone.CreateState)
-				r.Get("/{id}", d.Zone.GetState)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateState)
+				r.With(authorize(d, "states", "create")).Post("/", d.State.CreateState)
+				r.Get("/{id}", d.State.GetState)
+				r.With(authorize(d, "states", "update")).Put("/{id}", d.State.UpdateState)
 
 				// Zones
 				r.Get("/{stateId}/zones", d.Zone.ListZones)
 				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)
 
 				// LGAs
-				r.Get("/{stateId}/lgas", d.Zone.ListLGAs)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.Zone.CreateLGA)
+				r.Get("/{stateId}/lgas", d.LGA.ListLGAs)
+				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.LGA.CreateLGA)
 			})
 
 			r.Route("/zones", func(r chi.Router) {
+
 				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
 				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
 			})
 
 			r.Route("/lgas", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateLGA)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteLGA)
+				
+				r.With(authorize(d, "schools", "update")).Put("/{id}", d.LGA.UpdateLGA)
+				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.LGA.DeleteLGA)
 			})
 
 			// ── SCHOOLS ───────────────────────────────────────────────────────
@@ -216,7 +233,7 @@ func New(d Deps) http.Handler {
 			// ── PERSONNEL ─────────────────────────────────────────────────────
 			r.Route("/personnel", func(r chi.Router) {
 				r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
-				r.With(authorize(d, "personnel", "create")).Post("/", d.Personnel.Create)
+				
 				r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
 				r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
 				r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)

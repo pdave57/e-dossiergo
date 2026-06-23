@@ -16,6 +16,7 @@ import (
 	"github.com/edossier/api/internal/application/service"
 	infradb "github.com/edossier/api/internal/infrastructure/db"
 	"github.com/edossier/api/internal/infrastructure/repository"
+	"github.com/edossier/api/internal/infrastructure/storage"
 	"github.com/edossier/api/internal/interfaces/http/handler"
 	"github.com/edossier/api/internal/interfaces/http/router"
 	"github.com/edossier/api/pkg/logger"
@@ -49,6 +50,24 @@ func main() {
 		os.Exit(1)
 	}
 	log.Info("schema migration complete")
+
+	//initialize redis
+	redisClient, err := infradb.NewRedisClient(cfg.RedisURL, cfg.RedisPassword, 0)
+	if err != nil {
+		log.Error("failed to connect to redis", "error", err)
+		os.Exit(1)
+	}
+	defer redisClient.Close()
+	log.Info("redis connected")
+
+	//Initialize Cloudinary (Infrastructure)
+	cloudinaryClient, err := storage.NewCloudinaryStorage(cfg.CloudinaryCloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret)
+	if err != nil {
+		log.Error("failed to connect to cloudinary", "error", err)
+		os.Exit(1)
+	}
+	log.Info("cloudinary connected")
+
 
 	// ── Token maker ───────────────────────────────────────────────────────────
 	tokenMaker := token.New(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
@@ -96,8 +115,10 @@ func main() {
 	userUC := service.NewUserService(userRepo, userRoleRepo, roleRepo)
 	roleUC := service.NewRoleService(roleRepo, permRepo)
 
-	zoneUC      := service.NewZoneService(stateRepo, zoneRepo, lgaRepo)
-	schoolUC   := service.NewSchoolService(schoolRepo, facilityRepo)
+	stateUC := service.NewStateService(stateRepo)
+	zoneUC := service.NewZoneService(zoneRepo)
+	lgaUC := service.NewLGAService(lgaRepo)
+	schoolUC := service.NewSchoolService(schoolRepo, facilityRepo)
 	academicUC := service.NewAcademicService(sessionRepo, termRepo)
 
 	levelUC := service.NewLevelService(levelRepo, subLevelRepo, schoolLevelRepo)
@@ -116,12 +137,15 @@ func main() {
 	)
 
 	reportUC := service.NewReportService(reportRepo)
+	avatarUC := service.NewAvatarService(personnelRepo, studentRepo, cloudinaryClient)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler      := handler.NewAuthHandler(authUC)
 	userHandler      := handler.NewUserHandler(userUC, userRepo)
 	roleHandler      := handler.NewRoleHandler(roleUC)
+	stateHandler     := handler.NewStateHandler(stateUC)
 	zoneHandler      := handler.NewZoneHandler(zoneUC)
+	lgaHandler       := handler.NewLGAHandler(lgaUC)
 	schoolHandler    := handler.NewSchoolHandler(schoolUC)
 	academicHandler  := handler.NewAcademicHandler(academicUC)
 	levelHandler     := handler.NewLevelHandler(levelUC)
@@ -131,6 +155,7 @@ func main() {
 	resultHandler    := handler.NewResultHandler(resultUC)
 	reportHandler    := handler.NewReportHandler(reportUC)
 	genderHandler    := handler.NewGenderHandler(genderUC)
+	avatarHandler    := handler.NewAvatarHandler(avatarUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -140,7 +165,9 @@ func main() {
 		Auth:        authHandler,
 		User:        userHandler,
 		Role:        roleHandler,
+		State:       stateHandler,	
 		Zone:        zoneHandler,
+		LGA:         lgaHandler,
 		School:      schoolHandler,
 		Academic:    academicHandler,
 		Level:       levelHandler,
@@ -150,6 +177,7 @@ func main() {
 		Result:      resultHandler,
 		Report:      reportHandler,
 		Gender:      genderHandler,
+		Avatar:      avatarHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

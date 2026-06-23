@@ -23,6 +23,15 @@ type Config struct {
 	DBMaxIdleConns int
 	DBConnMaxLife  time.Duration
 
+	// Redis
+	RedisURL      string
+	RedisPassword string
+
+	// Cloudinary
+	CloudinaryCloudName string
+	CloudinaryAPIKey    string
+	CloudinaryAPISecret string
+
 	// JWT
 	JWTSecret       string
 	AccessTokenTTL  time.Duration
@@ -38,7 +47,7 @@ type Config struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() (*Config, error) {
 	cfg := &Config{
-		Port:            getEnv("PORT", "8090"),
+		Port:            getEnv("PORT", "34005"),
 		ReadTimeout:     getDuration("READ_TIMEOUT", 10*time.Second),
 		WriteTimeout:    getDuration("WRITE_TIMEOUT", 30*time.Second),
 		IdleTimeout:     getDuration("IDLE_TIMEOUT", 60*time.Second),
@@ -46,7 +55,12 @@ func Load() (*Config, error) {
 		DBMaxOpenConns:  getInt("DB_MAX_OPEN_CONNS", 25),
 		DBMaxIdleConns:  getInt("DB_MAX_IDLE_CONNS", 10),
 		DBConnMaxLife:   getDuration("DB_CONN_MAX_LIFE", 5*time.Minute),
-		JWTSecret:       getEnv("JWT_SECRET", ""),
+		RedisURL:        getEnv("REDIS_URL", "localhost:6379"),
+		RedisPassword:   getEnv("REDIS_PASSWORD", ""),
+		CloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME", "dcafodexp"),
+		CloudinaryAPIKey:    getEnv("CLOUDINARY_API_KEY", "985515664992942"),
+		CloudinaryAPISecret: getEnv("CLOUDINARY_API_SECRET", "UBRI06BUb25sRzGiIDbAX8rj-SI"),
+		JWTSecret:       getEnv("JWT_SECRET", "Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0QaYf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa"),
 		AccessTokenTTL:  getDuration("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTokenTTL: getDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
 		Env:             getEnv("APP_ENV", "development"),

@@ -387,6 +387,7 @@ type Personnel struct {
 	Specialization   string      `json:"specialization,omitempty"`
 	DateOfEmployment *time.Time  `json:"date_of_employment,omitempty"`
 	LGAID            string      `json:"lga_id,omitempty"`
+	AvatarURL        string      `json:"avatar_url,omitempty"`
 	AuditFields
 }
 
@@ -446,6 +447,7 @@ type Student struct {
 	GuardianPhone    string        `json:"guardian_phone"`
 	GuardianRelation string        `json:"guardian_relation,omitempty"`
 	Status           StudentStatus `json:"status"`
+	AvatarURL        string        `json:"avatar_url,omitempty"`
 	AuditFields
 }
 

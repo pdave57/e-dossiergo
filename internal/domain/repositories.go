@@ -153,6 +153,7 @@ type SchoolRepository interface {
 	Update(ctx context.Context, s *School) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter SchoolFilter, p pagination.Params) ([]*School, int, error)
+	CountTotalSchools(ctx context.Context, stateID string) (int, error)
 }
 
 type SchoolFacilityRepository interface {
@@ -247,6 +248,8 @@ type PersonnelRepository interface {
 	Update(ctx context.Context, p *Personnel) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter PersonnelFilter, p pagination.Params) ([]*Personnel, int, error)
+	CountTotalPersonnel(ctx context.Context, stateID string) (int, error)
+	UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error
 }
 
 type PersonnelTransferRepository interface {
@@ -270,6 +273,7 @@ type StudentRepository interface {
 	CountBySchoolCode(ctx context.Context, schoolCode string) (int, error)
 	CountByGender(ctx context.Context, stateID string) (male, female, other int, err error)
 	CountTotalStudents(ctx context.Context, stateID string) (int, error)
+	UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error
 }
 
 type EnrollmentRepository interface {

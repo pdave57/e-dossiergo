@@ -294,14 +294,14 @@ func (h *RoleHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ZONE HANDLER
+// STATES HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ZoneHandler struct{ uc *service.ZoneService }
+type StateHandler struct{ uc *service.StateService }
 
-func NewZoneHandler(uc *service.ZoneService) *ZoneHandler { return &ZoneHandler{uc: uc} }
+func NewStateHandler(uc *service.StateService) *StateHandler { return &StateHandler{uc: uc} }
 
-func (h *ZoneHandler) ListStates(w http.ResponseWriter, r *http.Request) {
+func (h *StateHandler) ListStates(w http.ResponseWriter, r *http.Request) {
 	states, err := h.uc.ListStates(r.Context())
 	if err != nil {
 		presenter.Error(w, err)
@@ -310,7 +310,7 @@ func (h *ZoneHandler) ListStates(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, states)
 }
 
-func (h *ZoneHandler) CreateState(w http.ResponseWriter, r *http.Request) {
+func (h *StateHandler) CreateState(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateStateRequest
 	if err := presenter.DecodeJSON(r, &req); err != nil {
 		presenter.Error(w, err)
@@ -325,7 +325,7 @@ func (h *ZoneHandler) CreateState(w http.ResponseWriter, r *http.Request) {
 	presenter.Created(w, s)
 }
 
-func (h *ZoneHandler) GetState(w http.ResponseWriter, r *http.Request) {
+func (h *StateHandler) GetState(w http.ResponseWriter, r *http.Request) {
 	s, err := h.uc.GetState(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		presenter.Error(w, err)
@@ -334,7 +334,7 @@ func (h *ZoneHandler) GetState(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, s)
 }
 
-func (h *ZoneHandler) UpdateState(w http.ResponseWriter, r *http.Request) {
+func (h *StateHandler) UpdateState(w http.ResponseWriter, r *http.Request) {
 	var req dto.UpdateStateRequest
 	if err := presenter.DecodeJSON(r, &req); err != nil {
 		presenter.Error(w, err)
@@ -349,6 +349,13 @@ func (h *ZoneHandler) UpdateState(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, s)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ZONE HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+type ZoneHandler struct{ uc *service.ZoneService }
+
+func NewZoneHandler(uc *service.ZoneService) *ZoneHandler { return &ZoneHandler{uc: uc} }
+
 func (h *ZoneHandler) ListZones(w http.ResponseWriter, r *http.Request) {
 	zones, err := h.uc.ListZones(r.Context(), chi.URLParam(r, "stateId"))
 	if err != nil {
@@ -357,6 +364,7 @@ func (h *ZoneHandler) ListZones(w http.ResponseWriter, r *http.Request) {
 	}
 	presenter.JSON(w, http.StatusOK, zones)
 }
+
 
 func (h *ZoneHandler) CreateZone(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateZoneRequest
@@ -395,8 +403,13 @@ func (h *ZoneHandler) DeleteZone(w http.ResponseWriter, r *http.Request) {
 	}
 	presenter.NoContent(w)
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// LGA HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+type LGAHandler struct { uc *service.LGAService }
+func NewLGAHandler(uc *service.LGAService) *LGAHandler { return &LGAHandler{uc: uc} }
 
-func (h *ZoneHandler) ListLGAs(w http.ResponseWriter, r *http.Request) {
+func (h *LGAHandler) ListLGAs(w http.ResponseWriter, r *http.Request) {
 	stateID := chi.URLParam(r, "stateId")
 	zoneID := r.URL.Query().Get("zone_id")
 	var (
@@ -415,7 +428,7 @@ func (h *ZoneHandler) ListLGAs(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, lgas)
 }
 
-func (h *ZoneHandler) CreateLGA(w http.ResponseWriter, r *http.Request) {
+func (h *LGAHandler) CreateLGA(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateLGARequest
 	if err := presenter.DecodeJSON(r, &req); err != nil {
 		presenter.Error(w, err)
@@ -430,7 +443,7 @@ func (h *ZoneHandler) CreateLGA(w http.ResponseWriter, r *http.Request) {
 	presenter.Created(w, l)
 }
 
-func (h *ZoneHandler) UpdateLGA(w http.ResponseWriter, r *http.Request) {
+func (h *LGAHandler) UpdateLGA(w http.ResponseWriter, r *http.Request) {
 	var req dto.UpdateLGARequest
 	if err := presenter.DecodeJSON(r, &req); err != nil {
 		presenter.Error(w, err)
@@ -445,7 +458,7 @@ func (h *ZoneHandler) UpdateLGA(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, l)
 }
 
-func (h *ZoneHandler) DeleteLGA(w http.ResponseWriter, r *http.Request) {
+func (h *LGAHandler) DeleteLGA(w http.ResponseWriter, r *http.Request) {
 	if err := h.uc.DeleteLGA(r.Context(), chi.URLParam(r, "id")); err != nil {
 		presenter.Error(w, err)
 		return
@@ -573,6 +586,16 @@ func (h *SchoolHandler) DeleteFacility(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	presenter.NoContent(w)
+}
+
+func (h *SchoolHandler) CountTotalSchools(w http.ResponseWriter, r *http.Request) {
+	stateID := r.URL.Query().Get("state_id")
+	count, err := h.uc.CountTotalSchools(r.Context(), stateID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, count)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1108,6 +1131,20 @@ func (h *PersonnelHandler) ListTransfers(w http.ResponseWriter, r *http.Request)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TOTAL PERSONNEL HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+func (h *PersonnelHandler) CountTotalPersonnel(w http.ResponseWriter, r *http.Request) {
+	stateID := r.URL.Query().Get("state_id")
+	count, err := h.uc.CountTotalPersonnel(r.Context(), stateID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, count)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // STUDENT HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1252,6 +1289,24 @@ func (h *StudentHandler) ListProgressions(w http.ResponseWriter, r *http.Request
 	}
 	presenter.JSON(w, http.StatusOK, lps)
 }
+
+// func (h *AvatarHandler) UploadStudentAvatar(w http.ResponseWriter, r *http.Request) {
+//     studentID := chi.URLParam(r, "id")
+//     file, _, err := r.FormFile("file")
+//     if err != nil {
+//         presenter.Error(w, err)
+//         return
+//     }
+//     defer file.Close()
+//     claims := middleware.ClaimsFromCtx(r.Context())
+//     updated, err := h.uc.UploadAvatar(r.Context(), studentID, file, claims.UserID)
+//     if err != nil {
+//         presenter.Error(w, err)
+//         return
+//     }
+//     presenter.JSON(w, http.StatusOK, updated)
+// }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GENDER HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1462,4 +1517,60 @@ func (h *ResultHandler) ListGradeConfigs(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	presenter.JSON(w, http.StatusOK, configs)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AVATAR HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+type AvatarHandler struct {
+	avatarService *service.AvatarService
+}
+
+func NewAvatarHandler(s *service.AvatarService) *AvatarHandler {
+	return &AvatarHandler{avatarService: s}
+}
+
+// POST /api/v1/avatar/personnel
+func (h *AvatarHandler) UploadPersonnelAvatar(w http.ResponseWriter, r *http.Request) {
+	// Get User/School context (Assume middleware sets Claims)
+	claims := middleware.ClaimsFromCtx(r.Context())
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("file is required"))
+		return
+	}
+	defer file.Close()
+
+	url, err := h.avatarService.UploadPersonnelAvatar(r.Context(), claims.SchoolID, claims.UserID, file, header.Filename)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+
+	presenter.JSON(w, http.StatusOK, map[string]string{"avatar_url": url})
+}
+
+// POST /api/v1/avatar/student
+func (h *AvatarHandler) UploadStudentAvatar(w http.ResponseWriter, r *http.Request) {
+	// Get StudentID from form or query
+	studentID := r.FormValue("student_id")
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("file is required"))
+		return
+	}
+	defer file.Close()
+
+	claims := middleware.ClaimsFromCtx(r.Context())
+
+	url, err := h.avatarService.UploadStudentAvatar(r.Context(), claims.SchoolID, studentID, file, header.Filename)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+
+	presenter.JSON(w, http.StatusOK, map[string]string{"avatar_url": url})
 }

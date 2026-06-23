@@ -123,6 +123,25 @@ func (r *personnelRepo) List(ctx context.Context, f domain.PersonnelFilter, p pa
 	return out, total, rows.Err()
 }
 
+func (r *personnelRepo) CountTotalPersonnel(ctx context.Context, stateID string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(id)
+		FROM personnel
+		WHERE state_id = $1
+		AND deleted_at IS NULL
+	`, stateID).Scan(&count)
+	if err != nil {
+		return 0, apperror.Internal(err)
+	}
+	return count, nil
+}
+
+func (r *personnelRepo) UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error {
+    _, err := r.db.ExecContext(ctx, updatePersonnelAvatarSQL, avatarURL, id, schoolID)
+    return err
+}
+
 const personnelSelect = `
 	SELECT id,state_id,school_id,staff_id,first_name,COALESCE(middle_name,''),last_name,gender,
 	       date_of_birth,COALESCE(email,''),COALESCE(phone,''),COALESCE(address,''),
@@ -149,6 +168,13 @@ func scanPersonnel(s scanner) (*domain.Personnel, error) {
 	}
 	return p, nil
 }
+// Example snippet for internal/infrastructure/repository/postgres/personnel_repo.go
+const updatePersonnelAvatarSQL = `
+    UPDATE personnel 
+    SET avatar_url = $1, updated_at = NOW() 
+    WHERE id = $2 AND school_id = $3
+`
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PERSONNEL TRANSFER REPOSITORY
@@ -219,6 +245,7 @@ func (r *personnelTransferRepo) listTransfers(ctx context.Context, where, arg st
 	return out, rows.Err()
 }
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // STUDENT REPOSITORY
 // ─────────────────────────────────────────────────────────────────────────────
@@ -253,6 +280,11 @@ func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
 		return apperror.Internal(err)
 	}
 	return nil
+}
+
+func (r *studentRepo) UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE students SET avatar_url = $1, updated_at = NOW() WHERE id = $2`, avatarURL, id)
+	return err
 }
 
 func (r *studentRepo) GetByID(ctx context.Context, id string) (*domain.Student, error) {

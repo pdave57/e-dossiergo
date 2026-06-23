@@ -385,6 +385,17 @@ func (r *schoolRepo) List(ctx context.Context, f domain.SchoolFilter, p paginati
 	return out, total, rows.Err()
 }
 
+func (r *schoolRepo) CountTotalSchools(ctx context.Context, stateID string) (int, error) {
+	var total int
+	if err := r.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM schools WHERE state_id=$1 AND deleted_at IS NULL`,
+		stateID).Scan(&total); err != nil {
+		return 0, apperror.Internal(err)
+	}
+	return total, nil
+}
+
+
 const schoolSelectSQL = `
 	SELECT s.id,s.state_id,s.zone_id,s.lga_id,s.name,s.code,s.category,s.ownership,s.status,
 	       COALESCE(s.address,''),COALESCE(s.head_teacher,''),s.founded,

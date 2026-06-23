@@ -13,22 +13,19 @@ import (
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ZONE USE CASES
+// STATES USE CASES
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ZoneService struct {
+
+type StateService struct {
 	states domain.StateRepository
-	zones  domain.ZoneRepository
-	lgas   domain.LGARepository
 }
 
-func NewZoneService(states domain.StateRepository, zones domain.ZoneRepository, lgas domain.LGARepository) *ZoneService {
-	return &ZoneService{states: states, zones: zones, lgas: lgas}
+func NewStateService(states domain.StateRepository) *StateService {
+	return &StateService{states: states}
 }
 
-// — States —
-
-func (uc *ZoneService) CreateState(ctx context.Context, req dto.CreateStateRequest, createdBy string) (*domain.State, error) {
+func (uc *StateService) CreateState(ctx context.Context, req dto.CreateStateRequest, createdBy string) (*domain.State, error) {
 	v := validator.New().Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -40,15 +37,15 @@ func (uc *ZoneService) CreateState(ctx context.Context, req dto.CreateStateReque
 	return s, uc.states.Create(ctx, s)
 }
 
-func (uc *ZoneService) GetState(ctx context.Context, id string) (*domain.State, error) {
+func (uc *StateService) GetState(ctx context.Context, id string) (*domain.State, error) {
 	return uc.states.GetByID(ctx, id)
 }
 
-func (uc *ZoneService) ListStates(ctx context.Context) ([]*domain.State, error) {
+func (uc *StateService) ListStates(ctx context.Context) ([]*domain.State, error) {
 	return uc.states.List(ctx)
 }
 
-func (uc *ZoneService) UpdateState(ctx context.Context, id string, req dto.UpdateStateRequest, updatedBy string) (*domain.State, error) {
+func (uc *StateService) UpdateState(ctx context.Context, id string, req dto.UpdateStateRequest, updatedBy string) (*domain.State, error) {
 	s, err := uc.states.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -62,6 +59,13 @@ func (uc *ZoneService) UpdateState(ctx context.Context, id string, req dto.Updat
 }
 
 // — Zones —
+type ZoneService struct {
+	zones  domain.ZoneRepository
+}
+
+func NewZoneService(zones domain.ZoneRepository) *ZoneService {
+	return &ZoneService{zones: zones}
+}
 
 func (uc *ZoneService) CreateZone(ctx context.Context, stateID string, req dto.CreateZoneRequest, createdBy string) (*domain.Zone, error) {
 	v := validator.New().Required(req.Name, "name").Required(req.Code, "code")
@@ -92,8 +96,15 @@ func (uc *ZoneService) DeleteZone(ctx context.Context, id string) error {
 }
 
 // — LGAs —
+type LGAService struct {
+	lgas   domain.LGARepository
+}
 
-func (uc *ZoneService) CreateLGA(ctx context.Context, stateID string, req dto.CreateLGARequest, createdBy string) (*domain.LGA, error) {
+func NewLGAService(lgas domain.LGARepository) *LGAService {
+	return &LGAService{lgas: lgas}
+}
+
+func (uc *LGAService) CreateLGA(ctx context.Context, stateID string, req dto.CreateLGARequest, createdBy string) (*domain.LGA, error) {
 	v := validator.New().Required(req.ZoneID, "zone_id").Required(req.Name, "name").Required(req.Code, "code")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -102,15 +113,15 @@ func (uc *ZoneService) CreateLGA(ctx context.Context, stateID string, req dto.Cr
 	return l, uc.lgas.Create(ctx, l)
 }
 
-func (uc *ZoneService) ListLGAs(ctx context.Context, stateID string) ([]*domain.LGA, error) {
+func (uc *LGAService) ListLGAs(ctx context.Context, stateID string) ([]*domain.LGA, error) {
 	return uc.lgas.ListByState(ctx, stateID)
 }
 
-func (uc *ZoneService) ListLGAsByZone(ctx context.Context, zoneID string) ([]*domain.LGA, error) {
+func (uc *LGAService) ListLGAsByZone(ctx context.Context, zoneID string) ([]*domain.LGA, error) {
 	return uc.lgas.ListByZone(ctx, zoneID)
 }
 
-func (uc *ZoneService) UpdateLGA(ctx context.Context, id string, req dto.UpdateLGARequest, updatedBy string) (*domain.LGA, error) {
+func (uc *LGAService) UpdateLGA(ctx context.Context, id string, req dto.UpdateLGARequest, updatedBy string) (*domain.LGA, error) {
 	l, err := uc.lgas.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -122,7 +133,7 @@ func (uc *ZoneService) UpdateLGA(ctx context.Context, id string, req dto.UpdateL
 	return l, uc.lgas.Update(ctx, l)
 }
 
-func (uc *ZoneService) DeleteLGA(ctx context.Context, id string) error {
+func (uc *LGAService) DeleteLGA(ctx context.Context, id string) error {
 	return uc.lgas.Delete(ctx, id)
 }
 
@@ -235,6 +246,11 @@ func (uc *SchoolService) UpdateFacility(ctx context.Context, id string, req dto.
 func (uc *SchoolService) DeleteFacility(ctx context.Context, id string) error {
 	return uc.facilities.Delete(ctx, id)
 }
+
+func (uc *SchoolService) CountTotalSchools(ctx context.Context, stateID string) (int, error) {
+	return uc.schools.CountTotalSchools(ctx, stateID)
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ACADEMIC SESSION USE CASE
@@ -709,6 +725,10 @@ func (uc *PersonnelService) ListTransfers(ctx context.Context, personnelID strin
 
 func (uc *PersonnelService) ListSchoolTransfers(ctx context.Context, schoolID string) ([]*domain.PersonnelTransfer, error) {
 	return uc.transfers.ListBySchool(ctx, schoolID)
+}
+
+func (uc *PersonnelService) CountTotalPersonnel(ctx context.Context, stateID string) (int, error) {
+	return uc.personnel.CountTotalPersonnel(ctx, stateID)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
