@@ -290,9 +290,9 @@ func New(d Deps) http.Handler {
 			})
 
 			// ── AVATARS ───────────────────────────────────────────────────────
-			r.Route("/avatars", func(r chi.Router) {
-				r.With(authorize(d, "avatars", "create")).Post("/personnel", d.Avatar.UploadPersonnelAvatar)
-				r.With(authorize(d, "avatars", "create")).Post("/students", d.Avatar.UploadStudentAvatar)
+			r.Route("/avatar", func(r chi.Router) {
+				r.With(authorize(d, "avatar", "update")).Put("/personnel/{id}", d.Avatar.UploadPersonnelAvatar)
+				r.With(authorize(d, "avatar", "update")).Put("/students/{id}", d.Avatar.UploadStudentAvatar)
 			})
 
 			// ── REPORTS ───────────────────────────────────────────────────────
