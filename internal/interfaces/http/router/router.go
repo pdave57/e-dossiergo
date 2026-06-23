@@ -289,6 +289,12 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "results", "read")).Get("/grade-config", d.Result.ListGradeConfigs)
 			})
 
+			// ── AVATARS ───────────────────────────────────────────────────────
+			r.Route("/avatars", func(r chi.Router) {
+				r.With(authorize(d, "avatars", "create")).Post("/personnel", d.Avatar.UploadPersonnelAvatar)
+				r.With(authorize(d, "avatars", "create")).Post("/students", d.Avatar.UploadStudentAvatar)
+			})
+
 			// ── REPORTS ───────────────────────────────────────────────────────
 			r.Route("/reports", func(r chi.Router) {
 				// Reports usually require a specific permission, e.g., 'reports', 'read'
