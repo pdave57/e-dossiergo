@@ -29,6 +29,16 @@ services:
     depends_on:
       - postgres
 
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: edossier_redis
+  #   ports:
+  #     - "6380:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   command: redis-server --appendonly yes
+  #   restart: unless-stopped
+
   api:
     build:
       context: .
@@ -42,6 +52,8 @@ services:
       PORT: "34005"
       APP_ENV: development
       DATABASE_URL: postgres://edossier:secret@postgres:5432/edossier?sslmode=disable
+
+      #REDIS_URL: redis:6379     
       JWT_SECRET: Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0QaYf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa
       ACCESS_TOKEN_TTL: 15m
       REFRESH_TOKEN_TTL: 168h
@@ -59,3 +71,4 @@ services:
 
 volumes:
   pg_data:
+  #redis_data:

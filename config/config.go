@@ -55,7 +55,7 @@ func Load() (*Config, error) {
 		DBMaxOpenConns:  getInt("DB_MAX_OPEN_CONNS", 25),
 		DBMaxIdleConns:  getInt("DB_MAX_IDLE_CONNS", 10),
 		DBConnMaxLife:   getDuration("DB_CONN_MAX_LIFE", 5*time.Minute),
-		RedisURL:        getEnv("REDIS_URL", "localhost:6379"),
+		RedisURL:        getEnv("REDIS_URL", "localhost:6380"),
 		RedisPassword:   getEnv("REDIS_PASSWORD", ""),
 		CloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME", "dcafodexp"),
 		CloudinaryAPIKey:    getEnv("CLOUDINARY_API_KEY", "985515664992942"),

@@ -52,13 +52,13 @@ func main() {
 	log.Info("schema migration complete")
 
 	//initialize redis
-	redisClient, err := infradb.NewRedisClient(cfg.RedisURL, cfg.RedisPassword, 0)
-	if err != nil {
-		log.Error("failed to connect to redis", "error", err)
-		os.Exit(1)
-	}
-	defer redisClient.Close()
-	log.Info("redis connected")
+	// redisClient, err := infradb.NewRedisClient(cfg.RedisURL, cfg.RedisPassword, 0)
+	// if err != nil {
+	// 	log.Error("failed to connect to redis", "error", err)
+	// 	os.Exit(1)
+	// }
+	// defer redisClient.Close()
+	// log.Info("redis connected")
 
 	//Initialize Cloudinary (Infrastructure)
 	cloudinaryClient, err := storage.NewCloudinaryStorage(cfg.CloudinaryCloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret)

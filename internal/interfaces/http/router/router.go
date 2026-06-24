@@ -63,11 +63,11 @@ func New(d Deps) http.Handler {
 			r.Get("/teaching-personnel", d.Report.GetPublicTeachingPersonnel)
 		})
 		r.Route("/reports/gender", func(r chi.Router) {
-			r.Get("/", d.Gender.CountByGender)
+			r.Get("/total", d.Gender.CountByGender)
 		})
 
-		r.Route("/reports/total", func(r chi.Router) {
-			r.Get("/", d.Student.CountTotalStudents)
+		r.Route("/reports/students", func(r chi.Router) {
+			r.Get("/total", d.Student.CountTotalStudents)
 		})
 
 		r.Route("/reports/personnel", func(r chi.Router) {
@@ -77,11 +77,9 @@ func New(d Deps) http.Handler {
 		r.Route("/reports/schools", func(r chi.Router) {
 			r.Get("/total", d.School.CountTotalSchools)
 		})
-
-		r.Route("/states", func(r chi.Router) {
-			r.Get("/", d.State.ListStates)
-			r.Get("/{id}", d.State.GetState)
-		})
+		// r.Route("/reports/dashboard", func(r chi.Router) {
+		// 	r.Get("/stats", d.Report.GetDashboardStats)
+		// })
 
 		// ── AUTH (public) ─────────────────────────────────────────────────────
 		r.Route("/auth", func(r chi.Router) {
@@ -126,27 +124,34 @@ func New(d Deps) http.Handler {
 
 			// ── ZONE: STATES ───────────────────────────────────────────────────
 			r.Route("/states", func(r chi.Router) {
-				r.With(authorize(d, "states", "create")).Post("/", d.State.CreateState)
+				r.Get("/", d.State.ListStates)
+				r.With(authorize(d, "schools", "create")).Post("/", d.State.CreateState)
 				r.Get("/{id}", d.State.GetState)
-				r.With(authorize(d, "states", "update")).Put("/{id}", d.State.UpdateState)
-
-				// Zones
+				r.With(authorize(d, "schools", "update")).Put("/{id}", d.State.UpdateState)
+ 
+				// Zones nested under a state (list + create only — matches
+				// ZoneHandler.ListZones/CreateZone, which both read stateId from the path)
 				r.Get("/{stateId}/zones", d.Zone.ListZones)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)
-
-				// LGAs
+				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)	
+ 
+				// LGAs nested under a state (list + create only — matches
+				// LGAHandler.ListLGAs/CreateLGA, which both read stateId from the path).
+				// ListLGAs additionally supports ?zone_id=... to filter by zone instead.
 				r.Get("/{stateId}/lgas", d.LGA.ListLGAs)
 				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.LGA.CreateLGA)
 			})
 
+			// ── GEO: ZONES (flat mutate routes — matches ZoneHandler.UpdateZone/DeleteZone,
+			// which both read a bare {id}, not {stateId})
+			// ─────────────────
 			r.Route("/zones", func(r chi.Router) {
-
 				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
 				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
 			})
-
+ 
+			// ── GEO: LGAS (flat mutate routes — matches LGAHandler.UpdateLGA/DeleteLGA,
+			//               which both read a bare {id}, not {stateId}) ──────────────────
 			r.Route("/lgas", func(r chi.Router) {
-				
 				r.With(authorize(d, "schools", "update")).Put("/{id}", d.LGA.UpdateLGA)
 				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.LGA.DeleteLGA)
 			})
@@ -294,13 +299,7 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "avatar", "update")).Put("/personnel/{id}", d.Avatar.UploadPersonnelAvatar)
 				r.With(authorize(d, "avatar", "update")).Put("/students/{id}", d.Avatar.UploadStudentAvatar)
 			})
-
-			// ── REPORTS ───────────────────────────────────────────────────────
-			r.Route("/reports", func(r chi.Router) {
-				// Reports usually require a specific permission, e.g., 'reports', 'read'
-				// Add 'reports' resource to RBAC if needed, or re-use 'results'/'schools'
-				r.With(authorize(d, "reports", "read")).Get("/dashboard", d.Report.GetDashboardStats)
-			})
+			
 		})
 	})
 

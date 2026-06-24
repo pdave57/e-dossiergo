@@ -294,7 +294,7 @@ func (h *RoleHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STATES HANDLER
+// STATE HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
 type StateHandler struct{ uc *service.StateService }
