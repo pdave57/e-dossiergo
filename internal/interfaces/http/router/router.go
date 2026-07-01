@@ -88,6 +88,79 @@ func New(d Deps) http.Handler {
 			r.Post("/refresh", d.Auth.Refresh)
 		})
 
+		// ── GEO: STATES (public read) ───────────────────────────────────────
+		r.Route("/states", func(r chi.Router) {
+			r.Get("/", d.State.ListStates)
+			r.With(authorize(d, "schools", "create")).Post("/", d.State.CreateState)
+			r.Get("/{id}", d.State.GetState)
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.State.UpdateState)
+
+			// Zones nested under a state (list + create only — matches
+			// ZoneHandler.ListZones/CreateZone, which both read stateId from the path)
+			r.Get("/{stateId}/zones", d.Zone.ListZones)
+			r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)
+
+			// LGAs nested under a state (list + create only — matches
+			// LGAHandler.ListLGAs/CreateLGA, which both read stateId from the path).
+			// ListLGAs additionally supports ?zone_id=... to filter by zone instead.
+			r.Get("/{stateId}/lgas", d.LGA.ListLGAs)
+			r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.LGA.CreateLGA)
+		})
+
+		// ── GEO: ZONES (flat mutate routes) ───────────────────────────────────
+		r.Route("/zones", func(r chi.Router) {
+			r.Get("/", d.Zone.ListZones)
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
+			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
+		})
+
+		// ── GEO: LGAS (flat mutate routes) ────────────────────────────────────
+		r.Route("/lgas", func(r chi.Router) {
+			r.Get("/", d.LGA.ListLGAs)
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.LGA.UpdateLGA)
+			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.LGA.DeleteLGA)
+		})
+
+		// ── SCHOOLS (public read) ───────────────────────────────────────────
+		r.Route("/schools", func(r chi.Router) {
+			r.Get("/", d.School.List)
+			r.With(authorize(d, "schools", "create")).Post("/", d.School.Create)
+			r.Get("/{id}", d.School.GetByID)
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.School.Update)
+			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.School.Delete)
+
+			// Facilities
+			r.Get("/{id}/facilities", d.School.ListFacilities)
+			r.With(authorize(d, "schools", "update")).Post("/{id}/facilities", d.School.AddFacility)
+			r.With(authorize(d, "schools", "update")).Put("/{id}/facilities/{facilityId}", d.School.UpdateFacility)
+			r.With(authorize(d, "schools", "update")).Delete("/{id}/facilities/{facilityId}", d.School.DeleteFacility)
+
+			// School-level assignments
+			r.Get("/{schoolId}/levels", d.Level.ListSchoolLevels)
+			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/levels", d.Level.UpsertSchoolLevel)
+
+			// Sub-levels (class arms)
+			r.Get("/{schoolId}/sub-levels", func(w http.ResponseWriter, r *http.Request) {
+				// delegates to level handler with schoolId from path
+				d.Level.ListSubLevels(w, r)
+			})
+			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/sub-levels", d.Level.CreateSubLevel)
+
+			// School subjects
+			r.Get("/{schoolId}/subjects", d.Subject.ListSchoolSubjects)
+			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/subjects", d.Subject.AssignToSchool)
+		})
+
+		r.Route("/sub-levels", func(r chi.Router) {
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Level.UpdateSubLevel)
+			r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Level.DeleteSubLevel)
+		})
+
+		r.Route("/school-subjects", func(r chi.Router) {
+			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Subject.UpdateSchoolSubject)
+			r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Subject.RemoveSchoolSubject)
+		})
+
 		// ── AUTHENTICATED routes ──────────────────────────────────────────────
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Authenticate(d.TokenMaker))
@@ -121,80 +194,6 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "roles", "update")).Delete("/{id}/permissions/{permId}", d.Role.RemovePermission)
 			})
 			r.With(authorize(d, "roles", "read")).Get("/permissions", d.Role.ListPermissions)
-
-			// ── ZONE: STATES ───────────────────────────────────────────────────
-			r.Route("/states", func(r chi.Router) {
-				r.Get("/", d.State.ListStates)
-				r.With(authorize(d, "schools", "create")).Post("/", d.State.CreateState)
-				r.Get("/{id}", d.State.GetState)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.State.UpdateState)
- 
-				// Zones nested under a state (list + create only — matches
-				// ZoneHandler.ListZones/CreateZone, which both read stateId from the path)
-				r.Get("/{stateId}/zones", d.Zone.ListZones)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)	
- 
-				// LGAs nested under a state (list + create only — matches
-				// LGAHandler.ListLGAs/CreateLGA, which both read stateId from the path).
-				// ListLGAs additionally supports ?zone_id=... to filter by zone instead.
-				r.Get("/{stateId}/lgas", d.LGA.ListLGAs)
-				r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.LGA.CreateLGA)
-			})
-
-			// ── GEO: ZONES (flat mutate routes — matches ZoneHandler.UpdateZone/DeleteZone,
-			// which both read a bare {id}, not {stateId})
-			// ─────────────────
-			r.Route("/zones", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
-			})
- 
-			// ── GEO: LGAS (flat mutate routes — matches LGAHandler.UpdateLGA/DeleteLGA,
-			//               which both read a bare {id}, not {stateId}) ──────────────────
-			r.Route("/lgas", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.LGA.UpdateLGA)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.LGA.DeleteLGA)
-			})
-
-			// ── SCHOOLS ───────────────────────────────────────────────────────
-			r.Route("/schools", func(r chi.Router) {
-				r.With(authorize(d, "schools", "read")).Get("/", d.School.List)
-				r.With(authorize(d, "schools", "create")).Post("/", d.School.Create)
-				r.With(authorize(d, "schools", "read")).Get("/{id}", d.School.GetByID)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.School.Update)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.School.Delete)
-
-				// Facilities
-				r.With(authorize(d, "schools", "read")).Get("/{id}/facilities", d.School.ListFacilities)
-				r.With(authorize(d, "schools", "update")).Post("/{id}/facilities", d.School.AddFacility)
-				r.With(authorize(d, "schools", "update")).Put("/{id}/facilities/{facilityId}", d.School.UpdateFacility)
-				r.With(authorize(d, "schools", "update")).Delete("/{id}/facilities/{facilityId}", d.School.DeleteFacility)
-
-				// School-level assignments
-				r.Get("/{schoolId}/levels", d.Level.ListSchoolLevels)
-				r.With(authorize(d, "schools", "update")).Post("/{schoolId}/levels", d.Level.UpsertSchoolLevel)
-
-				// Sub-levels (class arms)
-				r.With(authorize(d, "schools", "read")).Get("/{schoolId}/sub-levels", func(w http.ResponseWriter, r *http.Request) {
-					// delegates to level handler with schoolId from path
-					d.Level.ListSubLevels(w, r)
-				})
-				r.With(authorize(d, "schools", "update")).Post("/{schoolId}/sub-levels", d.Level.CreateSubLevel)
-
-				// School subjects
-				r.With(authorize(d, "schools", "read")).Get("/{schoolId}/subjects", d.Subject.ListSchoolSubjects)
-				r.With(authorize(d, "schools", "update")).Post("/{schoolId}/subjects", d.Subject.AssignToSchool)
-			})
-
-			r.Route("/sub-levels", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Level.UpdateSubLevel)
-				r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Level.DeleteSubLevel)
-			})
-
-			r.Route("/school-subjects", func(r chi.Router) {
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Subject.UpdateSchoolSubject)
-				r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Subject.RemoveSchoolSubject)
-			})
 
 			// ── ACADEMIC SESSIONS ─────────────────────────────────────────────
 			r.Route("/sessions", func(r chi.Router) {
@@ -238,7 +237,7 @@ func New(d Deps) http.Handler {
 			// ── PERSONNEL ─────────────────────────────────────────────────────
 			r.Route("/personnel", func(r chi.Router) {
 				r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
-				
+
 				r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
 				r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
 				r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)
@@ -247,7 +246,7 @@ func New(d Deps) http.Handler {
 			})
 
 			// ── STUDENTS ──────────────────────────────────────────────────────
-			r.Route("/students", func(r chi.Router) {	
+			r.Route("/students", func(r chi.Router) {
 
 				r.With(authorize(d, "students", "read")).Get("/", d.Student.List)
 				r.With(authorize(d, "students", "create")).Post("/", d.Student.Create)
@@ -299,10 +298,9 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "avatar", "update")).Put("/personnel/{id}", d.Avatar.UploadPersonnelAvatar)
 				r.With(authorize(d, "avatar", "update")).Put("/students/{id}", d.Avatar.UploadStudentAvatar)
 			})
-			
+
 		})
 	})
-
 
 	return r
 }

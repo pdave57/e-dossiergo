@@ -89,37 +89,42 @@ func (r *userRepo) List(ctx context.Context, f domain.UserFilter, p pagination.P
 	idx := 1
 	if f.StateID != "" {
 		where = append(where, fmt.Sprintf("state_id=$%d", idx))
-		args = append(args, f.StateID); idx++
+		args = append(args, f.StateID)
+		idx++
 	}
 	if f.SchoolID != "" {
 		where = append(where, fmt.Sprintf("school_id=$%d", idx))
-		args = append(args, f.SchoolID); idx++
+		args = append(args, f.SchoolID)
+		idx++
 	}
 	if f.Status != "" {
 		where = append(where, fmt.Sprintf("status=$%d", idx))
-		args = append(args, f.Status); idx++
+		args = append(args, f.Status)
+		idx++
 	}
 	if f.Search != "" {
 		where = append(where, fmt.Sprintf(
 			"(email ILIKE $%d OR first_name ILIKE $%d OR last_name ILIKE $%d)", idx, idx, idx))
-		args = append(args, "%"+f.Search+"%"); idx++
+		args = append(args, "%"+f.Search+"%")
+		idx++
 	}
 
 	clause := "WHERE " + strings.Join(where, " AND ")
 
 	var total int
 	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users "+clause, args...).Scan(&total); err != nil {
-		return nil, 0, apperror.Internal(err)
+		fmt.Println("DB ERROR:", err); return nil, 0, apperror.Internal(err)
 	}
 
 	args = append(args, p.PerPage, p.Offset)
 	q := fmt.Sprintf(`SELECT id,state_id,COALESCE(school_id,''),email,password_hash,
-		first_name,last_name,status,last_login_at,created_at,updated_at,created_by,updated_by
+		first_name,last_name,status,last_login_at,created_at,updated_at,
+		COALESCE(created_by,''),COALESCE(updated_by,'')
 		FROM users %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, clause, idx, idx+1)
 
 	rows, err := r.db.QueryContext(ctx, q, args...)
 	if err != nil {
-		return nil, 0, apperror.Internal(err)
+		fmt.Println("DB ERROR:", err); return nil, 0, apperror.Internal(err)
 	}
 	defer rows.Close()
 
