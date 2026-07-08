@@ -61,7 +61,7 @@ func Load() (*Config, error) {
 		CloudinaryAPIKey:    getEnv("CLOUDINARY_API_KEY", "985515664992942"),
 		CloudinaryAPISecret: getEnv("CLOUDINARY_API_SECRET", "UBRI06BUb25sRzGiIDbAX8rj-SI"),
 		JWTSecret:       getEnv("JWT_SECRET", "Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0QaYf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa"),
-		AccessTokenTTL:  getDuration("ACCESS_TOKEN_TTL", 15*time.Minute),
+		AccessTokenTTL:  getDuration("ACCESS_TOKEN_TTL", 7*time.Hour),
 		RefreshTokenTTL: getDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
 		Env:             getEnv("APP_ENV", "development"),
 	}

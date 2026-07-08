@@ -151,31 +151,36 @@ type UpdateLGARequest struct {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type CreateSchoolRequest struct {
-	ZoneID      string `json:"zone_id"    validate:"required"`
-	LGAID       string `json:"lga_id"     validate:"required"`
-	Name        string `json:"name"       validate:"required"`
-	Code        string `json:"code"       validate:"required"`
-	Category    string `json:"category"   validate:"required"`
-	Ownership   string `json:"ownership"  validate:"required"`
-	Address     string `json:"address"`
-	Email       string `json:"email"`
-	Phone       string `json:"phone"`
-	HeadTeacher string `json:"head_teacher"`
-	Founded     *int   `json:"founded"`
+	
+	StateID            string          `json:"state_id" validate:"required"`
+	ZoneID             string          `json:"zone_id" validate:"required"`
+	LGAID              string          `json:"lga_id" validate:"required"` 
+	Name               string          `json:"name" validate:"required"`
+	Code               string          `json:"code" validate:"required"`
+	Category           string          `json:"category" validate:"required"`
+	Ownership          string          `json:"ownership"`
+	Status             string          `json:"status"`
+	NumberOfClassrooms int             `json:"number_of_classrooms"`
+	TotalStudents      int             `json:"total_students"`
+	Address            string          `json:"address"`
+	HeadTeacher        string          `json:"head_teacher,omitempty"`
+	Founded            *int            `json:"founded,omitempty"`
 }
 
 type UpdateSchoolRequest struct {
-	ZoneID      string `json:"zone_id"   validate:"required"`
-	LGAID       string `json:"lga_id"    validate:"required"`
-	Name        string `json:"name"      validate:"required"`
-	Category    string `json:"category"  validate:"required"`
-	Ownership   string `json:"ownership" validate:"required"`
-	Status      string `json:"status"`
-	Address     string `json:"address"`
-	Email       string `json:"email"`
-	Phone       string `json:"phone"`
-	HeadTeacher string `json:"head_teacher"`
-	Founded     *int   `json:"founded"`
+	StateID            string          `json:"state_id" validate:"required"`
+	ZoneID             string          `json:"zone_id" validate:"required"`
+	LGAID              string          `json:"lga_id" validate:"required"` 
+	Name               string          `json:"name" validate:"required"`
+	Code               string          `json:"code" validate:"required"`
+	Category           string          `json:"category" validate:"required"`
+	Ownership          string          `json:"ownership"`
+	Status             string          `json:"status"`
+	NumberOfClassrooms int             `json:"number_of_classrooms"`
+	TotalStudents      int             `json:"total_students"`
+	Address            string          `json:"address"`
+	HeadTeacher        string          `json:"head_teacher,omitempty"`
+	Founded            *int            `json:"founded,omitempty"`
 }
 
 type CreateFacilityRequest struct {
@@ -214,6 +219,7 @@ type UpdateSessionRequest struct {
 }
 
 type CreateTermRequest struct {
+	SessionID string    `json:"session_id"`
 	Number    int       `json:"term_number" validate:"required"`
 	Name      string    `json:"name"        validate:"required"`
 	StartDate time.Time `json:"start_date"  validate:"required"`

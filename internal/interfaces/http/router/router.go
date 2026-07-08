@@ -88,77 +88,52 @@ func New(d Deps) http.Handler {
 			r.Post("/refresh", d.Auth.Refresh)
 		})
 
-		// ── GEO: STATES (public read) ───────────────────────────────────────
-		r.Route("/states", func(r chi.Router) {
-			r.Get("/", d.State.ListStates)
-			r.With(authorize(d, "schools", "create")).Post("/", d.State.CreateState)
-			r.Get("/{id}", d.State.GetState)
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.State.UpdateState)
+		// ── GEO: STATES (public reads) ──────────────────────────────────────
+		r.Get("/states", d.State.ListStates)
+		r.Get("/states/{id}", d.State.GetState)
 
-			// Zones nested under a state (list + create only — matches
-			// ZoneHandler.ListZones/CreateZone, which both read stateId from the path)
-			r.Get("/{stateId}/zones", d.Zone.ListZones)
-			r.With(authorize(d, "schools", "create")).Post("/{stateId}/zones", d.Zone.CreateZone)
-
-			// LGAs nested under a state (list + create only — matches
-			// LGAHandler.ListLGAs/CreateLGA, which both read stateId from the path).
-			// ListLGAs additionally supports ?zone_id=... to filter by zone instead.
-			r.Get("/{stateId}/lgas", d.LGA.ListLGAs)
-			r.With(authorize(d, "schools", "create")).Post("/{stateId}/lgas", d.LGA.CreateLGA)
-		})
-
-		// ── GEO: ZONES (flat mutate routes) ───────────────────────────────────
-		r.Route("/zones", func(r chi.Router) {
-			r.Get("/", d.Zone.ListZones)
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Zone.UpdateZone)
-			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Zone.DeleteZone)
-		})
-
-		// ── GEO: LGAS (flat mutate routes) ────────────────────────────────────
-		r.Route("/lgas", func(r chi.Router) {
-			r.Get("/", d.LGA.ListLGAs)
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.LGA.UpdateLGA)
-			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.LGA.DeleteLGA)
-		})
+		// Zones and LGAs — public list reads only
+		r.Get("/states/{stateId}/zones", d.Zone.ListZones)
+		r.Get("/states/{stateId}/lgas", d.LGA.ListLGAs)
 
 		// ── SCHOOLS (public read) ───────────────────────────────────────────
 		r.Route("/schools", func(r chi.Router) {
 			r.Get("/", d.School.List)
-			r.With(authorize(d, "schools", "create")).Post("/", d.School.Create)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "create")).Post("/", d.School.Create)
 			r.Get("/{id}", d.School.GetByID)
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.School.Update)
-			r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.School.Delete)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.School.Update)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "delete")).Delete("/{id}", d.School.Delete)
 
 			// Facilities
 			r.Get("/{id}/facilities", d.School.ListFacilities)
-			r.With(authorize(d, "schools", "update")).Post("/{id}/facilities", d.School.AddFacility)
-			r.With(authorize(d, "schools", "update")).Put("/{id}/facilities/{facilityId}", d.School.UpdateFacility)
-			r.With(authorize(d, "schools", "update")).Delete("/{id}/facilities/{facilityId}", d.School.DeleteFacility)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "create")).Post("/{id}/facilities", d.School.AddFacility)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}/facilities/{facilityId}", d.School.UpdateFacility)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "delete")).Delete("/{id}/facilities/{facilityId}", d.School.DeleteFacility)
 
 			// School-level assignments
 			r.Get("/{schoolId}/levels", d.Level.ListSchoolLevels)
-			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/levels", d.Level.UpsertSchoolLevel)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Post("/{schoolId}/levels", d.Level.UpsertSchoolLevel)
 
 			// Sub-levels (class arms)
 			r.Get("/{schoolId}/sub-levels", func(w http.ResponseWriter, r *http.Request) {
 				// delegates to level handler with schoolId from path
 				d.Level.ListSubLevels(w, r)
 			})
-			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/sub-levels", d.Level.CreateSubLevel)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Post("/{schoolId}/sub-levels", d.Level.CreateSubLevel)
 
 			// School subjects
 			r.Get("/{schoolId}/subjects", d.Subject.ListSchoolSubjects)
-			r.With(authorize(d, "schools", "update")).Post("/{schoolId}/subjects", d.Subject.AssignToSchool)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Post("/{schoolId}/subjects", d.Subject.AssignToSchool)
 		})
 
 		r.Route("/sub-levels", func(r chi.Router) {
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Level.UpdateSubLevel)
-			r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Level.DeleteSubLevel)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.Level.UpdateSubLevel)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Delete("/{id}", d.Level.DeleteSubLevel)
 		})
 
 		r.Route("/school-subjects", func(r chi.Router) {
-			r.With(authorize(d, "schools", "update")).Put("/{id}", d.Subject.UpdateSchoolSubject)
-			r.With(authorize(d, "schools", "update")).Delete("/{id}", d.Subject.RemoveSchoolSubject)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.Subject.UpdateSchoolSubject)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Delete("/{id}", d.Subject.RemoveSchoolSubject)
 		})
 
 		// ── AUTHENTICATED routes ──────────────────────────────────────────────
@@ -169,6 +144,18 @@ func New(d Deps) http.Handler {
 			r.Get("/auth/me", d.Auth.Me)
 			r.Post("/auth/logout", d.Auth.Logout)
 			r.Post("/auth/change-password", d.Auth.ChangePassword)
+
+			// ── GEO: STATES / ZONES / LGAS (authenticated writes) ────────────
+			r.With(authorize(d, "zones", "create")).Post("/states", d.State.CreateState)
+			r.With(authorize(d, "zones", "update")).Put("/states/{id}", d.State.UpdateState)
+
+			r.With(authorize(d, "zones", "create")).Post("/states/{stateId}/zones", d.Zone.CreateZone)
+			r.With(authorize(d, "zones", "update")).Put("/zones/{id}", d.Zone.UpdateZone)
+			r.With(authorize(d, "zones", "delete")).Delete("/zones/{id}", d.Zone.DeleteZone)
+
+			r.With(authorize(d, "lgas", "create")).Post("/states/{stateId}/lgas", d.LGA.CreateLGA)
+			r.With(authorize(d, "lgas", "update")).Put("/lgas/{id}", d.LGA.UpdateLGA)
+			r.With(authorize(d, "lgas", "delete")).Delete("/lgas/{id}", d.LGA.DeleteLGA)
 
 			// ── USERS ─────────────────────────────────────────────────────────
 			r.Route("/users", func(r chi.Router) {
@@ -213,26 +200,35 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "sessions", "update")).Delete("/{sessionId}/terms/{id}", d.Academic.DeleteTerm)
 			})
 
-			// ── LEVELS (state-wide class definitions) ─────────────────────────
-			r.Route("/levels", func(r chi.Router) {
-				r.Get("/", d.Level.List)
-				r.With(authorize(d, "schools", "create")).Post("/", d.Level.Create)
-				r.Get("/{id}", d.Level.GetByID)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Level.Update)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Level.Delete)
-
-				// Sub-levels listed by level
-				r.Get("/{levelId}/sub-levels", d.Level.ListSubLevels)
+			// ── TERMS (top-level; owning session supplied in request body) ──
+			r.Route("/terms", func(r chi.Router) {
+				r.With(authorize(d, "sessions", "read")).Get("/", d.Academic.ListAllTerms)
+				r.With(authorize(d, "sessions", "create")).Post("/", d.Academic.CreateTermTopLevel)
+				r.With(authorize(d, "sessions", "read")).Get("/{id}", d.Academic.GetTerm)
+				r.With(authorize(d, "sessions", "update")).Put("/{id}", d.Academic.UpdateTerm)
+				r.With(authorize(d, "sessions", "update")).Delete("/{id}", d.Academic.DeleteTerm)
 			})
 
-			// ── SUBJECTS (state-wide) ─────────────────────────────────────────
-			r.Route("/subjects", func(r chi.Router) {
-				r.Get("/", d.Subject.List)
-				r.With(authorize(d, "schools", "create")).Post("/", d.Subject.Create)
-				r.Get("/{id}", d.Subject.GetByID)
-				r.With(authorize(d, "schools", "update")).Put("/{id}", d.Subject.Update)
-				r.With(authorize(d, "schools", "delete")).Delete("/{id}", d.Subject.Delete)
-			})
+		// ── LEVELS (state-wide class definitions) ─────────────────────────
+		r.Route("/levels", func(r chi.Router) {
+			r.Get("/", d.Level.List)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "create")).Post("/", d.Level.Create)
+			r.Get("/{id}", d.Level.GetByID)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.Level.Update)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "delete")).Delete("/{id}", d.Level.Delete)
+
+			// Sub-levels listed by level
+			r.Get("/{levelId}/sub-levels", d.Level.ListSubLevels)
+		})
+
+		// ── SUBJECTS (state-wide) ─────────────────────────────────────────
+		r.Route("/subjects", func(r chi.Router) {
+			r.Get("/", d.Subject.List)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "create")).Post("/", d.Subject.Create)
+			r.Get("/{id}", d.Subject.GetByID)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.Subject.Update)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "delete")).Delete("/{id}", d.Subject.Delete)
+		})
 
 			// ── PERSONNEL ─────────────────────────────────────────────────────
 			r.Route("/personnel", func(r chi.Router) {

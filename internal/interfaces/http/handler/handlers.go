@@ -501,7 +501,13 @@ func (h *SchoolHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	claims := middleware.ClaimsFromCtx(r.Context())
-	s, err := h.uc.Create(r.Context(), claims.StateID, req, claims.UserID)
+	// Prefer the state selected in the request body; fall back to the
+	// caller's state from the token (e.g. state admins).
+	stateID := req.StateID
+	if stateID == "" {
+		stateID = claims.StateID
+	}
+	s, err := h.uc.Create(r.Context(), stateID, req, claims.UserID)
 	if err != nil {
 		presenter.Error(w, err)
 		return
@@ -772,6 +778,43 @@ func (h *AcademicHandler) DeleteTerm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	presenter.NoContent(w)
+}
+
+// GetTerm returns a single term by id (top-level /terms/{id}).
+func (h *AcademicHandler) GetTerm(w http.ResponseWriter, r *http.Request) {
+	t, err := h.uc.GetTerm(r.Context(), chi.URLParam(r, "id"))
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, t)
+}
+
+// ListAllTerms returns all terms across every session (top-level /terms).
+func (h *AcademicHandler) ListAllTerms(w http.ResponseWriter, r *http.Request) {
+	terms, err := h.uc.ListAllTerms(r.Context())
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, terms)
+}
+
+// CreateTermTopLevel creates a term via the top-level /terms endpoint, where the
+// owning session is provided in the request body.
+func (h *AcademicHandler) CreateTermTopLevel(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateTermRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	t, err := h.uc.CreateTermTopLevel(r.Context(), req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.Created(w, t)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

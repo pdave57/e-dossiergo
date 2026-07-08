@@ -185,6 +185,7 @@ type TermRepository interface {
 	Update(ctx context.Context, t *Term) error
 	Delete(ctx context.Context, id string) error
 	ListBySession(ctx context.Context, sessionID string) ([]*Term, error)
+	ListAll(ctx context.Context) ([]*Term, error)
 	SetActive(ctx context.Context, id, sessionID string) error
 }
 

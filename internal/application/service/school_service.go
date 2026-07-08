@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/edossier/api/internal/application/dto"
@@ -167,6 +168,7 @@ func (uc *SchoolService) Create(ctx context.Context, stateID string, req dto.Cre
 		Category: domain.SchoolCategory(req.Category), Ownership: domain.SchoolOwnership(req.Ownership),
 		Status: domain.SchoolStatusActive, Address: req.Address,
 		HeadTeacher: req.HeadTeacher, Founded: req.Founded,
+		NumberOfClassrooms: req.NumberOfClassrooms, TotalStudents: req.TotalStudents,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 	return s, uc.schools.Create(ctx, s)
@@ -193,6 +195,8 @@ func (uc *SchoolService) Update(ctx context.Context, id string, req dto.UpdateSc
 	s.Address = req.Address
 	s.HeadTeacher = req.HeadTeacher
 	s.Founded = req.Founded
+	s.NumberOfClassrooms = req.NumberOfClassrooms
+	s.TotalStudents = req.TotalStudents
 	if req.Status != "" {
 		s.Status = domain.SchoolStatus(req.Status)
 	}
@@ -376,6 +380,23 @@ func (uc *AcademicService) ActivateTerm(ctx context.Context, id, sessionID strin
 
 func (uc *AcademicService) DeleteTerm(ctx context.Context, id string) error {
 	return uc.terms.Delete(ctx, id)
+}
+
+func (uc *AcademicService) GetTerm(ctx context.Context, id string) (*domain.Term, error) {
+	return uc.terms.GetByID(ctx, id)
+}
+
+func (uc *AcademicService) ListAllTerms(ctx context.Context) ([]*domain.Term, error) {
+	return uc.terms.ListAll(ctx)
+}
+
+// CreateTermTopLevel creates a term via the top-level /terms endpoint, where the
+// owning session is supplied in the request body rather than the URL path.
+func (uc *AcademicService) CreateTermTopLevel(ctx context.Context, req dto.CreateTermRequest, createdBy string) (*domain.Term, error) {
+	if strings.TrimSpace(req.SessionID) == "" {
+		return nil, apperror.BadRequest("session_id is required")
+	}
+	return uc.CreateTerm(ctx, req.SessionID, req, createdBy)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

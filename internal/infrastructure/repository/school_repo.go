@@ -205,9 +205,9 @@ func (r *lgaRepo) Create(ctx context.Context, l *domain.LGA) error {
 
 func (r *lgaRepo) GetByID(ctx context.Context, id string) (*domain.LGA, error) {
 	return scanLGA(r.db.QueryRowContext(ctx,
-		`SELECT id,state_id,zone_id,name,code,created_at,updated_at,
-		        COALESCE(created_by,''),COALESCE(updated_by,'')
-		 FROM lgas WHERE id=$1 AND deleted_at IS NULL`, id))
+		`SELECT lgas.id,state_id,zone_id,name,code,zones.name,created_at,updated_at,
+		        COALESCE(lgas.created_by,''),COALESCE(lgas.updated_by,'')
+		 FROM lgas LEFT JOIN zones ON zones.id=lgas.zone_id WHERE lgas.id=$1 AND lgas.deleted_at IS NULL`, id))
 }
 
 func (r *lgaRepo) Update(ctx context.Context, l *domain.LGA) error {
@@ -227,9 +227,9 @@ func (r *lgaRepo) Delete(ctx context.Context, id string) error {
 
 func (r *lgaRepo) ListByState(ctx context.Context, stateID string) ([]*domain.LGA, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id,state_id,zone_id,name,code,created_at,updated_at,
-		        COALESCE(created_by,''),COALESCE(updated_by,'')
-		 FROM lgas WHERE state_id=$1 AND deleted_at IS NULL ORDER BY name`, stateID)
+		`SELECT lgas.id,lgas.state_id,lgas.zone_id,lgas.name,lgas.code,zones.name,lgas.created_at,lgas.updated_at,
+		        COALESCE(lgas.created_by,''),COALESCE(lgas.updated_by,'')
+		 FROM lgas LEFT JOIN zones ON zones.id=lgas.zone_id WHERE lgas.state_id=$1 AND lgas.deleted_at IS NULL ORDER BY lgas.name`, stateID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
@@ -239,9 +239,9 @@ func (r *lgaRepo) ListByState(ctx context.Context, stateID string) ([]*domain.LG
 
 func (r *lgaRepo) ListByZone(ctx context.Context, zoneID string) ([]*domain.LGA, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id,state_id,zone_id,name,code,created_at,updated_at,
-		        COALESCE(created_by,''),COALESCE(updated_by,'')
-		 FROM lgas WHERE zone_id=$1 AND deleted_at IS NULL ORDER BY name`, zoneID)
+		`SELECT lgas.id,state_id,zone_id,name,code,zones.name,created_at,updated_at,
+		        COALESCE(lgas.created_by,''),COALESCE(lgas.updated_by,'')
+		 FROM lgas LEFT JOIN zones ON zones.id=lgas.zone_id WHERE zone_id=$1 AND lgas.deleted_at IS NULL ORDER BY lgas.name`, zoneID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
@@ -263,7 +263,7 @@ func collectLGAs(rows *sql.Rows) ([]*domain.LGA, error) {
 
 func scanLGA(s scanner) (*domain.LGA, error) {
 	l := &domain.LGA{}
-	err := s.Scan(&l.ID, &l.StateID, &l.ZoneID, &l.Name, &l.Code,
+	err := s.Scan(&l.ID, &l.StateID, &l.ZoneID, &l.Name, &l.Code, &l.ZoneName,
 		&l.CreatedAt, &l.UpdatedAt, &l.CreatedBy, &l.UpdatedBy)
 	if err == sql.ErrNoRows {
 		return nil, apperror.NotFound("lga", "")
@@ -291,12 +291,12 @@ func (r *schoolRepo) Create(ctx context.Context, s *domain.School) error {
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO schools
 		 (id,state_id,zone_id,lga_id,name,code,category,ownership,status,address,
-		  head_teacher,founded,created_at,updated_at,created_by)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+		  head_teacher,founded,number_of_classrooms,total_students,created_at,updated_at,created_by)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
 		s.ID, s.StateID, s.ZoneID, s.LGAID, s.Name, s.Code,
 		s.Category, s.Ownership, s.Status, s.Address,
 		nullableString(s.HeadTeacher),
-		s.Founded, s.CreatedAt, s.UpdatedAt, s.CreatedBy)
+		s.Founded, s.NumberOfClassrooms, s.TotalStudents, s.CreatedAt, s.UpdatedAt, s.CreatedBy)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return apperror.Conflict("school code already exists")
@@ -318,10 +318,10 @@ func (r *schoolRepo) Update(ctx context.Context, s *domain.School) error {
 	s.UpdatedAt = time.Now()
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE schools SET zone_id=$1,lga_id=$2,name=$3,category=$4,ownership=$5,status=$6,
-		  address=$7,head_teacher=$8,founded=$9,updated_at=$10,updated_by=$11
-		 WHERE id=$12 AND deleted_at IS NULL`,
+		  address=$7,head_teacher=$8,founded=$9,number_of_classrooms=$10,total_students=$11,updated_at=$12,updated_by=$13
+		 WHERE id=$14 AND deleted_at IS NULL`,
 		s.ZoneID, s.LGAID, s.Name, s.Category, s.Ownership, s.Status,
-		s.Address, nullableString(s.HeadTeacher), s.Founded, s.UpdatedAt, s.UpdatedBy, s.ID)
+		s.Address, nullableString(s.HeadTeacher), s.Founded, s.NumberOfClassrooms, s.TotalStudents, s.UpdatedAt, s.UpdatedBy, s.ID)
 	return checkRowsAffected(res, err, "school", s.ID)
 }
 
@@ -399,6 +399,7 @@ func (r *schoolRepo) CountTotalSchools(ctx context.Context, stateID string) (int
 const schoolSelectSQL = `
 	SELECT s.id,s.state_id,s.zone_id,s.lga_id,s.name,s.code,s.category,s.ownership,s.status,
 	       COALESCE(s.address,''),COALESCE(s.head_teacher,''),s.founded,
+	       COALESCE(s.number_of_classrooms,0),COALESCE(s.total_students,0),
 	       s.created_at,s.updated_at,
 	       COALESCE(s.created_by,''),COALESCE(s.updated_by,'')
 	FROM schools s`
@@ -409,6 +410,7 @@ func scanSchool(s scanner) (*domain.School, error) {
 		&sc.ID, &sc.StateID, &sc.ZoneID, &sc.LGAID, &sc.Name, &sc.Code,
 		&sc.Category, &sc.Ownership, &sc.Status,
 		&sc.Address, &sc.HeadTeacher, &sc.Founded,
+		&sc.NumberOfClassrooms, &sc.TotalStudents,
 		&sc.CreatedAt, &sc.UpdatedAt, &sc.CreatedBy, &sc.UpdatedBy,
 	)
 	if err == sql.ErrNoRows {

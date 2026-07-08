@@ -125,6 +125,7 @@ type LGA struct {
 	ZoneID  string `json:"zone_id"`
 	Name    string `json:"name"`
 	Code    string `json:"code"`
+	ZoneName string `json:"zone_name"`
 	AuditFields
 }
 
