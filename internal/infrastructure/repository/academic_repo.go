@@ -284,7 +284,7 @@ func (r *levelRepo) Create(ctx context.Context, l *domain.Level) error {
 	now := time.Now()
 	l.CreatedAt, l.UpdatedAt = now, now
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO levels (id,school_id,name,code,type,ord,created_at,updated_at,created_by)
+		`INSERT INTO levels (id,state_id,name,code,type,ord,created_at,updated_at,created_by)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 		l.ID, l.SchoolID, l.Name, l.Code, l.Type, l.Order,
 		l.CreatedAt, l.UpdatedAt, l.CreatedBy)
@@ -319,7 +319,7 @@ func (r *levelRepo) Delete(ctx context.Context, id string) error {
 
 func (r *levelRepo) ListBySchool(ctx context.Context, schoolID string) ([]*domain.Level, error) {
 	rows, err := r.db.QueryContext(ctx,
-		levelSelect+" WHERE school_id=$1 AND deleted_at IS NULL ORDER BY ord,name", schoolID)
+		levelSelect+" WHERE state_id=$1 AND deleted_at IS NULL ORDER BY ord,name", schoolID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
@@ -338,17 +338,17 @@ func (r *levelRepo) ListBySchool(ctx context.Context, schoolID string) ([]*domai
 // GetNextLevel returns the level with ord = current+1 of the same type.
 func (r *levelRepo) GetNextLevel(ctx context.Context, currentLevelID string) (*domain.Level, error) {
 	return scanLevel(r.db.QueryRowContext(ctx, `
-		SELECT id,school_id,name,code,type,ord,created_at,updated_at,
+		SELECT id,state_id,name,code,type,ord,created_at,updated_at,
 		       COALESCE(created_by,''),COALESCE(updated_by,'')
 		FROM levels
-		WHERE school_id=(SELECT school_id FROM levels WHERE id=$1)
+		WHERE state_id=(SELECT state_id FROM levels WHERE id=$1)
 		  AND type=(SELECT type FROM levels WHERE id=$1)
 		  AND ord=(SELECT ord+1 FROM levels WHERE id=$1)
 		  AND deleted_at IS NULL`, currentLevelID))
 }
 
 const levelSelect = `
-	SELECT id,school_id,name,code,type,ord,created_at,updated_at,
+	SELECT id,state_id,name,code,type,ord,created_at,updated_at,
 	       COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM levels`
 
@@ -386,6 +386,9 @@ func (r *subLevelRepo) Create(ctx context.Context, s *domain.SubLevel) error {
 		if isUniqueViolation(err) {
 			return apperror.Conflict("sub-level code already exists for this school/level")
 		}
+		if isFKViolation(err) {
+			return apperror.BadRequest("referenced school or level does not exist")
+		}
 		return apperror.Internal(err)
 	}
 	return nil
@@ -412,9 +415,19 @@ func (r *subLevelRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (r *subLevelRepo) ListByLevel(ctx context.Context, schoolID, levelID string) ([]*domain.SubLevel, error) {
-	rows, err := r.db.QueryContext(ctx,
-		subLevelSelect+" WHERE school_id=$1 AND level_id=$2 AND deleted_at IS NULL ORDER BY code",
-		schoolID, levelID)
+	query := subLevelSelect + " WHERE deleted_at IS NULL"
+	args := []any{}
+	if schoolID != "" {
+		args = append(args, schoolID)
+		query += fmt.Sprintf(" AND school_id=$%d", len(args))
+	}
+	if levelID != "" {
+		args = append(args, levelID)
+		query += fmt.Sprintf(" AND level_id=$%d", len(args))
+	}
+	query += " ORDER BY code"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}

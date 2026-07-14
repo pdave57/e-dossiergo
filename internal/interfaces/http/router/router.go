@@ -127,6 +127,7 @@ func New(d Deps) http.Handler {
 		})
 
 		r.Route("/sub-levels", func(r chi.Router) {
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Post("/", d.Level.CreateSubLevelGlobal)
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.Level.UpdateSubLevel)
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Delete("/{id}", d.Level.DeleteSubLevel)
 		})
@@ -249,6 +250,7 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "students", "read")).Get("/{id}", d.Student.GetByID)
 				r.With(authorize(d, "students", "update")).Put("/{id}", d.Student.Update)
 				r.With(authorize(d, "students", "delete")).Delete("/{id}", d.Student.Delete)
+				r.With(authorize(d, "students", "read")).Get("/next-serial", d.Student.GetNextSerial)
 
 				// Progressions (level advancement)
 				r.With(authorize(d, "enrollments", "update")).Post("/{id}/progressions", d.Student.RecordProgression)

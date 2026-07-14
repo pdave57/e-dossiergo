@@ -263,14 +263,14 @@ func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO students
 		 (id,state_id,enrollment_year,enrollment_no,first_name,middle_name,last_name,gender,date_of_birth,
-		  state_of_origin,lga_id,religion,phone,email,address,
+		  state_of_origin,lga_id,religion,address,
 		  guardian_name,guardian_phone,guardian_relation,status,created_at,updated_at,created_by)
 		 VALUES ($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,NULLIF($10,''),NULLIF($11,''),
-		         NULLIF($12,''),NULLIF($13,''),NULLIF($14,''),NULLIF($15,''),
-		         $16,$17,NULLIF($18,''),$19,$20,$21,$22)`,
+		         NULLIF($12,''),NULLIF($13,''),
+		         $14,$15,NULLIF($16,''),$17,$18,$19,$20)`,
 		s.ID, s.StateID, s.EnrollmentYear, s.EnrollmentNo, s.FirstName, s.MiddleName, s.LastName,
 		s.Gender, s.DateOfBirth, s.StateOfOrigin, s.LGAID,
-		s.Religion, s.Phone, s.Email, s.Address,
+		s.Religion, s.Address,
 		s.GuardianName, s.GuardianPhone, s.GuardianRelation,
 		s.Status, s.CreatedAt, s.UpdatedAt, s.CreatedBy)
 	if err != nil {
@@ -302,13 +302,13 @@ func (r *studentRepo) Update(ctx context.Context, s *domain.Student) error {
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE students SET first_name=$1,middle_name=NULLIF($2,''),last_name=$3,
 		  gender=$4,date_of_birth=$5,state_of_origin=NULLIF($6,''),lga_id=NULLIF($7,''),
-		  religion=NULLIF($8,''),phone=NULLIF($9,''),email=NULLIF($10,''),address=NULLIF($11,''),
-		  guardian_name=$12,guardian_phone=$13,guardian_relation=NULLIF($14,''),
-		  status=$15,updated_at=$16,updated_by=$17
-		 WHERE id=$18 AND deleted_at IS NULL`,
+		  religion=NULLIF($8,''),address=NULLIF($9,''),
+		  guardian_name=$10,guardian_phone=$11,guardian_relation=NULLIF($12,''),
+		  status=$13,updated_at=$14,updated_by=$15
+		 WHERE id=$16 AND deleted_at IS NULL`,
 		s.FirstName, s.MiddleName, s.LastName,
 		s.Gender, s.DateOfBirth, s.StateOfOrigin, s.LGAID,
-		s.Religion, s.Phone, s.Email, s.Address,
+		s.Religion, s.Address,
 		s.GuardianName, s.GuardianPhone, s.GuardianRelation,
 		s.Status, s.UpdatedAt, s.UpdatedBy, s.ID)
 	return checkRowsAffected(res, err, "student", s.ID)
@@ -320,19 +320,35 @@ func (r *studentRepo) Delete(ctx context.Context, id string) error {
 	return checkRowsAffected(res, err, "student", id)
 }
 
-func (r *studentRepo) CountBySchoolCode(ctx context.Context, schoolCode string) (int, error) {
+func (r *studentRepo) CountByEnrollmentPrefix(ctx context.Context, prefix string) (int, error) {
 	var count int
-	// Count students whose enrollment_no starts with the school code
-	// Format: SCHOOLCODE/YYYY/SERIAL
+	// Count students whose enrollment_no starts with the given prefix
+	// Format: STATECODE-LGACODE-YY-SERIAL
 	err := r.db.QueryRowContext(ctx, `
-		SELECT COUNT(id) 
-		FROM students 
-		WHERE enrollment_no LIKE $1 || '/%' AND deleted_at IS NULL
-	`, schoolCode).Scan(&count)
+		SELECT COUNT(id)
+		FROM students
+		WHERE enrollment_no LIKE $1 || '%' AND deleted_at IS NULL
+	`, prefix).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *studentRepo) GetNextSerialByPrefix(ctx context.Context, prefix string) (int, error) {
+	var maxSerial sql.NullInt64
+	err := r.db.QueryRowContext(ctx, `
+		SELECT MAX(CAST(SUBSTRING(enrollment_no FROM LENGTH($1) + 1 FOR 4) AS INTEGER))
+		FROM students
+		WHERE enrollment_no LIKE $1 || '%' AND deleted_at IS NULL
+	`, prefix).Scan(&maxSerial)
+	if err != nil {
+		return 0, err
+	}
+	if maxSerial.Valid {
+		return int(maxSerial.Int64) + 1, nil
+	}
+	return 1, nil
 }
 
 func (r *studentRepo) List(ctx context.Context, f domain.StudentFilter, p pagination.Params) ([]*domain.Student, int, error) {
@@ -489,7 +505,8 @@ func (r *studentRepo) CountTotalStudents(ctx context.Context, stateID string) (i
 const studentSelect = `
 	SELECT id,state_id,enrollment_year,enrollment_no,first_name,COALESCE(middle_name,''),last_name,gender,date_of_birth,
 	       COALESCE(state_of_origin,''),COALESCE(lga_id,''),COALESCE(religion,''),
-	       COALESCE(phone,''),COALESCE(email,''),COALESCE(address,''),
+	       COALESCE(address,''),
+	       COALESCE((SELECT e.school_id FROM enrollments e WHERE e.student_id = students.id ORDER BY e.created_at DESC LIMIT 1), '') as school_id,
 	       guardian_name,guardian_phone,COALESCE(guardian_relation,''),
 	       status,created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM students`
@@ -498,7 +515,8 @@ const studentSelect = `
 const studentSelectAlias = `
 	s.id,s.state_id,s.enrollment_year,s.enrollment_no,s.first_name,COALESCE(s.middle_name,''),s.last_name,s.gender,s.date_of_birth,
 	COALESCE(s.state_of_origin,''),COALESCE(s.lga_id,''),COALESCE(s.religion,''),
-	COALESCE(s.phone,''),COALESCE(s.email,''),COALESCE(s.address,''),
+	COALESCE(s.address,''),
+	COALESCE((SELECT e.school_id FROM enrollments e WHERE e.student_id = s.id ORDER BY e.created_at DESC LIMIT 1), '') as school_id,
 	s.guardian_name,s.guardian_phone,COALESCE(s.guardian_relation,''),
 	s.status,s.created_at,s.updated_at,COALESCE(s.created_by,''),COALESCE(s.updated_by,'')`
 
@@ -515,7 +533,8 @@ func scanStudentAlias(s scanner) (*domain.Student, error) {
 		&st.FirstName, &st.MiddleName, &st.LastName,
 		&st.Gender, &st.DateOfBirth,
 		&st.StateOfOrigin, &st.LGAID, &st.Religion,
-		&st.Phone, &st.Email, &st.Address,
+		&st.Address,
+		&st.SchoolID,
 		&st.GuardianName, &st.GuardianPhone, &st.GuardianRelation,
 		&st.Status, &st.CreatedAt, &st.UpdatedAt, &st.CreatedBy, &st.UpdatedBy,
 	)

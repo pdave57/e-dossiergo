@@ -3,6 +3,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	chi "github.com/go-chi/chi/v5"
 
@@ -883,7 +884,7 @@ func (h *LevelHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LevelHandler) ListSubLevels(w http.ResponseWriter, r *http.Request) {
-	schoolID := r.URL.Query().Get("school_id")
+	schoolID := chi.URLParam(r, "schoolId")
 	levelID := chi.URLParam(r, "levelId")
 	sls, err := h.uc.ListSubLevels(r.Context(), schoolID, levelID)
 	if err != nil {
@@ -902,6 +903,31 @@ func (h *LevelHandler) CreateSubLevel(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromCtx(r.Context())
 	schoolID := chi.URLParam(r, "schoolId")
 	sl, err := h.uc.CreateSubLevel(r.Context(), schoolID, req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.Created(w, sl)
+}
+
+// CreateSubLevelGlobal handles POST /api/v1/sub-levels, reading the owning
+// school_id and level_id from the query string so callers can create a
+// sub-level from a page URL that already carries those identifiers.
+func (h *LevelHandler) CreateSubLevelGlobal(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateSubLevelRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	q := r.URL.Query()
+	if s := q.Get("school_id"); s != "" {
+		req.SchoolID = s
+	}
+	if l := q.Get("level_id"); l != "" {
+		req.LevelID = l
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	sl, err := h.uc.CreateSubLevel(r.Context(), req.SchoolID, req, claims.UserID)
 	if err != nil {
 		presenter.Error(w, err)
 		return
@@ -1226,6 +1252,22 @@ func (h *StudentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	presenter.Created(w, s)
+}
+
+func (h *StudentHandler) GetNextSerial(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	stateID := q.Get("state_id")
+	lgaID := q.Get("lga_id")
+	year := 0
+	if y := q.Get("year"); y != "" {
+		year, _ = strconv.Atoi(y)
+	}
+	serial, err := h.uc.GetNextSerial(r.Context(), stateID, lgaID, year)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, map[string]int{"serial_no": serial})
 }
 
 func (h *StudentHandler) GetByID(w http.ResponseWriter, r *http.Request) {

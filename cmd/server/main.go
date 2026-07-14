@@ -127,7 +127,7 @@ func main() {
 	personnelUC := service.NewPersonnelService(personnelRepo, transferRepo, schoolRepo)
 
 	studentUC := service.NewStudentService(
-		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo, schoolRepo,
+		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo, schoolRepo, stateRepo, lgaRepo,
 	)
 	genderUC := service.NewGenderService(studentRepo)
 

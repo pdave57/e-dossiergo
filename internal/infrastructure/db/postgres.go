@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/lib/pq"
+	_"github.com/lib/pq"
 )
 
 // Open creates and validates a *sql.DB connection pool.
@@ -393,8 +393,6 @@ func Migrate(db *sql.DB) error {
             state_of_origin   TEXT,
             lga_id            TEXT,
             religion          TEXT,
-            phone             TEXT,
-            email             TEXT,                         
             address           TEXT,
             guardian_name     TEXT NOT NULL,    
             guardian_phone    TEXT NOT NULL,
@@ -409,6 +407,10 @@ func Migrate(db *sql.DB) error {
 
 		`CREATE INDEX IF NOT EXISTS idx_students_state_id ON students(state_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_students_enrollment_no ON students(enrollment_no)`,
+
+		// Backfill: drop contact columns removed from the Student entity.
+		`ALTER TABLE students DROP COLUMN IF EXISTS phone`,
+		`ALTER TABLE students DROP COLUMN IF EXISTS email`,
 
 		`CREATE TABLE IF NOT EXISTS enrollments (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,

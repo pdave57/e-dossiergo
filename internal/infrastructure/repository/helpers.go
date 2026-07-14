@@ -2,9 +2,10 @@ package repository
 
 import (
 	"database/sql"
-	"strings"
+	"errors"
 
 	"github.com/edossier/api/pkg/apperror"
+	"github.com/lib/pq"
 )
 
 // scanner is satisfied by both *sql.Row and *sql.Rows.
@@ -29,12 +30,20 @@ func checkRowsAffected(res sql.Result, err error, entity, id string) error {
 
 // isUniqueViolation detects PostgreSQL unique constraint errors (code 23505).
 func isUniqueViolation(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "23505")
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		return pqErr.Code == "23505"
+	}
+	return false
 }
 
 // isFKViolation detects foreign-key constraint errors (code 23503).
 func isFKViolation(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "23503")
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		return pqErr.Code == "23503"
+	}
+	return false
 }
 
 // nullableString returns sql.NullString for optional fields.

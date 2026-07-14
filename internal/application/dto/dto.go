@@ -251,6 +251,7 @@ type UpdateLevelRequest struct {
 }
 
 type CreateSubLevelRequest struct {
+	SchoolID string `json:"school_id"`
 	LevelID  string `json:"level_id"  validate:"required"`
 	Name     string `json:"name"      validate:"required"`
 	Code     string `json:"code"      validate:"required"`
@@ -360,8 +361,6 @@ type CreateStudentRequest struct {
 	StateOfOrigin    string    `json:"state_of_origin"`
 	LGAID            string    `json:"lga_id"`
 	Religion         string    `json:"religion"`
-	Phone            string    `json:"phone"`
-	Email            string    `json:"email"`
 	Address          string    `json:"address"`
 	GuardianName     string    `json:"guardian_name"     validate:"required"`
 	GuardianPhone    string    `json:"guardian_phone"    validate:"required"`
@@ -377,8 +376,6 @@ type UpdateStudentRequest struct {
 	StateOfOrigin    string    `json:"state_of_origin"`
 	LGAID            string    `json:"lga_id"`
 	Religion         string    `json:"religion"`
-	Phone            string    `json:"phone"`
-	Email            string    `json:"email"`
 	Address          string    `json:"address"`
 	GuardianName     string    `json:"guardian_name"  validate:"required"`
 	GuardianPhone    string    `json:"guardian_phone" validate:"required"`

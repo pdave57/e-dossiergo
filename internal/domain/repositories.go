@@ -271,10 +271,11 @@ type StudentRepository interface {
 	Update(ctx context.Context, s *Student) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter StudentFilter, p pagination.Params) ([]*Student, int, error)
-	CountBySchoolCode(ctx context.Context, schoolCode string) (int, error)
+	CountByEnrollmentPrefix(ctx context.Context, prefix string) (int, error)
 	CountByGender(ctx context.Context, stateID string) (male, female, other int, err error)
 	CountTotalStudents(ctx context.Context, stateID string) (int, error)
 	UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error
+	GetNextSerialByPrefix(ctx context.Context, prefix string) (int, error)
 }
 
 type EnrollmentRepository interface {

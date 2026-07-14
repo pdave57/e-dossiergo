@@ -157,7 +157,7 @@ func (uc *SchoolService) Create(ctx context.Context, stateID string, req dto.Cre
 		Required(req.LGAID, "lga_id").
 		Required(req.Name, "name").
 		Required(req.Code, "code").
-		OneOf(string(req.Category), []string{"PRIMARY", "JUNIOR_SECONDARY", "SENIOR_SECONDARY", "COMBINED", "VOCATIONAL"}, "category").
+		OneOf(string(req.Category), []string{"NURSERY", "PRIMARY", "JUNIOR_SECONDARY", "SENIOR_SECONDARY", "COMBINED", "VOCATIONAL"}, "category").
 		OneOf(string(req.Ownership), []string{"GOVERNMENT", "PRIVATE", "MISSION", "COMMUNITY"}, "ownership")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
@@ -421,7 +421,7 @@ func (uc *LevelService) CreateLevel(ctx context.Context, schoolID string, req dt
 	v := validator.New().
 		Required(req.Name, "name").
 		Required(req.Code, "code").
-		OneOf(req.Type, []string{"PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "type")
+		OneOf(req.Type, []string{"NURSERY","PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "type")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
 	}
@@ -536,7 +536,7 @@ func (uc *SubjectService) Create(ctx context.Context, stateID string, req dto.Cr
 		Required(req.Name, "name").
 		Required(req.Code, "code").
 		OneOf(req.Category, []string{"CORE", "ELECTIVE", "PRACTICAL"}, "category").
-		OneOf(req.LevelType, []string{"PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "level_type")
+		OneOf(req.LevelType, []string{"NURSERY", "PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "level_type")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
 	}
@@ -763,6 +763,8 @@ type StudentService struct {
 	progressions domain.LevelProgressionRepository
 	levels       domain.LevelRepository
 	schools      domain.SchoolRepository
+	states       domain.StateRepository
+	lgas         domain.LGARepository
 }
 
 func NewStudentService(
@@ -772,11 +774,13 @@ func NewStudentService(
 	progressions domain.LevelProgressionRepository,
 	levels domain.LevelRepository,
 	schools domain.SchoolRepository,
+	states domain.StateRepository,
+	lgas domain.LGARepository,
 ) *StudentService {
 	return &StudentService{
 		students: students, enrollments: enrollments,
 		subLevels: subLevels, progressions: progressions, levels: levels,
-		schools: schools,
+		schools: schools, states: states, lgas: lgas,
 	}
 }
 
@@ -793,9 +797,14 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		return nil, apperror.Validation(v.Errors())
 	}
 
-	school, err := uc.schools.GetByID(ctx, req.SchoolID)
+	// Resolve state & LGA codes used to build the enrollment number.
+	state, err := uc.states.GetByID(ctx, stateID)
 	if err != nil {
-		return nil, apperror.NotFound("school", req.SchoolID)
+		return nil, apperror.NotFound("state", stateID)
+	}
+	lga, err := uc.lgas.GetByID(ctx, req.LGAID)
+	if err != nil {
+		return nil, apperror.NotFound("lga", req.LGAID)
 	}
 
 	// Use provided enrollment year or default to current year.
@@ -804,25 +813,44 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		year = time.Now().Year()
 	}
 
-	count, err := uc.students.CountBySchoolCode(ctx, school.Code)
+	// Enrollment number format: STATECODE-LGACODE-YY-SERIAL
+	// e.g. TARA-JAL-26-0001, where SERIAL is incremented per (state, lga, year).
+	yy := year % 100
+	prefix := fmt.Sprintf("%s-%s-%02d-", state.Code, lga.Code, yy)
+	serialNo, err := uc.students.GetNextSerialByPrefix(ctx, prefix)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
-
-	serialNo := count + 1
-	enrollmentNo := fmt.Sprintf("%s/%d/%04d", school.Code, year, serialNo)
+	enrollmentNo := fmt.Sprintf("%s%04d", prefix, serialNo)
 
 	s := &domain.Student{
-		StateID: stateID, EnrollmentYear: year, EnrollmentNo: enrollmentNo,
+		StateID: stateID, EnrollmentYear: year, EnrollmentNo: enrollmentNo, SerialNo: serialNo,
 		FirstName: req.FirstName, MiddleName: req.MiddleName, LastName: req.LastName,
 		Gender: domain.Gender(req.Gender), DateOfBirth: req.DateOfBirth,
 		StateOfOrigin: req.StateOfOrigin, LGAID: req.LGAID, Religion: req.Religion,
-		Phone: req.Phone, Email: req.Email, Address: req.Address,
+		Address: req.Address,
 		GuardianName: req.GuardianName, GuardianPhone: req.GuardianPhone,
 		GuardianRelation: req.GuardianRelation, Status: domain.StudentStatusActive,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
 	}
 	return s, uc.students.Create(ctx, s)
+}
+
+func (uc *StudentService) GetNextSerial(ctx context.Context, stateID, lgaID string, year int) (int, error) {
+	state, err := uc.states.GetByID(ctx, stateID)
+	if err != nil {
+		return 0, apperror.NotFound("state", stateID)
+	}
+	lga, err := uc.lgas.GetByID(ctx, lgaID)
+	if err != nil {
+		return 0, apperror.NotFound("lga", lgaID)
+	}
+	if year == 0 {
+		year = time.Now().Year()
+	}
+	yy := year % 100
+	prefix := fmt.Sprintf("%s-%s-%02d-", state.Code, lga.Code, yy)
+	return uc.students.GetNextSerialByPrefix(ctx, prefix)
 }
 
 func (uc *StudentService) GetByID(ctx context.Context, id string) (*domain.Student, error) {
@@ -848,8 +876,6 @@ func (uc *StudentService) Update(ctx context.Context, id string, req dto.UpdateS
 	s.StateOfOrigin = req.StateOfOrigin
 	s.LGAID = req.LGAID
 	s.Religion = req.Religion
-	s.Phone = req.Phone
-	s.Email = req.Email
 	s.Address = req.Address
 	s.GuardianName = req.GuardianName
 	s.GuardianPhone = req.GuardianPhone

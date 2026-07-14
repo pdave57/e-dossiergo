@@ -258,11 +258,25 @@ type Term struct {
 type LevelType string
 
 const (
+	LevelTypeNursery    LevelType = "NURSERY"
 	LevelTypePrimary    LevelType = "PRIMARY"
 	LevelTypeJSS        LevelType = "JSS"
 	LevelTypeSSS        LevelType = "SSS"
 	LevelTypeVocational LevelType = "VOCATIONAL"
 )
+
+// levelTypes holds all valid LevelType constants for enumeration.
+var levelTypes = []LevelType{
+	LevelTypeNursery,
+	LevelTypePrimary,
+	LevelTypeJSS,
+	LevelTypeSSS,
+	LevelTypeVocational,
+}
+
+// Values returns all valid LevelType constants, so callers (e.g. the HTTP
+// layer) can expose them from the backend instead of hardcoding on the client.
+func (t LevelType) Values() []LevelType { return levelTypes }
 
 // Level is a school-defined class (JSS1, JSS2, SS1, …).
 // A School owns its Levels; use SchoolLevel to activate a Level for a session.
@@ -433,6 +447,7 @@ type Student struct {
 	StateID          string        `json:"state_id"`
 	EnrollmentYear   int           `json:"enrollment_year"`
 	EnrollmentNo     string        `json:"enrollment_no"`
+	SerialNo         int           `json:"serial_no"`
 	FirstName        string        `json:"first_name"`
 	MiddleName       string        `json:"middle_name,omitempty"`
 	LastName         string        `json:"last_name"`
@@ -441,9 +456,8 @@ type Student struct {
 	StateOfOrigin    string        `json:"state_of_origin,omitempty"`
 	LGAID            string        `json:"lga_id,omitempty"`
 	Religion         string        `json:"religion,omitempty"`
-	Phone            string        `json:"phone,omitempty"`
-	Email            string        `json:"email,omitempty"`
 	Address          string        `json:"address,omitempty"`
+	SchoolID         string        `json:"school_id,omitempty"`
 	GuardianName     string        `json:"guardian_name"`
 	GuardianPhone    string        `json:"guardian_phone"`
 	GuardianRelation string        `json:"guardian_relation,omitempty"`
