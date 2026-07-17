@@ -110,6 +110,72 @@ type AddPermissionRequest struct {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+type PersonnelAttendanceRequest struct {
+	PersonnelID string    `json:"personnel_id" validate:"required"`
+	SchoolID    string    `json:"school_id"    validate:"required"`
+	Date        time.Time `json:"date"         validate:"required"`
+	Status      string    `json:"status"       validate:"required,oneof=PRESENT ABSENT LATE EXCUSED"`
+	Remarks     string    `json:"remarks"`
+	RecordedBy  string    `json:"recorded_by"  validate:"required"`
+}
+
+type UpdatePersonnelAttendanceRequest struct {
+	Status  string `json:"status"       validate:"required,oneof=PRESENT ABSENT LATE EXCUSED"`
+	Remarks string `json:"remarks"`
+}
+
+type PersonnelAttendanceResponse struct {
+	ID            string    `json:"id"`
+	PersonnelID   string    `json:"personnel_id"`
+	SchoolID      string    `json:"school_id"`
+	AttendanceDate time.Time `json:"attendance_date"`
+	Status        string    `json:"status"`
+	Remarks       string    `json:"remarks,omitempty"`
+	RecordedBy    string    `json:"recorded_by"`
+	PersonnelName string    `json:"personnel_name,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type StudentAttendanceRequest struct {
+	StudentID  string    `json:"student_id" validate:"required"`
+	SchoolID   string    `json:"school_id"  validate:"required"`
+	Date       time.Time `json:"date"       validate:"required"`
+	Status     string    `json:"status"     validate:"required,oneof=PRESENT ABSENT LATE EXCUSED"`
+	Remarks    string    `json:"remarks"`
+	RecordedBy string    `json:"recorded_by" validate:"required"`
+}
+
+type UpdateStudentAttendanceRequest struct {
+	Status  string `json:"status"     validate:"required,oneof=PRESENT ABSENT LATE EXCUSED"`
+	Remarks string `json:"remarks"`
+}
+
+type StudentAttendanceResponse struct {
+	ID            string    `json:"id"`
+	StudentID     string    `json:"student_id"`
+	SchoolID      string    `json:"school_id"`
+	AttendanceDate time.Time `json:"attendance_date"`
+	Status        string    `json:"status"`
+	Remarks       string    `json:"remarks,omitempty"`
+	RecordedBy    string    `json:"recorded_by"`
+	StudentName   string    `json:"student_name,omitempty"`
+	EnrollmentNo  string    `json:"enrollment_no,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type BulkStudentAttendanceRequest struct {
+	SchoolID   string                       `json:"school_id"   validate:"required"`
+	Date       time.Time                    `json:"date"        validate:"required"`
+	RecordedBy string                       `json:"recorded_by" validate:"required"`
+	Records    []StudentAttendanceRequest   `json:"records"     validate:"required"`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ZONES / LGAS
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -151,36 +217,35 @@ type UpdateLGARequest struct {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type CreateSchoolRequest struct {
-	
-	StateID            string          `json:"state_id" validate:"required"`
-	ZoneID             string          `json:"zone_id" validate:"required"`
-	LGAID              string          `json:"lga_id" validate:"required"` 
-	Name               string          `json:"name" validate:"required"`
-	Code               string          `json:"code" validate:"required"`
-	Category           string          `json:"category" validate:"required"`
-	Ownership          string          `json:"ownership"`
-	Status             string          `json:"status"`
-	NumberOfClassrooms int             `json:"number_of_classrooms"`
-	TotalStudents      int             `json:"total_students"`
-	Address            string          `json:"address"`
-	HeadTeacher        string          `json:"head_teacher,omitempty"`
-	Founded            *int            `json:"founded,omitempty"`
+	StateID            string `json:"state_id" validate:"required"`
+	ZoneID             string `json:"zone_id" validate:"required"`
+	LGAID              string `json:"lga_id" validate:"required"`
+	Name               string `json:"name" validate:"required"`
+	Code               string `json:"code" validate:"required"`
+	Category           string `json:"category" validate:"required"`
+	Ownership          string `json:"ownership"`
+	Status             string `json:"status"`
+	NumberOfClassrooms int    `json:"number_of_classrooms"`
+	TotalStudents      int    `json:"total_students"`
+	Address            string `json:"address"`
+	HeadTeacher        string `json:"head_teacher,omitempty"`
+	Founded            *int   `json:"founded,omitempty"`
 }
 
 type UpdateSchoolRequest struct {
-	StateID            string          `json:"state_id" validate:"required"`
-	ZoneID             string          `json:"zone_id" validate:"required"`
-	LGAID              string          `json:"lga_id" validate:"required"` 
-	Name               string          `json:"name" validate:"required"`
-	Code               string          `json:"code" validate:"required"`
-	Category           string          `json:"category" validate:"required"`
-	Ownership          string          `json:"ownership"`
-	Status             string          `json:"status"`
-	NumberOfClassrooms int             `json:"number_of_classrooms"`
-	TotalStudents      int             `json:"total_students"`
-	Address            string          `json:"address"`
-	HeadTeacher        string          `json:"head_teacher,omitempty"`
-	Founded            *int            `json:"founded,omitempty"`
+	StateID            string `json:"state_id" validate:"required"`
+	ZoneID             string `json:"zone_id" validate:"required"`
+	LGAID              string `json:"lga_id" validate:"required"`
+	Name               string `json:"name" validate:"required"`
+	Code               string `json:"code" validate:"required"`
+	Category           string `json:"category" validate:"required"`
+	Ownership          string `json:"ownership"`
+	Status             string `json:"status"`
+	NumberOfClassrooms int    `json:"number_of_classrooms"`
+	TotalStudents      int    `json:"total_students"`
+	Address            string `json:"address"`
+	HeadTeacher        string `json:"head_teacher,omitempty"`
+	Founded            *int   `json:"founded,omitempty"`
 }
 
 type CreateFacilityRequest struct {
@@ -459,6 +524,34 @@ type UpsertGradeConfigRequest struct {
 	MaxScore float64 `json:"max_score"  validate:"required"`
 	Remark   string  `json:"remark"     validate:"required"`
 	Points   float64 `json:"points"`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT AUTH
+// ─────────────────────────────────────────────────────────────────────────────
+
+type StudentLoginRequest struct {
+	SchoolCode   string `json:"school_code"   validate:"required"`
+	EnrollmentNo string `json:"enrollment_no" validate:"required"`
+}
+
+type StudentLoginResponse struct {
+	AccessToken  string      `json:"access_token"`
+	RefreshToken string      `json:"refresh_token"`
+	ExpiresAt    time.Time   `json:"expires_at"`
+	Student      StudentInfo `json:"student"`
+}
+
+type StudentInfo struct {
+	ID           string `json:"id"`
+	StateID      string `json:"state_id"`
+	SchoolID     string `json:"school_id,omitempty"`
+	EnrollmentNo string `json:"enrollment_no"`
+	FirstName    string `json:"first_name"`
+	MiddleName   string `json:"middle_name,omitempty"`
+	LastName     string `json:"last_name"`
+	Gender       string `json:"gender"`
+	Status       string `json:"status"`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

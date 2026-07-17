@@ -602,3 +602,38 @@ type ReportCard struct {
 
 // IsPublished returns whether the report card is visible to students/parents.
 func (r *ReportCard) IsPublished() bool { return r.PublishedAt != nil }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+type AttendanceStatus string
+
+const (
+	AttendanceStatusPresent AttendanceStatus = "PRESENT"
+	AttendanceStatusAbsent  AttendanceStatus = "ABSENT"
+	AttendanceStatusLate    AttendanceStatus = "LATE"
+	AttendanceStatusExcused AttendanceStatus = "EXCUSED"
+)
+
+type PersonnelAttendance struct {
+	ID          string    `json:"id"`
+	PersonnelID string    `json:"personnel_id"`
+	SchoolID    string    `json:"school_id"`
+	AttendanceDate time.Time `json:"attendance_date"`
+	Status      AttendanceStatus `json:"status"`
+	Remarks     string    `json:"remarks,omitempty"`
+	RecordedBy  string    `json:"recorded_by"`
+	AuditFields
+}
+
+type StudentAttendance struct {
+	ID            string    `json:"id"`
+	StudentID     string    `json:"student_id"`
+	SchoolID      string    `json:"school_id"`
+	AttendanceDate time.Time `json:"attendance_date"`
+	Status        AttendanceStatus `json:"status"`
+	Remarks       string    `json:"remarks,omitempty"`
+	RecordedBy    string    `json:"recorded_by"`
+	AuditFields
+}

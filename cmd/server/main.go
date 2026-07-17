@@ -68,47 +68,49 @@ func main() {
 	}
 	log.Info("cloudinary connected")
 
-
 	// ── Token maker ───────────────────────────────────────────────────────────
 	tokenMaker := token.New(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 
 	// ── Repositories ─────────────────────────────────────────────────────────
-	userRepo          := repository.NewUserRepository(db)
-	roleRepo          := repository.NewRoleRepository(db)
-	permRepo          := repository.NewPermissionRepository(db)
-	userRoleRepo      := repository.NewUserRoleRepository(db)
-	refreshTokenRepo  := repository.NewRefreshTokenRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
+	permRepo := repository.NewPermissionRepository(db)
+	userRoleRepo := repository.NewUserRoleRepository(db)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
 
-	stateRepo         := repository.NewStateRepository(db)
-	zoneRepo          := repository.NewZoneRepository(db)
-	lgaRepo           := repository.NewLGARepository(db)
+	stateRepo := repository.NewStateRepository(db)
+	zoneRepo := repository.NewZoneRepository(db)
+	lgaRepo := repository.NewLGARepository(db)
 
-	schoolRepo        := repository.NewSchoolRepository(db)
-	facilityRepo      := repository.NewSchoolFacilityRepository(db)
+	schoolRepo := repository.NewSchoolRepository(db)
+	facilityRepo := repository.NewSchoolFacilityRepository(db)
 
-	sessionRepo       := repository.NewAcademicSessionRepository(db)
-	termRepo          := repository.NewTermRepository(db)
+	sessionRepo := repository.NewAcademicSessionRepository(db)
+	termRepo := repository.NewTermRepository(db)
 
-	levelRepo         := repository.NewLevelRepository(db)
-	subLevelRepo      := repository.NewSubLevelRepository(db)
-	schoolLevelRepo   := repository.NewSchoolLevelRepository(db)
+	levelRepo := repository.NewLevelRepository(db)
+	subLevelRepo := repository.NewSubLevelRepository(db)
+	schoolLevelRepo := repository.NewSchoolLevelRepository(db)
 
-	subjectRepo       := repository.NewSubjectRepository(db)
+	subjectRepo := repository.NewSubjectRepository(db)
 	schoolSubjectRepo := repository.NewSchoolSubjectRepository(db)
 
-	personnelRepo     := repository.NewPersonnelRepository(db)
-	transferRepo      := repository.NewPersonnelTransferRepository(db)
+	personnelRepo := repository.NewPersonnelRepository(db)
+	transferRepo := repository.NewPersonnelTransferRepository(db)
 
-	studentRepo       := repository.NewStudentRepository(db)
-	enrollmentRepo    := repository.NewEnrollmentRepository(db)
-	progressionRepo   := repository.NewLevelProgressionRepository(db)
+	studentRepo := repository.NewStudentRepository(db)
+	enrollmentRepo := repository.NewEnrollmentRepository(db)
+	progressionRepo := repository.NewLevelProgressionRepository(db)
 
-	scoreSheetRepo    := repository.NewScoreSheetRepository(db)
-	reportCardRepo    := repository.NewReportCardRepository(db)
-	gradeConfigRepo   := repository.NewGradeConfigRepository(db)
-	scoreConfigRepo   := repository.NewScoreConfigRepository(db)
+	scoreSheetRepo := repository.NewScoreSheetRepository(db)
+	reportCardRepo := repository.NewReportCardRepository(db)
+	gradeConfigRepo := repository.NewGradeConfigRepository(db)
+	scoreConfigRepo := repository.NewScoreConfigRepository(db)
 
-	reportRepo        := repository.NewReportRepository(db)
+	reportRepo := repository.NewReportRepository(db)
+
+	personnelAttendanceRepo := repository.NewPersonnelAttendanceRepository(db)
+	studentAttendanceRepo := repository.NewStudentAttendanceRepository(db)
 
 	// ── Use Cases ─────────────────────────────────────────────────────────────
 	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
@@ -139,6 +141,13 @@ func main() {
 	reportUC := service.NewReportService(reportRepo)
 	avatarUC := service.NewAvatarService(personnelRepo, studentRepo, cloudinaryClient)
 
+	attendanceUC := service.NewAttendanceService(
+		personnelAttendanceRepo, studentAttendanceRepo,
+		personnelRepo, studentRepo, schoolRepo,
+	)
+
+	studentAuthUC := service.NewStudentAuthService(studentRepo, schoolRepo, refreshTokenRepo, tokenMaker)
+
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler      := handler.NewAuthHandler(authUC)
 	userHandler      := handler.NewUserHandler(userUC, userRepo)
@@ -156,6 +165,8 @@ func main() {
 	reportHandler    := handler.NewReportHandler(reportUC)
 	genderHandler    := handler.NewGenderHandler(genderUC)
 	avatarHandler    := handler.NewAvatarHandler(avatarUC)
+	studentAuthHandler := handler.NewStudentAuthHandler(studentAuthUC)
+	attendanceHandler := handler.NewAttendanceHandler(attendanceUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -165,7 +176,7 @@ func main() {
 		Auth:        authHandler,
 		User:        userHandler,
 		Role:        roleHandler,
-		State:       stateHandler,	
+		State:       stateHandler,
 		Zone:        zoneHandler,
 		LGA:         lgaHandler,
 		School:      schoolHandler,
@@ -178,6 +189,8 @@ func main() {
 		Report:      reportHandler,
 		Gender:      genderHandler,
 		Avatar:      avatarHandler,
+		StudentAuth: studentAuthHandler,
+		Attendance:  attendanceHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

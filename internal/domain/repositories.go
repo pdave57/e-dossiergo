@@ -5,6 +5,7 @@ package domain
 
 import (
 	"context"
+	"time"
 
 	"github.com/edossier/api/pkg/pagination"
 )
@@ -328,6 +329,31 @@ type ReportCardRepository interface {
 	ListByTerm(ctx context.Context, schoolID, termID string, p pagination.Params) ([]*ReportCard, int, error)
 	ListByStudent(ctx context.Context, studentID string) ([]*ReportCard, error)
 	Publish(ctx context.Context, id string) error
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+type PersonnelAttendanceRepository interface {
+	Create(ctx context.Context, a *PersonnelAttendance) error
+	GetByID(ctx context.Context, id string) (*PersonnelAttendance, error)
+	GetByPersonnelAndDate(ctx context.Context, personnelID string, date time.Time) (*PersonnelAttendance, error)
+	Update(ctx context.Context, a *PersonnelAttendance) error
+	Delete(ctx context.Context, id string) error
+	ListBySchoolAndDate(ctx context.Context, schoolID string, date time.Time) ([]*PersonnelAttendance, error)
+	ListByPersonnelAndRange(ctx context.Context, personnelID string, from, to time.Time) ([]*PersonnelAttendance, error)
+}
+
+type StudentAttendanceRepository interface {
+	Create(ctx context.Context, a *StudentAttendance) error
+	GetByID(ctx context.Context, id string) (*StudentAttendance, error)
+	GetByStudentAndDate(ctx context.Context, studentID string, date time.Time) (*StudentAttendance, error)
+	Update(ctx context.Context, a *StudentAttendance) error
+	Delete(ctx context.Context, id string) error
+	ListBySchoolAndDate(ctx context.Context, schoolID string, date time.Time) ([]*StudentAttendance, error)
+	ListByStudentAndRange(ctx context.Context, studentID string, from, to time.Time) ([]*StudentAttendance, error)
+	ListBySchoolAndRange(ctx context.Context, schoolID string, from, to time.Time) ([]*StudentAttendance, error)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

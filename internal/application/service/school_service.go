@@ -797,14 +797,10 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		return nil, apperror.Validation(v.Errors())
 	}
 
-	// Resolve state & LGA codes used to build the enrollment number.
-	state, err := uc.states.GetByID(ctx, stateID)
+	// Resolve school code used to build the enrollment number.
+	school, err := uc.schools.GetByID(ctx, req.SchoolID)
 	if err != nil {
-		return nil, apperror.NotFound("state", stateID)
-	}
-	lga, err := uc.lgas.GetByID(ctx, req.LGAID)
-	if err != nil {
-		return nil, apperror.NotFound("lga", req.LGAID)
+		return nil, apperror.NotFound("school", req.SchoolID)
 	}
 
 	// Use provided enrollment year or default to current year.
@@ -813,10 +809,10 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		year = time.Now().Year()
 	}
 
-	// Enrollment number format: STATECODE-LGACODE-YY-SERIAL
-	// e.g. TARA-JAL-26-0001, where SERIAL is incremented per (state, lga, year).
+	// Enrollment number format: SCHOOLCODE-YY-SERIAL
+	// e.g. GSSJAL-26-0001, where SERIAL is incremented per (school, year).
 	yy := year % 100
-	prefix := fmt.Sprintf("%s-%s-%02d-", state.Code, lga.Code, yy)
+	prefix := fmt.Sprintf("%s-%02d-", school.Code, yy)
 	serialNo, err := uc.students.GetNextSerialByPrefix(ctx, prefix)
 	if err != nil {
 		return nil, apperror.Internal(err)
@@ -836,20 +832,15 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 	return s, uc.students.Create(ctx, s)
 }
 
-func (uc *StudentService) GetNextSerial(ctx context.Context, stateID, lgaID string, year int) (int, error) {
-	state, err := uc.states.GetByID(ctx, stateID)
+func (uc *StudentService) GetNextSerial(ctx context.Context, schoolID string, year int) (int, error) {
+	school, err := uc.schools.GetByID(ctx, schoolID)
 	if err != nil {
-		return 0, apperror.NotFound("state", stateID)
-	}
-	lga, err := uc.lgas.GetByID(ctx, lgaID)
-	if err != nil {
-		return 0, apperror.NotFound("lga", lgaID)
+		return 0, apperror.NotFound("school", schoolID)
 	}
 	if year == 0 {
 		year = time.Now().Year()
 	}
-	yy := year % 100
-	prefix := fmt.Sprintf("%s-%s-%02d-", state.Code, lga.Code, yy)
+	prefix := fmt.Sprintf("%s-%02d-", school.Code, year%100)
 	return uc.students.GetNextSerialByPrefix(ctx, prefix)
 }
 

@@ -536,6 +536,42 @@ func Migrate(db *sql.DB) error {
             UNIQUE (student_id, term_id)
 		)`,
 
+		`CREATE TABLE IF NOT EXISTS personnel_attendance (
+            id               TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+            personnel_id     TEXT NOT NULL REFERENCES personnel(id),
+            school_id        TEXT NOT NULL REFERENCES schools(id),
+            attendance_date  DATE NOT NULL,
+            status           TEXT NOT NULL,
+            remarks          TEXT,
+            recorded_by      TEXT NOT NULL,
+            created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            created_by       TEXT,
+            updated_by       TEXT,
+            UNIQUE (personnel_id, attendance_date)
+        )`,
+
+		`CREATE INDEX IF NOT EXISTS idx_personnel_attendance_school_id ON personnel_attendance(school_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_personnel_attendance_date ON personnel_attendance(attendance_date)`,
+
+		`CREATE TABLE IF NOT EXISTS student_attendance (
+            id               TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+            student_id       TEXT NOT NULL REFERENCES students(id),
+            school_id        TEXT NOT NULL REFERENCES schools(id),
+            attendance_date  DATE NOT NULL,
+            status           TEXT NOT NULL,
+            remarks          TEXT,
+            recorded_by      TEXT NOT NULL,
+            created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            created_by       TEXT,
+            updated_by       TEXT,
+            UNIQUE (student_id, attendance_date)
+        )`,
+
+		`CREATE INDEX IF NOT EXISTS idx_student_attendance_school_id ON student_attendance(school_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_student_attendance_date ON student_attendance(attendance_date)`,
+
 		`INSERT INTO permissions (id, resource, action, description) VALUES
         (gen_random_uuid()::TEXT, 'schools',       'create',  'Create a school'),
         (gen_random_uuid()::TEXT, 'schools',       'read',    'View school details'),
@@ -589,6 +625,10 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'results',       'read',    'View results'),
         (gen_random_uuid()::TEXT, 'results',       'update',  'Modify scores'),
         (gen_random_uuid()::TEXT, 'results',       'publish', 'Publish report cards'),
+        (gen_random_uuid()::TEXT, 'attendance',    'create',  'Record attendance'),
+        (gen_random_uuid()::TEXT, 'attendance',    'read',    'View attendance'),
+        (gen_random_uuid()::TEXT, 'attendance',    'update',  'Update attendance'),
+        (gen_random_uuid()::TEXT, 'attendance',    'delete',  'Delete attendance'),
         (gen_random_uuid()::TEXT, 'users',         'create',  'Create user accounts'),
         (gen_random_uuid()::TEXT, 'users',         'read',    'View user accounts'),
         (gen_random_uuid()::TEXT, 'users',         'update',  'Update user accounts'),

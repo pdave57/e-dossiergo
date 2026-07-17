@@ -4,6 +4,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	chi "github.com/go-chi/chi/v5"
 
@@ -92,6 +93,30 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromCtx(r.Context())
 	presenter.JSON(w, http.StatusOK, claims)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT AUTH HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+type StudentAuthHandler struct{ uc *service.StudentAuthService }
+
+func NewStudentAuthHandler(uc *service.StudentAuthService) *StudentAuthHandler {
+	return &StudentAuthHandler{uc: uc}
+}
+
+func (h *StudentAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req dto.StudentLoginRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	resp, err := h.uc.Login(r.Context(), req)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -366,7 +391,6 @@ func (h *ZoneHandler) ListZones(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, zones)
 }
 
-
 func (h *ZoneHandler) CreateZone(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateZoneRequest
 	if err := presenter.DecodeJSON(r, &req); err != nil {
@@ -404,10 +428,12 @@ func (h *ZoneHandler) DeleteZone(w http.ResponseWriter, r *http.Request) {
 	}
 	presenter.NoContent(w)
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LGA HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
-type LGAHandler struct { uc *service.LGAService }
+type LGAHandler struct{ uc *service.LGAService }
+
 func NewLGAHandler(uc *service.LGAService) *LGAHandler { return &LGAHandler{uc: uc} }
 
 func (h *LGAHandler) ListLGAs(w http.ResponseWriter, r *http.Request) {
@@ -822,7 +848,7 @@ func (h *AcademicHandler) CreateTermTopLevel(w http.ResponseWriter, r *http.Requ
 // LEVEL HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
-type LevelHandler struct{ uc *service.LevelService}
+type LevelHandler struct{ uc *service.LevelService }
 
 func NewLevelHandler(uc *service.LevelService) *LevelHandler { return &LevelHandler{uc: uc} }
 
@@ -1103,7 +1129,7 @@ func (h *SubjectHandler) RemoveSchoolSubject(w http.ResponseWriter, r *http.Requ
 // PERSONNEL HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
-type PersonnelHandler struct{ uc *service.PersonnelService}
+type PersonnelHandler struct{ uc *service.PersonnelService }
 
 func NewPersonnelHandler(uc *service.PersonnelService) *PersonnelHandler {
 	return &PersonnelHandler{uc: uc}
@@ -1256,13 +1282,12 @@ func (h *StudentHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *StudentHandler) GetNextSerial(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	stateID := q.Get("state_id")
-	lgaID := q.Get("lga_id")
+	schoolID := q.Get("school_id")
 	year := 0
 	if y := q.Get("year"); y != "" {
 		year, _ = strconv.Atoi(y)
 	}
-	serial, err := h.uc.GetNextSerial(r.Context(), stateID, lgaID, year)
+	serial, err := h.uc.GetNextSerial(r.Context(), schoolID, year)
 	if err != nil {
 		presenter.Error(w, err)
 		return
@@ -1409,6 +1434,7 @@ func (h *GenderHandler) CountByGender(w http.ResponseWriter, r *http.Request) {
 	}
 	presenter.JSON(w, http.StatusOK, counts)
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TOTAL STUDENT HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1422,11 +1448,12 @@ func (h *StudentHandler) CountTotalStudents(w http.ResponseWriter, r *http.Reque
 	}
 	presenter.JSON(w, http.StatusOK, count)
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // RESULT HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ResultHandler struct{ uc *service.ResultService}
+type ResultHandler struct{ uc *service.ResultService }
 
 func NewResultHandler(uc *service.ResultService) *ResultHandler { return &ResultHandler{uc: uc} }
 
@@ -1658,4 +1685,251 @@ func (h *AvatarHandler) UploadStudentAvatar(w http.ResponseWriter, r *http.Reque
 	}
 
 	presenter.JSON(w, http.StatusOK, map[string]string{"avatar_url": url})
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATTENDANCE HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+type AttendanceHandler struct{ uc *service.AttendanceService }
+
+func NewAttendanceHandler(uc *service.AttendanceService) *AttendanceHandler {
+	return &AttendanceHandler{uc: uc}
+}
+
+// ── Personnel Attendance ────────────────────────────────────────────────────
+
+func (h *AttendanceHandler) RecordPersonnelAttendance(w http.ResponseWriter, r *http.Request) {
+	var req dto.PersonnelAttendanceRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	resp, err := h.uc.RecordPersonnelAttendance(r.Context(), req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.Created(w, resp)
+}
+
+func (h *AttendanceHandler) GetPersonnelAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	resp, err := h.uc.GetPersonnelAttendance(r.Context(), id)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) UpdatePersonnelAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var req dto.UpdatePersonnelAttendanceRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	resp, err := h.uc.UpdatePersonnelAttendance(r.Context(), id, req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) DeletePersonnelAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.uc.DeletePersonnelAttendance(r.Context(), id); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.NoContent(w)
+}
+
+func (h *AttendanceHandler) ListPersonnelAttendanceBySchoolAndDate(w http.ResponseWriter, r *http.Request) {
+	schoolID := r.URL.Query().Get("school_id")
+	dateStr := r.URL.Query().Get("date")
+	if schoolID == "" || dateStr == "" {
+		presenter.Error(w, apperror.BadRequest("school_id and date are required"))
+		return
+	}
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid date format, expected YYYY-MM-DD"))
+		return
+	}
+	resp, err := h.uc.ListPersonnelAttendanceBySchoolAndDate(r.Context(), schoolID, date)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) ListPersonnelAttendanceByPersonnelAndRange(w http.ResponseWriter, r *http.Request) {
+	personnelID := chi.URLParam(r, "id")
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+	if fromStr == "" || toStr == "" {
+		presenter.Error(w, apperror.BadRequest("from and to query parameters are required"))
+		return
+	}
+	from, err := time.Parse("2006-01-02", fromStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid from date format, expected YYYY-MM-DD"))
+		return
+	}
+	to, err := time.Parse("2006-01-02", toStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid to date format, expected YYYY-MM-DD"))
+		return
+	}
+	resp, err := h.uc.ListPersonnelAttendanceByPersonnelAndRange(r.Context(), personnelID, from, to)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+// ── Student Attendance ──────────────────────────────────────────────────────
+
+func (h *AttendanceHandler) RecordStudentAttendance(w http.ResponseWriter, r *http.Request) {
+	var req dto.StudentAttendanceRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	resp, err := h.uc.RecordStudentAttendance(r.Context(), req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.Created(w, resp)
+}
+
+func (h *AttendanceHandler) BulkRecordStudentAttendance(w http.ResponseWriter, r *http.Request) {
+	var req dto.BulkStudentAttendanceRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	resp, err := h.uc.BulkRecordStudentAttendance(r.Context(), req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.Created(w, map[string]any{"records": resp})
+}
+
+func (h *AttendanceHandler) GetStudentAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	resp, err := h.uc.GetStudentAttendance(r.Context(), id)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) UpdateStudentAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var req dto.UpdateStudentAttendanceRequest
+	if err := presenter.DecodeJSON(r, &req); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	claims := middleware.ClaimsFromCtx(r.Context())
+	resp, err := h.uc.UpdateStudentAttendance(r.Context(), id, req, claims.UserID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) DeleteStudentAttendance(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.uc.DeleteStudentAttendance(r.Context(), id); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.NoContent(w)
+}
+
+func (h *AttendanceHandler) ListStudentAttendanceBySchoolAndDate(w http.ResponseWriter, r *http.Request) {
+	schoolID := r.URL.Query().Get("school_id")
+	dateStr := r.URL.Query().Get("date")
+	if schoolID == "" || dateStr == "" {
+		presenter.Error(w, apperror.BadRequest("school_id and date are required"))
+		return
+	}
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid date format, expected YYYY-MM-DD"))
+		return
+	}
+	resp, err := h.uc.ListStudentAttendanceBySchoolAndDate(r.Context(), schoolID, date)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) ListStudentAttendanceByStudentAndRange(w http.ResponseWriter, r *http.Request) {
+	studentID := chi.URLParam(r, "id")
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+	if fromStr == "" || toStr == "" {
+		presenter.Error(w, apperror.BadRequest("from and to query parameters are required"))
+		return
+	}
+	from, err := time.Parse("2006-01-02", fromStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid from date format, expected YYYY-MM-DD"))
+		return
+	}
+	to, err := time.Parse("2006-01-02", toStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid to date format, expected YYYY-MM-DD"))
+		return
+	}
+	resp, err := h.uc.ListStudentAttendanceByStudentAndRange(r.Context(), studentID, from, to)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
+}
+
+func (h *AttendanceHandler) ListStudentAttendanceBySchoolAndRange(w http.ResponseWriter, r *http.Request) {
+	schoolID := r.URL.Query().Get("school_id")
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+	if schoolID == "" || fromStr == "" || toStr == "" {
+		presenter.Error(w, apperror.BadRequest("school_id, from and to query parameters are required"))
+		return
+	}
+	from, err := time.Parse("2006-01-02", fromStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid from date format, expected YYYY-MM-DD"))
+		return
+	}
+	to, err := time.Parse("2006-01-02", toStr)
+	if err != nil {
+		presenter.Error(w, apperror.BadRequest("invalid to date format, expected YYYY-MM-DD"))
+		return
+	}
+	resp, err := h.uc.ListStudentAttendanceBySchoolAndRange(r.Context(), schoolID, from, to)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, resp)
 }
