@@ -17,34 +17,31 @@ func NewAvatarService(pRepo domain.PersonnelRepository, sRepo domain.StudentRepo
 	return &AvatarService{personnelRepo: pRepo, studentRepo: sRepo, storage: storage}
 }
 
-func (s *AvatarService) UploadPersonnelAvatar(ctx context.Context, schoolID, personnelID string, file io.Reader, filename string) (string, error) {
-	// 1. Upload to Cloudinary
+func (s *AvatarService) UploadPersonnelAvatar(ctx context.Context, personnelID string, file io.Reader, filename string) (string, error) {
 	url, publicID, err := s.storage.Upload(ctx, file, filename, "personnel_avatars")
 	if err != nil {
 		return "", err
 	}
-	
-	// 2. Update Database (Raw SQL via Repo)
-	err = s.personnelRepo.UpdateAvatar(ctx, personnelID, schoolID, url)
+
+	err = s.personnelRepo.UpdateAvatar(ctx, personnelID, url)
 	if err != nil {
-		// Optional: rollback cloudinary upload if DB fails
-		s.storage.Delete(ctx, publicID) 
+		s.storage.Delete(ctx, publicID)
 		return "", err
 	}
-	
+
 	return url, nil
 }
 
-func (s *AvatarService) UploadStudentAvatar(ctx context.Context, schoolID, studentID string, file io.Reader, filename string) (string, error) {
+func (s *AvatarService) UploadStudentAvatar(ctx context.Context, studentID string, file io.Reader, filename string) (string, error) {
 	url, _, err := s.storage.Upload(ctx, file, filename, "student_avatars")
 	if err != nil {
 		return "", err
 	}
-	
-	err = s.studentRepo.UpdateAvatar(ctx, studentID, schoolID, url)
+
+	err = s.studentRepo.UpdateAvatar(ctx, studentID, url)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return url, nil
 }

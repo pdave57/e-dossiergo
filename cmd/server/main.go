@@ -15,6 +15,7 @@ import (
 	"github.com/edossier/api/config"
 	"github.com/edossier/api/internal/application/service"
 	infradb "github.com/edossier/api/internal/infrastructure/db"
+	"github.com/edossier/api/internal/infrastructure/ml"
 	"github.com/edossier/api/internal/infrastructure/repository"
 	"github.com/edossier/api/internal/infrastructure/storage"
 	"github.com/edossier/api/internal/interfaces/http/handler"
@@ -111,6 +112,8 @@ func main() {
 
 	personnelAttendanceRepo := repository.NewPersonnelAttendanceRepository(db)
 	studentAttendanceRepo := repository.NewStudentAttendanceRepository(db)
+	predictionRepo := repository.NewPredictionRepository(db)
+	recommendationRepo := repository.NewRecommendationRepository(db)
 
 	// ── Use Cases ─────────────────────────────────────────────────────────────
 	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
@@ -145,6 +148,8 @@ func main() {
 		personnelAttendanceRepo, studentAttendanceRepo,
 		personnelRepo, studentRepo, schoolRepo,
 	)
+	predictionUC := service.NewPredictionService(predictionRepo)
+	recommendationUC := service.NewRecommendationService(recommendationRepo, ml.NewRecommenderClient(cfg.MLServiceURL, 30*time.Second))
 
 	studentAuthUC := service.NewStudentAuthService(studentRepo, schoolRepo, refreshTokenRepo, tokenMaker)
 
@@ -167,6 +172,8 @@ func main() {
 	avatarHandler    := handler.NewAvatarHandler(avatarUC)
 	studentAuthHandler := handler.NewStudentAuthHandler(studentAuthUC)
 	attendanceHandler := handler.NewAttendanceHandler(attendanceUC)
+	predictionHandler := handler.NewPredictionHandler(predictionUC)
+	recommendationHandler := handler.NewRecommendationHandler(recommendationUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -191,6 +198,8 @@ func main() {
 		Avatar:      avatarHandler,
 		StudentAuth: studentAuthHandler,
 		Attendance:  attendanceHandler,
+		Prediction:  predictionHandler,
+		Recommendation: recommendationHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────
@@ -229,4 +238,5 @@ func main() {
 		}
 		log.Info("server stopped gracefully")
 	}
+	
 }

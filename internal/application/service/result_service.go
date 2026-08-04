@@ -58,7 +58,7 @@ func (uc *ResultService) UpsertScoreConfig(ctx context.Context, stateID string, 
 		return nil, apperror.BadRequest("ca1_max + ca2_max + ca3_max + exam_max must equal total_max")
 	}
 	sc := &domain.ScoreConfig{
-		StateID: stateID, SchoolID: req.SchoolID,
+		StateID: stateID, SchoolID: req.SchoolID, LevelID: req.LevelID,
 		CA1Max: req.CA1Max, CA2Max: req.CA2Max, CA3Max: req.CA3Max,
 		ExamMax: req.ExamMax, TotalMax: req.TotalMax,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
@@ -88,7 +88,7 @@ func (uc *ResultService) UpsertGradeConfig(ctx context.Context, stateID string, 
 		return nil, apperror.Validation(v.Errors())
 	}
 	gc := &domain.GradeConfig{
-		StateID: stateID, SchoolID: req.SchoolID,
+		StateID: stateID, SchoolID: req.SchoolID, LevelID: req.LevelID,
 		Grade: req.Grade, MinScore: req.MinScore, MaxScore: req.MaxScore,
 		Remark: req.Remark, Points: req.Points,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},
@@ -96,12 +96,22 @@ func (uc *ResultService) UpsertGradeConfig(ctx context.Context, stateID string, 
 	return gc, uc.gradeConfigs.Upsert(ctx, gc)
 }
 
-func (uc *ResultService) ListGradeConfigs(ctx context.Context, schoolID, stateID string) ([]*domain.GradeConfig, error) {
-	configs, err := uc.gradeConfigs.ListBySchool(ctx, schoolID)
-	if err != nil || len(configs) == 0 {
-		return uc.gradeConfigs.ListStateDefault(ctx, stateID)
+func (uc *ResultService) DeleteGradeConfig(ctx context.Context, id string) error {
+	return uc.gradeConfigs.Delete(ctx, id)
+}
+
+func (uc *ResultService) ListGradeConfigs(ctx context.Context, schoolID, levelID, stateID string) ([]*domain.GradeConfig, error) {
+	if schoolID != "" && levelID != "" {
+		return uc.gradeConfigs.ListBySchoolAndLevel(ctx, schoolID, levelID)
 	}
-	return configs, nil
+	if schoolID != "" {
+		configs, err := uc.gradeConfigs.ListBySchool(ctx, schoolID)
+		if err != nil || len(configs) == 0 {
+			return uc.gradeConfigs.ListStateDefault(ctx, stateID)
+		}
+		return configs, nil
+	}
+	return uc.gradeConfigs.ListStateDefault(ctx, stateID)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,7 +122,9 @@ func (uc *ResultService) ListGradeConfigs(ctx context.Context, schoolID, stateID
 // It validates component maximums, computes the total, evaluates the grade.
 func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dto.UpsertScoreRequest, recordedBy string) (*domain.ScoreSheet, error) {
 	v := validator.New().
-		Required(req.EnrollmentID, "enrollment_id").
+		Required(req.StudentID, "student_id").
+		Required(req.LevelID, "level_id").
+		Required(req.SubLevelID, "sub_level_id").
 		Required(req.SubjectID, "subject_id").
 		Required(req.TermID, "term_id").
 		Min(req.CA1Score, 0, "ca1_score").
@@ -123,14 +135,20 @@ func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dt
 		return nil, apperror.Validation(v.Errors())
 	}
 
-	// Load enrollment to resolve school context
-	enr, err := uc.enrollments.GetByID(ctx, req.EnrollmentID)
+	// Resolve sub-level to obtain the owning school
+	sub, err := uc.subLevels.GetByID(ctx, req.SubLevelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Resolve term to obtain the session
+	term, err := uc.terms.GetByID(ctx, req.TermID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Resolve score config (school-specific or state default)
-	cfg, err := uc.GetScoreConfig(ctx, enr.SchoolID, stateID)
+	cfg, err := uc.GetScoreConfig(ctx, sub.SchoolID, stateID)
 	if err != nil {
 		// If no config exists at all, use the classic Nigerian default: CA=30, Exam=70
 		cfg = &domain.ScoreConfig{CA1Max: 10, CA2Max: 10, CA3Max: 10, ExamMax: 70, TotalMax: 100}
@@ -147,23 +165,24 @@ func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dt
 	}
 
 	ss := &domain.ScoreSheet{
-		EnrollmentID: req.EnrollmentID,
-		StudentID:    enr.StudentID,
-		SchoolID:     enr.SchoolID,
-		SessionID:    enr.SessionID,
-		TermID:       req.TermID,
-		SubjectID:    req.SubjectID,
-		CA1Score:     req.CA1Score,
-		CA2Score:     req.CA2Score,
-		CA3Score:     req.CA3Score,
-		ExamScore:    req.ExamScore,
-		RecordedBy:   recordedBy,
-		RecordedAt:   time.Now(),
+		StudentID:  req.StudentID,
+		SchoolID:   sub.SchoolID,
+		SessionID:  term.SessionID,
+		LevelID:    req.LevelID,
+		SubLevelID: req.SubLevelID,
+		TermID:     req.TermID,
+		SubjectID:  req.SubjectID,
+		CA1Score:   req.CA1Score,
+		CA2Score:   req.CA2Score,
+		CA3Score:   req.CA3Score,
+		ExamScore:  req.ExamScore,
+		RecordedBy: recordedBy,
+		RecordedAt: time.Now(),
 	}
 	ss.ComputeTotal()
 
 	// Evaluate grade
-	gc, err := uc.gradeConfigs.EvaluateGrade(ctx, ss.TotalScore, enr.SchoolID, stateID)
+	gc, err := uc.gradeConfigs.EvaluateGrade(ctx, ss.TotalScore, sub.SchoolID, stateID)
 	if err == nil {
 		ss.Grade = gc.Grade
 		ss.Remark = gc.Remark
@@ -173,11 +192,11 @@ func (uc *ResultService) UpsertScore(ctx context.Context, stateID string, req dt
 }
 
 // BulkUpsertScores processes multiple score entries in one call.
-func (uc *ResultService) BulkUpsertScores(ctx context.Context, studentID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
+func (uc *ResultService) BulkUpsertScores(ctx context.Context, stateID string, req dto.BulkUpsertScoreRequest, recordedBy string) ([]*domain.ScoreSheet, []error) {
 	results := make([]*domain.ScoreSheet, 0, len(req.Scores))
 	errs := make([]error, 0)
 	for _, s := range req.Scores {
-		ss, err := uc.UpsertScore(ctx, studentID, s, recordedBy)
+		ss, err := uc.UpsertScore(ctx, stateID, s, recordedBy)
 		if err != nil {
 			errs = append(errs, err)
 			continue

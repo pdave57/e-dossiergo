@@ -390,6 +390,10 @@ func (uc *AcademicService) ListAllTerms(ctx context.Context) ([]*domain.Term, er
 	return uc.terms.ListAll(ctx)
 }
 
+func (uc *AcademicService) GetActiveTerm(ctx context.Context, sessionID string) (*domain.Term, error) {
+	return uc.terms.GetActiveTerm(ctx, sessionID)
+}
+
 // CreateTermTopLevel creates a term via the top-level /terms endpoint, where the
 // owning session is supplied in the request body rather than the URL path.
 func (uc *AcademicService) CreateTermTopLevel(ctx context.Context, req dto.CreateTermRequest, createdBy string) (*domain.Term, error) {

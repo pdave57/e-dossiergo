@@ -38,6 +38,8 @@ type Deps struct {
 	Avatar      *handler.AvatarHandler
 	StudentAuth *handler.StudentAuthHandler
 	Attendance  *handler.AttendanceHandler
+	Prediction  *handler.PredictionHandler
+	Recommendation *handler.RecommendationHandler
 }
 
 // New builds and returns the fully-configured HTTP router.
@@ -211,6 +213,7 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "sessions", "read")).Get("/{id}", d.Academic.GetTerm)
 				r.With(authorize(d, "sessions", "update")).Put("/{id}", d.Academic.UpdateTerm)
 				r.With(authorize(d, "sessions", "update")).Delete("/{id}", d.Academic.DeleteTerm)
+				r.With(authorize(d, "sessions", "read")).Get("/active", d.Academic.GetActiveTerm)
 			})
 
 			// ── LEVELS (state-wide class definitions) ─────────────────────────
@@ -235,15 +238,16 @@ func New(d Deps) http.Handler {
 			})
 
 			// ── PERSONNEL ─────────────────────────────────────────────────────
-			r.Route("/personnel", func(r chi.Router) {
-				r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
+		r.Route("/personnel", func(r chi.Router) {
+			r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
+			r.With(authorize(d, "personnel", "create")).Post("/", d.Personnel.Create)
 
-				r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
-				r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
-				r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)
-				r.With(authorize(d, "personnel", "update")).Post("/{id}/transfer", d.Personnel.Transfer)
-				r.With(authorize(d, "personnel", "read")).Get("/{id}/transfers", d.Personnel.ListTransfers)
-			})
+			r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
+			r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
+			r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)
+			r.With(authorize(d, "personnel", "update")).Post("/{id}/transfer", d.Personnel.Transfer)
+			r.With(authorize(d, "personnel", "read")).Get("/{id}/transfers", d.Personnel.ListTransfers)
+		})
 
 			// ── STUDENTS ──────────────────────────────────────────────────────
 			r.Route("/students", func(r chi.Router) {
@@ -308,7 +312,7 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "attendance", "update")).Put("/{id}", d.Attendance.UpdatePersonnelAttendance)
 				r.With(authorize(d, "attendance", "delete")).Delete("/{id}", d.Attendance.DeletePersonnelAttendance)
 				r.With(authorize(d, "attendance", "read")).Get("/school", d.Attendance.ListPersonnelAttendanceBySchoolAndDate)
-				r.With(authorize(d, "attendance", "read")).Get("/personnel/{id}/range", d.Attendance.ListPersonnelAttendanceByPersonnelAndRange)
+				r.With(authorize(d, "attendance", "read")).Get("/{id}/range", d.Attendance.ListPersonnelAttendanceByPersonnelAndRange)
 			})
 			r.Route("/students", func(r chi.Router) {
 				r.With(authorize(d, "attendance", "create")).Post("/", d.Attendance.RecordStudentAttendance)
@@ -321,6 +325,15 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "attendance", "read")).Get("/school/range", d.Attendance.ListStudentAttendanceBySchoolAndRange)
 			})
 		})
+
+		r.Route("/predictions", func(r chi.Router) {
+			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}", d.Prediction.SchoolReport)
+			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/full", d.Prediction.FullReport)
+			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/students/{studentId}", d.Prediction.StudentReport)
+		})
+
+		// ── RECOMMENDATIONS ───────────────────────────────────────────────
+		r.With(authorize(d, "reports", "read")).Get("/recommendations", d.Recommendation.GetRecommendations)
 
 	})
 	})

@@ -47,8 +47,28 @@ func Migrate(db *sql.DB) error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			deleted_at TIMESTAMPTZ,
 			created_by TEXT,
-			updated_by TEXT
-		)`,
+            updated_by      TEXT
+        )`,
+
+		`CREATE TABLE IF NOT EXISTS score_configs (
+            id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+            state_id    TEXT NOT NULL REFERENCES states(id),
+            school_id   TEXT REFERENCES schools(id),
+            level_id    TEXT REFERENCES levels(id),
+            ca1_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
+            ca2_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
+            ca3_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
+            exam_max    NUMERIC(5,2) NOT NULL DEFAULT 70,
+            total_max   NUMERIC(5,2) NOT NULL DEFAULT 100,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            created_by  TEXT,
+            updated_by  TEXT,
+            UNIQUE (state_id, school_id, level_id)
+        )`,
+		`ALTER TABLE score_configs ADD COLUMN IF NOT EXISTS level_id TEXT REFERENCES levels(id)`,
+		`DROP INDEX IF EXISTS idx_score_configs_school`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_score_configs_unique ON score_configs(state_id, school_id, level_id) NULLS NOT DISTINCT`,
 
 		`CREATE TABLE IF NOT EXISTS zones (
 			id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -454,6 +474,7 @@ func Migrate(db *sql.DB) error {
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             school_id   TEXT REFERENCES schools(id),
+            level_id    TEXT REFERENCES levels(id),
             ca1_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
             ca2_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
             ca3_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
@@ -463,13 +484,14 @@ func Migrate(db *sql.DB) error {
             updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             created_by  TEXT,
             updated_by  TEXT,
-            UNIQUE (state_id, school_id)
+            UNIQUE (state_id, school_id, level_id)
         )`,
 
 		`CREATE TABLE IF NOT EXISTS grade_configs (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
             state_id    TEXT NOT NULL REFERENCES states(id),
             school_id   TEXT REFERENCES schools(id),
+            level_id    TEXT REFERENCES levels(id),
             grade       TEXT NOT NULL,
             min_score   NUMERIC(5,2) NOT NULL,
             max_score   NUMERIC(5,2) NOT NULL,
@@ -479,13 +501,14 @@ func Migrate(db *sql.DB) error {
             updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             created_by  TEXT,
             updated_by  TEXT,
-            UNIQUE (state_id, school_id, grade)
+            UNIQUE (state_id, school_id, level_id, grade)
         )`,
 
 		`CREATE TABLE IF NOT EXISTS score_sheets (
             id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-            enrollment_id TEXT NOT NULL REFERENCES enrollments(id),
             student_id    TEXT NOT NULL REFERENCES students(id),
+            level_id      TEXT NOT NULL REFERENCES levels(id),
+            sub_level_id  TEXT NOT NULL REFERENCES sub_levels(id),
             school_id     TEXT NOT NULL REFERENCES schools(id),
             session_id    TEXT NOT NULL REFERENCES academic_sessions(id),
             term_id       TEXT NOT NULL REFERENCES terms(id),
@@ -510,6 +533,8 @@ func Migrate(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_score_sheets_student  ON score_sheets(student_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_score_sheets_term     ON score_sheets(term_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_score_sheets_school   ON score_sheets(school_id)`,
+		`ALTER TABLE score_sheets ADD COLUMN IF NOT EXISTS sub_level_id TEXT REFERENCES sub_levels(id)`,
+		`CREATE INDEX IF NOT EXISTS idx_score_sheets_sublevel ON score_sheets(sub_level_id)`,
 
 		`CREATE TABLE IF NOT EXISTS report_cards (
             id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -637,7 +662,8 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'roles',         'read',    'View roles'),
         (gen_random_uuid()::TEXT, 'roles',         'update',  'Update roles'),
         (gen_random_uuid()::TEXT, 'roles',         'delete',  'Delete roles'),
-        (gen_random_uuid()::TEXT, 'reports',       'read',    'View reports and dashboards')
+        (gen_random_uuid()::TEXT, 'reports',       'read',    'View reports and dashboards'),
+        (gen_random_uuid()::TEXT, 'avatar',        'update',  'Upload avatar')
         ON CONFLICT (resource, action) DO NOTHING;`,
 
 		`INSERT INTO role_permissions (role_id, permission_id, granted_at)
@@ -1106,6 +1132,7 @@ CREATE TABLE IF NOT EXISTS score_configs (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     state_id    TEXT NOT NULL REFERENCES states(id),
     school_id   TEXT REFERENCES schools(id),
+    level_id    TEXT REFERENCES levels(id),
     ca1_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
     ca2_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
     ca3_max     NUMERIC(5,2) NOT NULL DEFAULT 10,
@@ -1115,13 +1142,18 @@ CREATE TABLE IF NOT EXISTS score_configs (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by  TEXT,
     updated_by  TEXT,
-    UNIQUE (state_id, school_id)
+    UNIQUE (state_id, school_id, level_id)
 );
+
+ALTER TABLE score_configs ADD COLUMN IF NOT EXISTS level_id TEXT REFERENCES levels(id);
+DROP INDEX IF EXISTS idx_score_configs_school;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_score_configs_unique ON score_configs(state_id, school_id, level_id) NULLS NOT DISTINCT;
 
 CREATE TABLE IF NOT EXISTS grade_configs (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     state_id    TEXT NOT NULL REFERENCES states(id),
     school_id   TEXT REFERENCES schools(id),
+    level_id    TEXT REFERENCES levels(id),
     grade       TEXT NOT NULL,
     min_score   NUMERIC(5,2) NOT NULL,
     max_score   NUMERIC(5,2) NOT NULL,
@@ -1131,13 +1163,18 @@ CREATE TABLE IF NOT EXISTS grade_configs (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by  TEXT,
     updated_by  TEXT,
-    UNIQUE (state_id, school_id, grade)
+    UNIQUE (state_id, school_id, level_id, grade)
 );
+
+ALTER TABLE grade_configs ADD COLUMN IF NOT EXISTS level_id TEXT REFERENCES levels(id);
+DROP INDEX IF EXISTS idx_grade_configs_school;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_grade_configs_unique ON grade_configs(state_id, school_id, level_id, grade) NULLS NOT DISTINCT;
 
 CREATE TABLE IF NOT EXISTS score_sheets (
     id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    enrollment_id TEXT NOT NULL REFERENCES enrollments(id),
     student_id    TEXT NOT NULL REFERENCES students(id),
+    level_id      TEXT NOT NULL REFERENCES levels(id),
+    sub_level_id  TEXT NOT NULL REFERENCES sub_levels(id),
     school_id     TEXT NOT NULL REFERENCES schools(id),
     session_id    TEXT NOT NULL REFERENCES academic_sessions(id),
     term_id       TEXT NOT NULL REFERENCES terms(id),
@@ -1162,6 +1199,8 @@ CREATE TABLE IF NOT EXISTS score_sheets (
 CREATE INDEX IF NOT EXISTS idx_score_sheets_student  ON score_sheets(student_id);
 CREATE INDEX IF NOT EXISTS idx_score_sheets_term     ON score_sheets(term_id);
 CREATE INDEX IF NOT EXISTS idx_score_sheets_school   ON score_sheets(school_id);
+ALTER TABLE score_sheets ADD COLUMN IF NOT EXISTS sub_level_id TEXT REFERENCES sub_levels(id);
+CREATE INDEX IF NOT EXISTS idx_score_sheets_sublevel ON score_sheets(sub_level_id);
 
 CREATE TABLE IF NOT EXISTS report_cards (
     id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -1252,6 +1291,7 @@ INSERT INTO permissions (id, resource, action, description) VALUES
   (gen_random_uuid()::TEXT, 'roles',         'read',    'View roles'),
   (gen_random_uuid()::TEXT, 'roles',         'update',  'Update roles'),
   (gen_random_uuid()::TEXT, 'roles',         'delete',  'Delete roles'),
-  (gen_random_uuid()::TEXT, 'reports',       'read',    'View reports and dashboards')
+  (gen_random_uuid()::TEXT, 'reports',       'read',    'View reports and dashboards'),
+  (gen_random_uuid()::TEXT, 'avatar',        'update',  'Upload avatar')
 ON CONFLICT (resource, action) DO NOTHING;
 `

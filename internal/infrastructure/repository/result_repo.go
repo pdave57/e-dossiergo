@@ -137,8 +137,8 @@ func (r *personnelRepo) CountTotalPersonnel(ctx context.Context, stateID string)
 	return count, nil
 }
 
-func (r *personnelRepo) UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error {
-    _, err := r.db.ExecContext(ctx, updatePersonnelAvatarSQL, avatarURL, id, schoolID)
+func (r *personnelRepo) UpdateAvatar(ctx context.Context, id, avatarURL string) error {
+    _, err := r.db.ExecContext(ctx, updatePersonnelAvatarSQL, avatarURL, id)
     return err
 }
 
@@ -146,7 +146,7 @@ const personnelSelect = `
 	SELECT id,state_id,school_id,staff_id,first_name,COALESCE(middle_name,''),last_name,gender,
 	       date_of_birth,COALESCE(email,''),COALESCE(phone,''),COALESCE(address,''),
 	       role,status,COALESCE(qualification,''),COALESCE(specialization,''),
-	       date_of_employment,COALESCE(lga_id,''),created_at,updated_at,
+	       date_of_employment,COALESCE(lga_id,''),COALESCE(avatar_url,''),created_at,updated_at,
 	       COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM personnel`
 
@@ -157,7 +157,7 @@ func scanPersonnel(s scanner) (*domain.Personnel, error) {
 		&p.FirstName, &p.MiddleName, &p.LastName, &p.Gender,
 		&p.DateOfBirth, &p.Email, &p.Phone, &p.Address,
 		&p.Role, &p.Status, &p.Qualification, &p.Specialization,
-		&p.DateOfEmployment, &p.LGAID,
+		&p.DateOfEmployment, &p.LGAID, &p.AvatarURL,
 		&p.CreatedAt, &p.UpdatedAt, &p.CreatedBy, &p.UpdatedBy,
 	)
 	if err == sql.ErrNoRows {
@@ -172,7 +172,7 @@ func scanPersonnel(s scanner) (*domain.Personnel, error) {
 const updatePersonnelAvatarSQL = `
     UPDATE personnel 
     SET avatar_url = $1, updated_at = NOW() 
-    WHERE id = $2 AND school_id = $3
+    WHERE id = $2
 `
 
 
@@ -282,7 +282,7 @@ func (r *studentRepo) Create(ctx context.Context, s *domain.Student) error {
 	return nil
 }
 
-func (r *studentRepo) UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error {
+func (r *studentRepo) UpdateAvatar(ctx context.Context, id, avatarURL string) error {
 	_, err := r.db.ExecContext(ctx, `UPDATE students SET avatar_url = $1, updated_at = NOW() WHERE id = $2`, avatarURL, id)
 	return err
 }
@@ -778,17 +778,18 @@ func (r *scoreSheetRepo) Upsert(ctx context.Context, ss *domain.ScoreSheet) erro
 	}
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO score_sheets
-		(id,enrollment_id,student_id,school_id,session_id,term_id,subject_id,
+		(id,student_id,level_id,sub_level_id,school_id,session_id,term_id,subject_id,
 		 ca1_score,ca2_score,ca3_score,exam_score,total_score,grade,remark,
 		 position,recorded_by,recorded_at,created_at,updated_at,created_by)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
 		ON CONFLICT (student_id,subject_id,term_id) DO UPDATE SET
+		  level_id=EXCLUDED.level_id, sub_level_id=EXCLUDED.sub_level_id,
 		  ca1_score=EXCLUDED.ca1_score, ca2_score=EXCLUDED.ca2_score,
 		  ca3_score=EXCLUDED.ca3_score, exam_score=EXCLUDED.exam_score,
 		  total_score=EXCLUDED.total_score, grade=EXCLUDED.grade,
 		  remark=EXCLUDED.remark, recorded_by=EXCLUDED.recorded_by,
 		  recorded_at=EXCLUDED.recorded_at, updated_at=NOW()`,
-		ss.ID, ss.EnrollmentID, ss.StudentID, ss.SchoolID, ss.SessionID, ss.TermID, ss.SubjectID,
+		ss.ID, ss.StudentID, ss.LevelID, ss.SubLevelID, ss.SchoolID, ss.SessionID, ss.TermID, ss.SubjectID,
 		ss.CA1Score, ss.CA2Score, ss.CA3Score, ss.ExamScore, ss.TotalScore,
 		ss.Grade, ss.Remark, ss.Position, ss.RecordedBy, ss.RecordedAt,
 		ss.CreatedAt, ss.UpdatedAt, ss.CreatedBy)
@@ -828,6 +829,12 @@ func (r *scoreSheetRepo) List(ctx context.Context, f domain.ScoreSheetFilter, p 
 	if f.TermID != "" {
 		where = append(where, fmt.Sprintf("term_id=$%d", idx)); args = append(args, f.TermID); idx++
 	}
+	if f.LevelID != "" {
+		where = append(where, fmt.Sprintf("level_id=$%d", idx)); args = append(args, f.LevelID); idx++
+	}
+	if f.SubLevelID != "" {
+		where = append(where, fmt.Sprintf("sub_level_id=$%d", idx)); args = append(args, f.SubLevelID); idx++
+	}
 	if f.SubjectID != "" {
 		where = append(where, fmt.Sprintf("subject_id=$%d", idx)); args = append(args, f.SubjectID); idx++
 	}
@@ -857,15 +864,14 @@ func (r *scoreSheetRepo) ComputePositions(ctx context.Context, termID, subLevelI
 		  SELECT ss2.id,
 		         RANK() OVER (ORDER BY ss2.total_score DESC) AS pos
 		  FROM score_sheets ss2
-		  JOIN enrollments e ON e.id = ss2.enrollment_id
-		  WHERE ss2.term_id=$1 AND e.sub_level_id=$2 AND ss2.subject_id=$3
+		  WHERE ss2.term_id=$1 AND ss2.sub_level_id=$2 AND ss2.subject_id=$3
 		) ranked
 		WHERE ss.id = ranked.id`, termID, subLevelID, subjectID)
 	return err
 }
 
 const scoreSheetSelect = `
-	SELECT id,enrollment_id,student_id,school_id,session_id,term_id,subject_id,
+	SELECT id,student_id,level_id,sub_level_id,school_id,session_id,term_id,subject_id,
 	       ca1_score,ca2_score,ca3_score,exam_score,total_score,
 	       COALESCE(grade,''),COALESCE(remark,''),position,
 	       COALESCE(recorded_by,''),COALESCE(recorded_at,NOW()),
@@ -875,7 +881,7 @@ const scoreSheetSelect = `
 func scanScoreSheet(s scanner) (*domain.ScoreSheet, error) {
 	ss := &domain.ScoreSheet{}
 	err := s.Scan(
-		&ss.ID, &ss.EnrollmentID, &ss.StudentID, &ss.SchoolID, &ss.SessionID, &ss.TermID, &ss.SubjectID,
+		&ss.ID, &ss.StudentID, &ss.LevelID, &ss.SubLevelID, &ss.SchoolID, &ss.SessionID, &ss.TermID, &ss.SubjectID,
 		&ss.CA1Score, &ss.CA2Score, &ss.CA3Score, &ss.ExamScore, &ss.TotalScore,
 		&ss.Grade, &ss.Remark, &ss.Position, &ss.RecordedBy, &ss.RecordedAt,
 		&ss.CreatedAt, &ss.UpdatedAt, &ss.CreatedBy, &ss.UpdatedBy,
@@ -914,12 +920,12 @@ func (r *gradeConfigRepo) Upsert(ctx context.Context, gc *domain.GradeConfig) er
 		gc.ID = uuid.NewString()
 	}
 	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO grade_configs (id,state_id,school_id,grade,min_score,max_score,remark,points,created_at,updated_at,created_by)
-		VALUES ($1,$2,NULLIF($3,''),$4,$5,$6,$7,$8,NOW(),NOW(),$9)
-		ON CONFLICT (state_id,school_id,grade) DO UPDATE SET
+		INSERT INTO grade_configs (id,state_id,school_id,level_id,grade,min_score,max_score,remark,points,created_at,updated_at,created_by)
+		VALUES ($1,$2,NULLIF($3,''),NULLIF($4,''),$5,$6,$7,$8,$9,NOW(),NOW(),$10)
+		ON CONFLICT (state_id,school_id,level_id,grade) DO UPDATE SET
 		  min_score=EXCLUDED.min_score, max_score=EXCLUDED.max_score,
 		  remark=EXCLUDED.remark, points=EXCLUDED.points, updated_at=NOW()`,
-		gc.ID, gc.StateID, gc.SchoolID, gc.Grade, gc.MinScore, gc.MaxScore,
+		gc.ID, gc.StateID, gc.SchoolID, gc.LevelID, gc.Grade, gc.MinScore, gc.MaxScore,
 		gc.Remark, gc.Points, gc.CreatedBy)
 	return err
 }
@@ -934,9 +940,19 @@ func (r *gradeConfigRepo) ListBySchool(ctx context.Context, schoolID string) ([]
 	return collectGradeConfigs(rows)
 }
 
+func (r *gradeConfigRepo) ListBySchoolAndLevel(ctx context.Context, schoolID, levelID string) ([]*domain.GradeConfig, error) {
+	rows, err := r.db.QueryContext(ctx,
+		gradeConfigSelect+" WHERE school_id=$1 AND level_id=$2 ORDER BY min_score DESC", schoolID, levelID)
+	if err != nil {
+		return nil, apperror.Internal(err)
+	}
+	defer rows.Close()
+	return collectGradeConfigs(rows)
+}
+
 func (r *gradeConfigRepo) ListStateDefault(ctx context.Context, stateID string) ([]*domain.GradeConfig, error) {
 	rows, err := r.db.QueryContext(ctx,
-		gradeConfigSelect+" WHERE state_id=$1 AND school_id IS NULL ORDER BY min_score DESC", stateID)
+		gradeConfigSelect+" WHERE state_id=$1 AND school_id IS NULL AND level_id IS NULL ORDER BY min_score DESC", stateID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}
@@ -948,14 +964,15 @@ func (r *gradeConfigRepo) EvaluateGrade(ctx context.Context, score float64, scho
 	// Try school-specific first, fall back to state default
 	gc := &domain.GradeConfig{}
 	err := r.db.QueryRowContext(ctx, `
-		SELECT id,state_id,COALESCE(school_id,''),grade,min_score,max_score,remark,points,
+		SELECT id,state_id,COALESCE(school_id,''),COALESCE(level_id,''),grade,min_score,max_score,remark,points,
 		       created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
 		FROM grade_configs
 		WHERE state_id=$1 AND (school_id=$2 OR school_id IS NULL)
+		  AND level_id IS NULL
 		  AND $3 BETWEEN min_score AND max_score
 		ORDER BY school_id DESC NULLS LAST
 		LIMIT 1`, stateID, schoolID, score).
-		Scan(&gc.ID, &gc.StateID, &gc.SchoolID, &gc.Grade, &gc.MinScore, &gc.MaxScore,
+		Scan(&gc.ID, &gc.StateID, &gc.SchoolID, &gc.LevelID, &gc.Grade, &gc.MinScore, &gc.MaxScore,
 			&gc.Remark, &gc.Points, &gc.CreatedAt, &gc.UpdatedAt, &gc.CreatedBy, &gc.UpdatedBy)
 	if err == sql.ErrNoRows {
 		return nil, apperror.NotFound("grade_config", "for score")
@@ -963,8 +980,19 @@ func (r *gradeConfigRepo) EvaluateGrade(ctx context.Context, score float64, scho
 	return gc, err
 }
 
+func (r *gradeConfigRepo) Delete(ctx context.Context, id string) error {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM grade_configs WHERE id=$1`, id)
+	if err != nil {
+		return apperror.Internal(err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return apperror.NotFound("grade_config", id)
+	}
+	return nil
+}
+
 const gradeConfigSelect = `
-	SELECT id,state_id,COALESCE(school_id,''),grade,min_score,max_score,remark,points,
+	SELECT id,state_id,COALESCE(school_id,''),COALESCE(level_id,''),grade,min_score,max_score,remark,points,
 	       created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
 	FROM grade_configs`
 
@@ -972,7 +1000,7 @@ func collectGradeConfigs(rows *sql.Rows) ([]*domain.GradeConfig, error) {
 	var out []*domain.GradeConfig
 	for rows.Next() {
 		gc := &domain.GradeConfig{}
-		if err := rows.Scan(&gc.ID, &gc.StateID, &gc.SchoolID, &gc.Grade,
+		if err := rows.Scan(&gc.ID, &gc.StateID, &gc.SchoolID, &gc.LevelID, &gc.Grade,
 			&gc.MinScore, &gc.MaxScore, &gc.Remark, &gc.Points,
 			&gc.CreatedAt, &gc.UpdatedAt, &gc.CreatedBy, &gc.UpdatedBy); err != nil {
 			return nil, apperror.Internal(err)
@@ -995,13 +1023,13 @@ func (r *scoreConfigRepo) Upsert(ctx context.Context, sc *domain.ScoreConfig) er
 		sc.ID = uuid.NewString()
 	}
 	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO score_configs (id,state_id,school_id,ca1_max,ca2_max,ca3_max,exam_max,total_max,created_at,updated_at,created_by)
-		VALUES ($1,$2,NULLIF($3,''),$4,$5,$6,$7,$8,NOW(),NOW(),$9)
-		ON CONFLICT (state_id,school_id) DO UPDATE SET
+		INSERT INTO score_configs (id,state_id,school_id,level_id,ca1_max,ca2_max,ca3_max,exam_max,total_max,created_at,updated_at,created_by)
+		VALUES ($1,$2,NULLIF($3,''),NULLIF($4,''),$5,$6,$7,$8,$9,NOW(),NOW(),$10)
+		ON CONFLICT (state_id,school_id,level_id) DO UPDATE SET
 		  ca1_max=EXCLUDED.ca1_max, ca2_max=EXCLUDED.ca2_max,
 		  ca3_max=EXCLUDED.ca3_max, exam_max=EXCLUDED.exam_max,
 		  total_max=EXCLUDED.total_max, updated_at=NOW()`,
-		sc.ID, sc.StateID, sc.SchoolID, sc.CA1Max, sc.CA2Max, sc.CA3Max,
+		sc.ID, sc.StateID, sc.SchoolID, sc.LevelID, sc.CA1Max, sc.CA2Max, sc.CA3Max,
 		sc.ExamMax, sc.TotalMax, sc.CreatedBy)
 	return err
 }
@@ -1009,10 +1037,10 @@ func (r *scoreConfigRepo) Upsert(ctx context.Context, sc *domain.ScoreConfig) er
 func (r *scoreConfigRepo) GetBySchool(ctx context.Context, schoolID string) (*domain.ScoreConfig, error) {
 	sc := &domain.ScoreConfig{}
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id,state_id,COALESCE(school_id,''),ca1_max,ca2_max,ca3_max,exam_max,total_max,
+		`SELECT id,state_id,COALESCE(school_id,''),COALESCE(level_id,''),ca1_max,ca2_max,ca3_max,exam_max,total_max,
 		        created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
-		 FROM score_configs WHERE school_id=$1`, schoolID).
-		Scan(&sc.ID, &sc.StateID, &sc.SchoolID, &sc.CA1Max, &sc.CA2Max, &sc.CA3Max,
+		 FROM score_configs WHERE school_id=$1 AND level_id IS NULL`, schoolID).
+		Scan(&sc.ID, &sc.StateID, &sc.SchoolID, &sc.LevelID, &sc.CA1Max, &sc.CA2Max, &sc.CA3Max,
 			&sc.ExamMax, &sc.TotalMax, &sc.CreatedAt, &sc.UpdatedAt, &sc.CreatedBy, &sc.UpdatedBy)
 	if err == sql.ErrNoRows {
 		return nil, apperror.NotFound("score_config", schoolID)
@@ -1023,10 +1051,10 @@ func (r *scoreConfigRepo) GetBySchool(ctx context.Context, schoolID string) (*do
 func (r *scoreConfigRepo) GetStateDefault(ctx context.Context, stateID string) (*domain.ScoreConfig, error) {
 	sc := &domain.ScoreConfig{}
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id,state_id,COALESCE(school_id,''),ca1_max,ca2_max,ca3_max,exam_max,total_max,
+		`SELECT id,state_id,COALESCE(school_id,''),COALESCE(level_id,''),ca1_max,ca2_max,ca3_max,exam_max,total_max,
 		        created_at,updated_at,COALESCE(created_by,''),COALESCE(updated_by,'')
-		 FROM score_configs WHERE state_id=$1 AND school_id IS NULL`, stateID).
-		Scan(&sc.ID, &sc.StateID, &sc.SchoolID, &sc.CA1Max, &sc.CA2Max, &sc.CA3Max,
+		 FROM score_configs WHERE state_id=$1 AND school_id IS NULL AND level_id IS NULL`, stateID).
+		Scan(&sc.ID, &sc.StateID, &sc.SchoolID, &sc.LevelID, &sc.CA1Max, &sc.CA2Max, &sc.CA3Max,
 			&sc.ExamMax, &sc.TotalMax, &sc.CreatedAt, &sc.UpdatedAt, &sc.CreatedBy, &sc.UpdatedBy)
 	if err == sql.ErrNoRows {
 		return nil, apperror.NotFound("score_config", "state default")

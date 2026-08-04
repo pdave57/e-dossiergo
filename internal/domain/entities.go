@@ -317,10 +317,7 @@ type SchoolLevel struct {
 
 type SubjectCategory string
 
-const (
-	SubjectCore      SubjectCategory = "CORE"
-	SubjectElective  SubjectCategory = "ELECTIVE"
-	SubjectPractical SubjectCategory = "PRACTICAL"
+const (SubjectPractical SubjectCategory = "PRACTICAL"
 )
 
 // Subject is a state-wide subject definition.
@@ -525,11 +522,12 @@ type LevelProgression struct {
 // EXAMINATION & RESULTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ScoreConfig defines maximum marks per component (state-wide or per-school).
+// ScoreConfig defines maximum marks per component (state-wide, per-school, or per-level).
 type ScoreConfig struct {
 	ID       string  `json:"id"`
 	StateID  string  `json:"state_id"`
 	SchoolID string  `json:"school_id,omitempty"`
+	LevelID  string  `json:"level_id,omitempty"`
 	CA1Max   float64 `json:"ca1_max"`
 	CA2Max   float64 `json:"ca2_max"`
 	CA3Max   float64 `json:"ca3_max"`
@@ -543,6 +541,7 @@ type GradeConfig struct {
 	ID       string  `json:"id"`
 	StateID  string  `json:"state_id"`
 	SchoolID string  `json:"school_id,omitempty"`
+	LevelID  string  `json:"level_id,omitempty"`
 	Grade    string  `json:"grade"`
 	MinScore float64 `json:"min_score"`
 	MaxScore float64 `json:"max_score"`
@@ -553,9 +552,10 @@ type GradeConfig struct {
 
 // ScoreSheet holds raw scores for one student per subject per term.
 type ScoreSheet struct {
-	ID           string    `json:"id"`
-	EnrollmentID string    `json:"enrollment_id"`
-	StudentID    string    `json:"student_id"`
+	ID         string    `json:"id"`
+	StudentID  string    `json:"student_id"`
+	LevelID    string    `json:"level_id"`
+	SubLevelID string    `json:"sub_level_id"`
 	SchoolID     string    `json:"school_id"`
 	SessionID    string    `json:"session_id"`
 	TermID       string    `json:"term_id"`
@@ -637,3 +637,123 @@ type StudentAttendance struct {
 	RecordedBy    string    `json:"recorded_by"`
 	AuditFields
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUT SIGNALS  (raw data the engine reads from the DB)
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+// FacilitySignal is the aggregated facility profile for one school.
+type FacilitySignal struct {
+	SchoolID            string
+	TotalFacilities     int
+	GoodCount           int     // condition = GOOD
+	FairCount           int     // condition = FAIR
+	PoorCount           int     // condition = POOR
+	DefunctCount        int     // condition = DEFUNCT
+	HasLibrary          bool
+	HasLab              bool
+	HasICT              bool
+	HasSportField       bool
+	FacilityScore       float64 // 0–100, computed by engine
+}
+ 
+// PersonnelSignal is the aggregated staff profile for one school.
+type PersonnelSignal struct {
+	SchoolID             string
+	TotalStaff           int
+	ActiveStaff          int
+	QualifiedCount       int     // NCE / B.Ed / M.Ed / Ph.D
+	PostgradCount        int     // M.Ed or Ph.D
+	StaffStudentRatio    float64 // active staff / enrolled students
+	TeacherCount         int     // role = TEACHER
+	PersonnelScore       float64 // 0–100, computed by engine
+}
+ 
+// HistoricalSignal holds aggregated academic performance for a school or student.
+type HistoricalSignal struct {
+	SchoolID       string
+	StudentID      string  // empty = school-level signal
+	AvgScore       float64 // mean total_score across all score_sheets
+	PassRate       float64 // % of score_sheets with total_score >= 40
+	DistinctionRate float64 // % with total_score >= 70
+	TermsRecorded  int     // how many term results exist
+}
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// PREDICTION OUTPUTS
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+// RiskLevel classifies a student's likelihood of poor academic performance.
+type RiskLevel string
+ 
+const (
+	RiskLow    RiskLevel = "LOW"    // predicted avg >= 60
+	RiskMedium RiskLevel = "MEDIUM" // predicted avg 40–59
+	RiskHigh   RiskLevel = "HIGH"   // predicted avg < 40
+)
+ 
+// SchoolRating classifies overall school performance capacity.
+type SchoolRating string
+ 
+const (
+	RatingExcellent SchoolRating = "EXCELLENT" // composite >= 80
+	RatingGood      SchoolRating = "GOOD"      // composite 65–79
+	RatingAverage   SchoolRating = "AVERAGE"   // composite 50–64
+	RatingPoor      SchoolRating = "POOR"      // composite < 50
+)
+ 
+// ScoreRange is a human-readable predicted score bracket.
+type ScoreRange struct {
+	Min   float64 `json:"min"`
+	Max   float64 `json:"max"`
+	Label string  `json:"label"` // e.g. "60–75%"
+}
+ 
+// StudentPrediction is the per-student output.
+type StudentPrediction struct {
+	StudentID        string      `json:"student_id"`
+	StudentName      string      `json:"student_name"`
+	SchoolID         string      `json:"school_id"`
+	RiskLevel        RiskLevel   `json:"risk_level"`
+	PredictedRange   ScoreRange  `json:"predicted_score_range"`
+	HistoricalAvg    float64     `json:"historical_avg"`
+	FacilityScore    float64     `json:"facility_score"`
+	PersonnelScore   float64     `json:"personnel_score"`
+	CompositeScore   float64     `json:"composite_score"`    // weighted blend
+	Confidence       float64     `json:"confidence"`         // 0–1, based on data richness
+	Factors          []Factor    `json:"contributing_factors"`
+	GeneratedAt      time.Time   `json:"generated_at"`
+}
+ 
+// SchoolPrediction is the school-level output.
+type SchoolPrediction struct {
+	SchoolID            string       `json:"school_id"`
+	SchoolName          string       `json:"school_name"`
+	Rating              SchoolRating `json:"rating"`
+	CompositeScore      float64      `json:"composite_score"`
+	FacilityScore       float64      `json:"facility_score"`
+	PersonnelScore      float64      `json:"personnel_score"`
+	HistoricalScore     float64      `json:"historical_score"`
+	PredictedPassRate   float64      `json:"predicted_pass_rate"`
+	HighRiskCount       int          `json:"high_risk_student_count"`
+	MediumRiskCount     int          `json:"medium_risk_student_count"`
+	LowRiskCount        int          `json:"low_risk_student_count"`
+	Factors             []Factor     `json:"contributing_factors"`
+	GeneratedAt         time.Time    `json:"generated_at"`
+}
+ 
+// Factor is one named contributor to the prediction — shown in the UI as insight cards.
+type Factor struct {
+	Name   string  `json:"name"`
+	Score  float64 `json:"score"`   // 0–100
+	Weight float64 `json:"weight"`  // 0–1, how much this factor contributes
+	Detail string  `json:"detail"`  // human-readable explanation
+}
+ 
+// PredictionReport bundles school + all student predictions for one request.
+type PredictionReport struct {
+	School   SchoolPrediction    `json:"school"`
+	Students []StudentPrediction `json:"students"`
+}
+ 
+// IsEmpty returns whether the prediction report contains any data.
+func (pr *PredictionReport) IsEmpty() bool { return len(pr.Students) == 0 }

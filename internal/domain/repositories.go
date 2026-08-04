@@ -56,11 +56,12 @@ type EnrollmentFilter struct {
 }
 
 type ScoreSheetFilter struct {
-	SchoolID  string
-	SessionID string
-	TermID    string
-	LevelID   string
-	SubjectID string
+	SchoolID   string
+	SessionID  string
+	TermID     string
+	LevelID    string
+	SubLevelID string
+	SubjectID  string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -251,7 +252,7 @@ type PersonnelRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter PersonnelFilter, p pagination.Params) ([]*Personnel, int, error)
 	CountTotalPersonnel(ctx context.Context, stateID string) (int, error)
-	UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error
+	UpdateAvatar(ctx context.Context, id, avatarURL string) error
 }
 
 type PersonnelTransferRepository interface {
@@ -275,7 +276,7 @@ type StudentRepository interface {
 	CountByEnrollmentPrefix(ctx context.Context, prefix string) (int, error)
 	CountByGender(ctx context.Context, stateID string) (male, female, other int, err error)
 	CountTotalStudents(ctx context.Context, stateID string) (int, error)
-	UpdateAvatar(ctx context.Context, id, schoolID string, avatarURL string) error
+	UpdateAvatar(ctx context.Context, id, avatarURL string) error
 	GetNextSerialByPrefix(ctx context.Context, prefix string) (int, error)
 }
 
@@ -308,7 +309,9 @@ type ScoreConfigRepository interface {
 
 type GradeConfigRepository interface {
 	Upsert(ctx context.Context, gc *GradeConfig) error
+	Delete(ctx context.Context, id string) error
 	ListBySchool(ctx context.Context, schoolID string) ([]*GradeConfig, error)
+	ListBySchoolAndLevel(ctx context.Context, schoolID, levelID string) ([]*GradeConfig, error)
 	ListStateDefault(ctx context.Context, stateID string) ([]*GradeConfig, error)
 	EvaluateGrade(ctx context.Context, score float64, schoolID, stateID string) (*GradeConfig, error)
 }
@@ -363,4 +366,77 @@ type StudentAttendanceRepository interface {
 type ReportRepository interface {
 	GetDashboardStats(ctx context.Context, stateID, schoolID string) (*DashboardStats, error)
 	GetTotalTeachingPersonnel(ctx context.Context) (int, error)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RECOMMENDATION / ML
+// ─────────────────────────────────────────────────────────────────────────────
+
+type RecommendationRepository interface {
+	ListSchoolsWithAggregates(ctx context.Context) ([]SchoolRecommendationRow, error)
+}
+
+// SchoolRecommendationRow is a pre-aggregated projection used by the ML recommender.
+type SchoolRecommendationRow struct {
+	ID                   string
+	Name                 string
+	ZoneName             string
+	LGAName              string
+	Category             string
+	TotalTeachers        int
+	QualifiedTeachers    int
+	TotalStudents        int
+	TotalClassrooms      int
+	FunctionalClassrooms int
+	HasLibrary           bool
+	HasLaboratory        bool
+	HasToilet            bool
+	HasElectricity       bool
+	HasWater             bool
+	HasInternet          bool
+	SubjectsOffered      int
+	ExpectedSubjects     int
+	BooksPerStudent      float64
+	AvgPassRate          *float64
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPOSITORY INTERFACE  (port — infrastructure implements this)
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+// PredictionRepository is the data-access contract for the prediction engine.
+// All methods are read-only aggregate queries — no writes.
+type PredictionRepository interface {
+	// GetFacilitySignal returns the aggregated facility profile for a school.
+	GetFacilitySignal(schoolID string) (*FacilitySignal, error)
+ 
+	// GetPersonnelSignal returns the aggregated staff profile for a school.
+	GetPersonnelSignal(schoolID string) (*PersonnelSignal, error)
+ 
+	// GetSchoolHistoricalSignal returns aggregate performance for a school.
+	GetSchoolHistoricalSignal(schoolID string) (*HistoricalSignal, error)
+ 
+	// GetStudentHistoricalSignal returns per-student performance signal.
+	GetStudentHistoricalSignal(studentID, schoolID string) (*HistoricalSignal, error)
+ 
+	// GetEnrolledStudents returns lightweight student rows for a school+session.
+	GetEnrolledStudents(schoolID, sessionID string) ([]StudentRow, error)
+ 
+	// GetSchoolName returns just the school name for labelling.
+	GetSchoolName(schoolID string) (string, error)
+ 
+	// GetEnrollmentCount returns the total active enrolled students for ratio calc.
+	GetEnrollmentCount(schoolID string) (int, error)
+}
+ 
+// StudentRow is a minimal projection used only by the prediction engine.
+type StudentRow struct {
+	ID         string
+	FirstName  string
+	LastName   string
+}
+
+// GetFullName returns the student's full name as "First Last".
+func (sr *StudentRow) GetFullName() string {
+	return sr.FirstName + " " + sr.LastName
 }

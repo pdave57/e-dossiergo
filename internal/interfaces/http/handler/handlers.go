@@ -14,6 +14,7 @@ import (
 	"github.com/edossier/api/internal/interfaces/http/middleware"
 	"github.com/edossier/api/internal/interfaces/presenter"
 	"github.com/edossier/api/pkg/apperror"
+	"github.com/edossier/api/pkg/logger"
 	"github.com/edossier/api/pkg/pagination"
 )
 
@@ -827,6 +828,18 @@ func (h *AcademicHandler) ListAllTerms(w http.ResponseWriter, r *http.Request) {
 	presenter.JSON(w, http.StatusOK, terms)
 }
 
+// GetActiveTerm returns the active term for an optional session.
+// Query param: session_id (optional). If omitted, returns the currently active term globally.
+func (h *AcademicHandler) GetActiveTerm(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+	t, err := h.uc.GetActiveTerm(r.Context(), sessionID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, t)
+}
+
 // CreateTermTopLevel creates a term via the top-level /terms endpoint, where the
 // owning session is provided in the request body.
 func (h *AcademicHandler) CreateTermTopLevel(w http.ResponseWriter, r *http.Request) {
@@ -1623,12 +1636,22 @@ func (h *ResultHandler) UpsertGradeConfig(w http.ResponseWriter, r *http.Request
 func (h *ResultHandler) ListGradeConfigs(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromCtx(r.Context())
 	schoolID := r.URL.Query().Get("school_id")
-	configs, err := h.uc.ListGradeConfigs(r.Context(), schoolID, claims.StateID)
+	levelID := r.URL.Query().Get("level_id")
+	configs, err := h.uc.ListGradeConfigs(r.Context(), schoolID, levelID, claims.StateID)
 	if err != nil {
 		presenter.Error(w, err)
 		return
 	}
 	presenter.JSON(w, http.StatusOK, configs)
+}
+
+func (h *ResultHandler) DeleteGradeConfig(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.uc.DeleteGradeConfig(r.Context(), id); err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1645,8 +1668,7 @@ func NewAvatarHandler(s *service.AvatarService) *AvatarHandler {
 
 // POST /api/v1/avatar/personnel
 func (h *AvatarHandler) UploadPersonnelAvatar(w http.ResponseWriter, r *http.Request) {
-	// Get User/School context (Assume middleware sets Claims)
-	claims := middleware.ClaimsFromCtx(r.Context())
+	personnelID := chi.URLParam(r, "id")
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
@@ -1655,7 +1677,7 @@ func (h *AvatarHandler) UploadPersonnelAvatar(w http.ResponseWriter, r *http.Req
 	}
 	defer file.Close()
 
-	url, err := h.avatarService.UploadPersonnelAvatar(r.Context(), claims.SchoolID, claims.UserID, file, header.Filename)
+	url, err := h.avatarService.UploadPersonnelAvatar(r.Context(), personnelID, file, header.Filename)
 	if err != nil {
 		presenter.Error(w, err)
 		return
@@ -1666,7 +1688,6 @@ func (h *AvatarHandler) UploadPersonnelAvatar(w http.ResponseWriter, r *http.Req
 
 // POST /api/v1/avatar/student
 func (h *AvatarHandler) UploadStudentAvatar(w http.ResponseWriter, r *http.Request) {
-	// Get StudentID from form or query
 	studentID := r.FormValue("student_id")
 
 	file, header, err := r.FormFile("file")
@@ -1676,9 +1697,7 @@ func (h *AvatarHandler) UploadStudentAvatar(w http.ResponseWriter, r *http.Reque
 	}
 	defer file.Close()
 
-	claims := middleware.ClaimsFromCtx(r.Context())
-
-	url, err := h.avatarService.UploadStudentAvatar(r.Context(), claims.SchoolID, studentID, file, header.Filename)
+	url, err := h.avatarService.UploadStudentAvatar(r.Context(), studentID, file, header.Filename)
 	if err != nil {
 		presenter.Error(w, err)
 		return
@@ -1933,3 +1952,130 @@ func (h *AttendanceHandler) ListStudentAttendanceBySchoolAndRange(w http.Respons
 	}
 	presenter.JSON(w, http.StatusOK, resp)
 }
+// PredictionHandler serves prediction endpoints.
+type PredictionHandler struct{ uc *service.PredictionService }
+ 
+func NewPredictionHandler(uc *service.PredictionService) *PredictionHandler {
+	return &PredictionHandler{uc: uc}
+}
+ 
+// SchoolReport godoc
+// GET /api/v1/predictions/schools/{schoolId}
+//
+// Returns a school-level performance prediction only (fast path — no per-student loop).
+// Query param: session_id (optional) — scope to a specific academic session.
+//
+// Required permission: results:read
+func (h *PredictionHandler) SchoolReport(w http.ResponseWriter, r *http.Request) {
+	schoolID := chi.URLParam(r, "schoolId")
+	if schoolID == "" {
+		presenter.Error(w, apperror.BadRequest("school_id is required"))
+		return
+	}
+ 
+	pred, err := h.uc.SchoolOnlyReport(schoolID)
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, pred)
+}
+ 
+// FullReport godoc
+// GET /api/v1/predictions/schools/{schoolId}/full
+//
+// Returns the school prediction plus individual predictions for every
+// actively enrolled student. Can be slow for large schools — use
+// SchoolReport for summary cards, this for the detailed drill-down view.
+//
+// Query params:
+//   session_id (optional) — scope enrollments to a specific session
+//
+// Required permission: results:read
+func (h *PredictionHandler) FullReport(w http.ResponseWriter, r *http.Request) {
+	schoolID := chi.URLParam(r, "schoolId")
+	if schoolID == "" {
+		presenter.Error(w, apperror.BadRequest("school_id is required"))
+		return
+	}
+ 
+	sessionID := r.URL.Query().Get("session_id")
+ 
+	// Confirm the caller is scoped to this school or is a state-level user.
+	claims := middleware.ClaimsFromCtx(r.Context())
+	if claims.SchoolID != "" && claims.SchoolID != schoolID {
+		presenter.Error(w, apperror.Forbidden("you can only access predictions for your own school"))
+		return
+	}
+ 
+	report, err := h.uc.GenerateReport(schoolID, sessionID)
+	if err != nil {
+		logger.FromContext(r.Context()).Error("prediction generate report failed", "school_id", schoolID, "session_id", sessionID, "error", err)
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, report)
+}
+ 
+// StudentReport godoc
+// GET /api/v1/predictions/schools/{schoolId}/students/{studentId}
+//
+// Returns a prediction for a single student, useful for drilling into
+// one record from the full report without regenerating everything.
+//
+// Required permission: results:read
+func (h *PredictionHandler) StudentReport(w http.ResponseWriter, r *http.Request) {
+	schoolID := chi.URLParam(r, "schoolId")
+	studentID := chi.URLParam(r, "studentId")
+ 
+	if schoolID == "" || studentID == "" {
+		presenter.Error(w, apperror.BadRequest("school_id and student_id are required"))
+		return
+	}
+ 
+	// Generate the full report and find the student in it.
+	// (A dedicated single-student path would be a further optimisation.)
+	report, err := h.uc.GenerateReport(schoolID, "")
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+ 
+	for _, sp := range report.Students {
+		if sp.StudentID == studentID {
+			presenter.JSON(w, http.StatusOK, sp)
+			return
+		}
+	}
+
+	presenter.Error(w, apperror.NotFound("student prediction", studentID))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RECOMMENDATION HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+type RecommendationHandler struct {
+	uc *service.RecommendationService
+}
+
+func NewRecommendationHandler(uc *service.RecommendationService) *RecommendationHandler {
+	return &RecommendationHandler{uc: uc}
+}
+
+func (h *RecommendationHandler) GetRecommendations(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromCtx(r.Context())
+	if claims == nil {
+		presenter.Error(w, apperror.Unauthorized("unauthorized"))
+		return
+	}
+
+	result, err := h.uc.GetRecommendations(r.Context())
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+
+	presenter.JSON(w, http.StatusOK, result)
+}
+

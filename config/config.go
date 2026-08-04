@@ -37,11 +37,16 @@ type Config struct {
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 
+	// ML
+	MLServiceURL string
+
 	// Logging
 	LogLevel slog.Level
 
 	// App
 	Env string // "development" | "production"
+	mlURL string // ML Recommender URL
+	
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -63,8 +68,17 @@ func Load() (*Config, error) {
 		JWTSecret:       getEnv("JWT_SECRET", "Yf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0QaYf9Kq2mV7xR4Lp8Wc6Dt3Hg5Jb0Qa"),
 		AccessTokenTTL:  getDuration("ACCESS_TOKEN_TTL", 7*time.Hour),
 		RefreshTokenTTL: getDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
+		MLServiceURL:    getEnv("ML_RECOMMENDER_URL", "http://localhost:9001"),
 		Env:             getEnv("APP_ENV", "development"),
+		// In your Go main.go or config
+		mlURL:         getEnv("ML_RECOMMENDER_URL", ""),
+		
 	}
+
+	if cfg.mlURL == "" {
+		cfg.mlURL = "http://localhost:9001" // local dev fallback
+	}
+	
 
 	// Level
 	switch getEnv("LOG_LEVEL", "info") {

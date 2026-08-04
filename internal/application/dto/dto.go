@@ -481,13 +481,15 @@ type RecordProgressionRequest struct {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type UpsertScoreRequest struct {
-	EnrollmentID string  `json:"enrollment_id" validate:"required"`
-	SubjectID    string  `json:"subject_id"    validate:"required"`
-	TermID       string  `json:"term_id"       validate:"required"`
-	CA1Score     float64 `json:"ca1_score"`
-	CA2Score     float64 `json:"ca2_score"`
-	CA3Score     float64 `json:"ca3_score"`
-	ExamScore    float64 `json:"exam_score"`
+	StudentID  string  `json:"student_id"  validate:"required"`
+	LevelID    string  `json:"level_id"    validate:"required"`
+	SubLevelID string  `json:"sub_level_id" validate:"required"`
+	SubjectID  string  `json:"subject_id"  validate:"required"`
+	TermID     string  `json:"term_id"     validate:"required"`
+	CA1Score   float64 `json:"ca1_score"`
+	CA2Score   float64 `json:"ca2_score"`
+	CA3Score   float64 `json:"ca3_score"`
+	ExamScore  float64 `json:"exam_score"`
 }
 
 type BulkUpsertScoreRequest struct {
@@ -510,6 +512,7 @@ type UpdateReportCardRemarksRequest struct {
 
 type UpsertScoreConfigRequest struct {
 	SchoolID string  `json:"school_id"` // optional — empty = state default
+	LevelID  string  `json:"level_id"`  // optional — empty = school/state default
 	CA1Max   float64 `json:"ca1_max"   validate:"required"`
 	CA2Max   float64 `json:"ca2_max"   validate:"required"`
 	CA3Max   float64 `json:"ca3_max"   validate:"required"`
@@ -519,6 +522,7 @@ type UpsertScoreConfigRequest struct {
 
 type UpsertGradeConfigRequest struct {
 	SchoolID string  `json:"school_id"` // optional
+	LevelID  string  `json:"level_id"`  // optional
 	Grade    string  `json:"grade"      validate:"required"`
 	MinScore float64 `json:"min_score"`
 	MaxScore float64 `json:"max_score"  validate:"required"`
