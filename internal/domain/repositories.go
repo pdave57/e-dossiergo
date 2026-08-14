@@ -156,6 +156,7 @@ type SchoolRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter SchoolFilter, p pagination.Params) ([]*School, int, error)
 	CountTotalSchools(ctx context.Context, stateID string) (int, error)
+	UpdateLogo(ctx context.Context, id, logoURL string) error
 }
 
 type SchoolFacilityRepository interface {
@@ -366,7 +367,13 @@ type StudentAttendanceRepository interface {
 type ReportRepository interface {
 	GetDashboardStats(ctx context.Context, stateID, schoolID string) (*DashboardStats, error)
 	GetTotalTeachingPersonnel(ctx context.Context) (int, error)
+	
 }
+
+type ZonalReportRepository interface {
+	GetZoneSummaryReport(ctx context.Context, sessionID string) ([]ZoneSummaryReport, error)
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RECOMMENDATION / ML

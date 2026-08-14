@@ -1,5 +1,25 @@
 // Command server is the e-Dossier API entry point.
 // It wires all layers together using manual dependency injection (no DI framework).
+//
+//	@title			e-Dossier API
+//	@version		1.0
+//	@description	e-Dossier School Management System API
+//	@termsOfService	http://swagger.io/terms/
+//
+//	@contact.name	API Support
+//	@contact.email	support@edossier.com
+//
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+//
+//	@securityDefinitions.basic	BasicAuth
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" + space + JWT token.
 package main
 
 import (
@@ -22,6 +42,8 @@ import (
 	"github.com/edossier/api/internal/interfaces/http/router"
 	"github.com/edossier/api/pkg/logger"
 	"github.com/edossier/api/pkg/token"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -51,6 +73,12 @@ func main() {
 		os.Exit(1)
 	}
 	log.Info("schema migration complete")
+
+	gormDB, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
+	if err != nil {
+		log.Error("failed to connect to gorm database", "error", err)
+		os.Exit(1)
+	}
 
 	//initialize redis
 	// redisClient, err := infradb.NewRedisClient(cfg.RedisURL, cfg.RedisPassword, 0)
@@ -88,7 +116,6 @@ func main() {
 
 	sessionRepo := repository.NewAcademicSessionRepository(db)
 	termRepo := repository.NewTermRepository(db)
-
 	levelRepo := repository.NewLevelRepository(db)
 	subLevelRepo := repository.NewSubLevelRepository(db)
 	schoolLevelRepo := repository.NewSchoolLevelRepository(db)
@@ -109,6 +136,7 @@ func main() {
 	scoreConfigRepo := repository.NewScoreConfigRepository(db)
 
 	reportRepo := repository.NewReportRepository(db)
+	zonalReportRepo := repository.NewZonalReportRepository(gormDB)
 
 	personnelAttendanceRepo := repository.NewPersonnelAttendanceRepository(db)
 	studentAttendanceRepo := repository.NewStudentAttendanceRepository(db)
@@ -123,7 +151,7 @@ func main() {
 	stateUC := service.NewStateService(stateRepo)
 	zoneUC := service.NewZoneService(zoneRepo)
 	lgaUC := service.NewLGAService(lgaRepo)
-	schoolUC := service.NewSchoolService(schoolRepo, facilityRepo)
+	schoolUC := service.NewSchoolService(schoolRepo, facilityRepo, cloudinaryClient)
 	academicUC := service.NewAcademicService(sessionRepo, termRepo)
 
 	levelUC := service.NewLevelService(levelRepo, subLevelRepo, schoolLevelRepo)
@@ -142,6 +170,7 @@ func main() {
 	)
 
 	reportUC := service.NewReportService(reportRepo)
+	zonalSummaryUC := service.NewZonalSummaryService(zonalReportRepo, sessionRepo)
 	avatarUC := service.NewAvatarService(personnelRepo, studentRepo, cloudinaryClient)
 
 	attendanceUC := service.NewAttendanceService(
@@ -154,22 +183,23 @@ func main() {
 	studentAuthUC := service.NewStudentAuthService(studentRepo, schoolRepo, refreshTokenRepo, tokenMaker)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
-	authHandler      := handler.NewAuthHandler(authUC)
-	userHandler      := handler.NewUserHandler(userUC, userRepo)
-	roleHandler      := handler.NewRoleHandler(roleUC)
-	stateHandler     := handler.NewStateHandler(stateUC)
-	zoneHandler      := handler.NewZoneHandler(zoneUC)
-	lgaHandler       := handler.NewLGAHandler(lgaUC)
-	schoolHandler    := handler.NewSchoolHandler(schoolUC)
-	academicHandler  := handler.NewAcademicHandler(academicUC)
-	levelHandler     := handler.NewLevelHandler(levelUC)
-	subjectHandler   := handler.NewSubjectHandler(subjectUC)
+	authHandler := handler.NewAuthHandler(authUC)
+	userHandler := handler.NewUserHandler(userUC, userRepo)
+	roleHandler := handler.NewRoleHandler(roleUC)
+	stateHandler := handler.NewStateHandler(stateUC)
+	zoneHandler := handler.NewZoneHandler(zoneUC)
+	lgaHandler := handler.NewLGAHandler(lgaUC)
+	schoolHandler := handler.NewSchoolHandler(schoolUC)
+	academicHandler := handler.NewAcademicHandler(academicUC)
+	levelHandler := handler.NewLevelHandler(levelUC)
+	subjectHandler := handler.NewSubjectHandler(subjectUC)
 	personnelHandler := handler.NewPersonnelHandler(personnelUC)
-	studentHandler   := handler.NewStudentHandler(studentUC)
-	resultHandler    := handler.NewResultHandler(resultUC)
-	reportHandler    := handler.NewReportHandler(reportUC)
-	genderHandler    := handler.NewGenderHandler(genderUC)
-	avatarHandler    := handler.NewAvatarHandler(avatarUC)
+	studentHandler := handler.NewStudentHandler(studentUC)
+	resultHandler := handler.NewResultHandler(resultUC)
+	reportHandler := handler.NewReportHandler(reportUC)
+	zonalSummaryHandler := handler.NewZonalSummaryHandler(zonalSummaryUC)
+	genderHandler := handler.NewGenderHandler(genderUC)
+	avatarHandler := handler.NewAvatarHandler(avatarUC)
 	studentAuthHandler := handler.NewStudentAuthHandler(studentAuthUC)
 	attendanceHandler := handler.NewAttendanceHandler(attendanceUC)
 	predictionHandler := handler.NewPredictionHandler(predictionUC)
@@ -177,28 +207,29 @@ func main() {
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
-		Log:         log,
-		TokenMaker:  tokenMaker,
-		RoleChecker: userRoleRepo,
-		Auth:        authHandler,
-		User:        userHandler,
-		Role:        roleHandler,
-		State:       stateHandler,
-		Zone:        zoneHandler,
-		LGA:         lgaHandler,
-		School:      schoolHandler,
-		Academic:    academicHandler,
-		Level:       levelHandler,
-		Subject:     subjectHandler,
-		Personnel:   personnelHandler,
-		Student:     studentHandler,
-		Result:      resultHandler,
-		Report:      reportHandler,
-		Gender:      genderHandler,
-		Avatar:      avatarHandler,
-		StudentAuth: studentAuthHandler,
-		Attendance:  attendanceHandler,
-		Prediction:  predictionHandler,
+		Log:            log,
+		TokenMaker:     tokenMaker,
+		RoleChecker:    userRoleRepo,
+		Auth:           authHandler,
+		User:           userHandler,
+		Role:           roleHandler,
+		State:          stateHandler,
+		Zone:           zoneHandler,
+		LGA:            lgaHandler,
+		School:         schoolHandler,
+		Academic:       academicHandler,
+		Level:          levelHandler,
+		Subject:        subjectHandler,
+		Personnel:      personnelHandler,
+		Student:        studentHandler,
+		Result:         resultHandler,
+		Report:         reportHandler,
+		ZonalSummary:   zonalSummaryHandler,
+		Gender:         genderHandler,
+		Avatar:         avatarHandler,
+		StudentAuth:    studentAuthHandler,
+		Attendance:     attendanceHandler,
+		Prediction:     predictionHandler,
 		Recommendation: recommendationHandler,
 	})
 
@@ -238,5 +269,5 @@ func main() {
 		}
 		log.Info("server stopped gracefully")
 	}
-	
+
 }

@@ -23,9 +23,18 @@ func NewReportHandler(reportUC *service.ReportService) *ReportHandler {
 
 // GetDashboardStats handles GET /reports/dashboard
 // It retrieves the state_id and optionally school_id from the context to scope the data.
+//
+//	@Summary		Get dashboard stats
+//	@Description	Retrieve dashboard statistics for the authenticated user's state/school
+//	@Tags			reports
+//	@Produce		json
+//	@Success		200	{object}	map[string]interface{}
+//	@Failure		401	{object}	apperror.AppError
+//	@Failure		403	{object}	apperror.AppError
+//	@Router			/reports/dashboard [get]
 func (h *ReportHandler) GetDashboardStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	claims := middleware.ClaimsFromCtx(ctx)
 	if claims == nil {
 		presenter.Error(w, apperror.Unauthorized("unauthorized"))
@@ -45,9 +54,16 @@ func (h *ReportHandler) GetDashboardStats(w http.ResponseWriter, r *http.Request
 }
 
 // GetPublicTeachingPersonnel handles GET /reports/public/teaching-personnel
+//
+//	@Summary		Get public teaching personnel count
+//	@Description	Get total count of active teaching personnel (public endpoint)
+//	@Tags			reports
+//	@Produce		json
+//	@Success		200	{object}	int
+//	@Router			/reports/public/teaching-personnel [get]
 func (h *ReportHandler) GetPublicTeachingPersonnel(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	data, err := h.reportUC.GetTotalTeachingPersonnel(ctx)
 	if err != nil {
 		presenter.Error(w, err)

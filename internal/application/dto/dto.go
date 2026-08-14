@@ -389,6 +389,7 @@ type CreatePersonnelRequest struct {
 
 type UpdatePersonnelRequest struct {
 	SchoolID         string     `json:"school_id"`
+	StaffID          string     `json:"staff_id"           validate:"required"`
 	FirstName        string     `json:"first_name"  validate:"required"`
 	MiddleName       string     `json:"middle_name"`
 	LastName         string     `json:"last_name"   validate:"required"`

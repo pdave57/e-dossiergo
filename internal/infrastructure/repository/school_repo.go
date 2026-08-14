@@ -335,26 +335,39 @@ func (r *schoolRepo) List(ctx context.Context, f domain.SchoolFilter, p paginati
 	where, args := []string{"s.deleted_at IS NULL"}, []any{}
 	idx := 1
 	if f.StateID != "" {
-		where = append(where, fmt.Sprintf("s.state_id=$%d", idx)); args = append(args, f.StateID); idx++
+		where = append(where, fmt.Sprintf("s.state_id=$%d", idx))
+		args = append(args, f.StateID)
+		idx++
 	}
 	if f.ZoneID != "" {
-		where = append(where, fmt.Sprintf("s.zone_id=$%d", idx)); args = append(args, f.ZoneID); idx++
+		where = append(where, fmt.Sprintf("s.zone_id=$%d", idx))
+		args = append(args, f.ZoneID)
+		idx++
 	}
 	if f.LGAID != "" {
-		where = append(where, fmt.Sprintf("s.lga_id=$%d", idx)); args = append(args, f.LGAID); idx++
+		where = append(where, fmt.Sprintf("s.lga_id=$%d", idx))
+		args = append(args, f.LGAID)
+		idx++
 	}
 	if f.Category != "" {
-		where = append(where, fmt.Sprintf("s.category=$%d", idx)); args = append(args, f.Category); idx++
+		where = append(where, fmt.Sprintf("s.category=$%d", idx))
+		args = append(args, f.Category)
+		idx++
 	}
 	if f.Ownership != "" {
-		where = append(where, fmt.Sprintf("s.ownership=$%d", idx)); args = append(args, f.Ownership); idx++
+		where = append(where, fmt.Sprintf("s.ownership=$%d", idx))
+		args = append(args, f.Ownership)
+		idx++
 	}
 	if f.Status != "" {
-		where = append(where, fmt.Sprintf("s.status=$%d", idx)); args = append(args, f.Status); idx++
+		where = append(where, fmt.Sprintf("s.status=$%d", idx))
+		args = append(args, f.Status)
+		idx++
 	}
 	if f.Search != "" {
 		where = append(where, fmt.Sprintf("(s.name ILIKE $%d OR s.code ILIKE $%d)", idx, idx))
-		args = append(args, "%"+f.Search+"%"); idx++
+		args = append(args, "%"+f.Search+"%")
+		idx++
 	}
 
 	clause := "WHERE " + strings.Join(where, " AND ")
@@ -395,11 +408,17 @@ func (r *schoolRepo) CountTotalSchools(ctx context.Context, stateID string) (int
 	return total, nil
 }
 
+func (r *schoolRepo) UpdateLogo(ctx context.Context, id, logoURL string) error {
+	res, err := r.db.ExecContext(ctx,
+		`UPDATE schools SET logo_url=$1, updated_at=NOW() WHERE id=$2 AND deleted_at IS NULL`,
+		logoURL, id)
+	return checkRowsAffected(res, err, "school", id)
+}
 
 const schoolSelectSQL = `
 	SELECT s.id,s.state_id,s.zone_id,s.lga_id,s.name,s.code,s.category,s.ownership,s.status,
 	       COALESCE(s.address,''),COALESCE(s.head_teacher,''),s.founded,
-	       COALESCE(s.number_of_classrooms,0),COALESCE(s.total_students,0),
+	       COALESCE(s.number_of_classrooms,0),COALESCE(s.total_students,0),COALESCE(s.logo_url,''),
 	       s.created_at,s.updated_at,
 	       COALESCE(s.created_by,''),COALESCE(s.updated_by,'')
 	FROM schools s`
@@ -410,7 +429,7 @@ func scanSchool(s scanner) (*domain.School, error) {
 		&sc.ID, &sc.StateID, &sc.ZoneID, &sc.LGAID, &sc.Name, &sc.Code,
 		&sc.Category, &sc.Ownership, &sc.Status,
 		&sc.Address, &sc.HeadTeacher, &sc.Founded,
-		&sc.NumberOfClassrooms, &sc.TotalStudents,
+		&sc.NumberOfClassrooms, &sc.TotalStudents, &sc.LogoURL,
 		&sc.CreatedAt, &sc.UpdatedAt, &sc.CreatedBy, &sc.UpdatedBy,
 	)
 	if err == sql.ErrNoRows {

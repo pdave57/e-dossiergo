@@ -8,6 +8,7 @@ import (
 
 	chi "github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	swagger "github.com/swaggo/http-swagger/v2"
 
 	"github.com/edossier/api/internal/interfaces/http/handler"
 	"github.com/edossier/api/internal/interfaces/http/middleware"
@@ -20,29 +21,37 @@ type Deps struct {
 	TokenMaker  *token.Maker
 	RoleChecker middleware.UserRoleChecker
 
-	Auth        *handler.AuthHandler
-	User        *handler.UserHandler
-	Role        *handler.RoleHandler
-	Zone        *handler.ZoneHandler
-	State       *handler.StateHandler
-	LGA         *handler.LGAHandler
-	School      *handler.SchoolHandler
-	Academic    *handler.AcademicHandler
-	Gender      *handler.GenderHandler
-	Level       *handler.LevelHandler
-	Subject     *handler.SubjectHandler
-	Personnel   *handler.PersonnelHandler
-	Student     *handler.StudentHandler
-	Result      *handler.ResultHandler
-	Report      *handler.ReportHandler
-	Avatar      *handler.AvatarHandler
-	StudentAuth *handler.StudentAuthHandler
-	Attendance  *handler.AttendanceHandler
-	Prediction  *handler.PredictionHandler
+	Auth           *handler.AuthHandler
+	User           *handler.UserHandler
+	Role           *handler.RoleHandler
+	Zone           *handler.ZoneHandler
+	State          *handler.StateHandler
+	LGA            *handler.LGAHandler
+	School         *handler.SchoolHandler
+	Academic       *handler.AcademicHandler
+	Gender         *handler.GenderHandler
+	Level          *handler.LevelHandler
+	Subject        *handler.SubjectHandler
+	Personnel      *handler.PersonnelHandler
+	Student        *handler.StudentHandler
+	Result         *handler.ResultHandler
+	Report         *handler.ReportHandler
+	ZonalSummary   *handler.ZonalSummaryHandler
+	Avatar         *handler.AvatarHandler
+	StudentAuth    *handler.StudentAuthHandler
+	Attendance     *handler.AttendanceHandler
+	Prediction     *handler.PredictionHandler
 	Recommendation *handler.RecommendationHandler
 }
 
 // New builds and returns the fully-configured HTTP router.
+//
+//	@Summary		Test router
+//	@Description	Test description
+//	@Tags			test
+//	@Produce		json
+//	@Success		200	{object}	map[string]string
+//	@Router			/test-router [get]
 func New(d Deps) http.Handler {
 	r := chi.NewRouter()
 
@@ -58,6 +67,9 @@ func New(d Deps) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok","service":"e-dossier"}`)) //nolint:errcheck
 	})
+
+	// ── Swagger UI ───────────────────────────────────────────────────────────
+	r.Get("/swagger/*", swagger.Handler(swagger.URL("/swagger/doc.json")))
 
 	// ── API v1 ────────────────────────────────────────────────────────────────
 	r.Route("/api/v1", func(r chi.Router) {
@@ -81,9 +93,13 @@ func New(d Deps) http.Handler {
 		r.Route("/reports/schools", func(r chi.Router) {
 			r.Get("/total", d.School.CountTotalSchools)
 		})
-		// r.Route("/reports/dashboard", func(r chi.Router) {
-		// 	r.Get("/stats", d.Report.GetDashboardStats)
-		// })
+		r.Route("/reports/dashboard", func(r chi.Router) {
+			r.With(middleware.Authenticate(d.TokenMaker)).Get("/stats", d.Report.GetDashboardStats)
+		})
+
+		r.Route("/reports/zonal", func(r chi.Router) {
+			r.With(middleware.Authenticate(d.TokenMaker)).Get("/summary", d.ZonalSummary.GetZoneSummaryReport)
+		})
 
 		// ── AUTH (public) ─────────────────────────────────────────────────────
 		r.Route("/auth", func(r chi.Router) {
@@ -107,6 +123,7 @@ func New(d Deps) http.Handler {
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "create")).Post("/", d.School.Create)
 			r.Get("/{id}", d.School.GetByID)
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}", d.School.Update)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Put("/{id}/logo", d.School.UploadLogo)
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "delete")).Delete("/{id}", d.School.Delete)
 
 			// Facilities
@@ -238,16 +255,16 @@ func New(d Deps) http.Handler {
 			})
 
 			// ── PERSONNEL ─────────────────────────────────────────────────────
-		r.Route("/personnel", func(r chi.Router) {
-			r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
-			r.With(authorize(d, "personnel", "create")).Post("/", d.Personnel.Create)
+			r.Route("/personnel", func(r chi.Router) {
+				r.With(authorize(d, "personnel", "read")).Get("/", d.Personnel.List)
+				r.With(authorize(d, "personnel", "create")).Post("/", d.Personnel.Create)
 
-			r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
-			r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
-			r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)
-			r.With(authorize(d, "personnel", "update")).Post("/{id}/transfer", d.Personnel.Transfer)
-			r.With(authorize(d, "personnel", "read")).Get("/{id}/transfers", d.Personnel.ListTransfers)
-		})
+				r.With(authorize(d, "personnel", "read")).Get("/{id}", d.Personnel.GetByID)
+				r.With(authorize(d, "personnel", "update")).Put("/{id}", d.Personnel.Update)
+				r.With(authorize(d, "personnel", "delete")).Delete("/{id}", d.Personnel.Delete)
+				r.With(authorize(d, "personnel", "update")).Post("/{id}/transfer", d.Personnel.Transfer)
+				r.With(authorize(d, "personnel", "read")).Get("/{id}/transfers", d.Personnel.ListTransfers)
+			})
 
 			// ── STUDENTS ──────────────────────────────────────────────────────
 			r.Route("/students", func(r chi.Router) {
@@ -298,44 +315,44 @@ func New(d Deps) http.Handler {
 				r.With(authorize(d, "results", "read")).Get("/grade-config", d.Result.ListGradeConfigs)
 			})
 
-		// ── AVATARS ───────────────────────────────────────────────────────
-		r.Route("/avatar", func(r chi.Router) {
-			r.With(authorize(d, "avatar", "update")).Put("/personnel/{id}", d.Avatar.UploadPersonnelAvatar)
-			r.With(authorize(d, "avatar", "update")).Put("/students/{id}", d.Avatar.UploadStudentAvatar)
-		})
-
-		// ── ATTENDANCE ───────────────────────────────────────────────────
-		r.Route("/attendance", func(r chi.Router) {
-			r.Route("/personnel", func(r chi.Router) {
-				r.With(authorize(d, "attendance", "create")).Post("/", d.Attendance.RecordPersonnelAttendance)
-				r.With(authorize(d, "attendance", "read")).Get("/{id}", d.Attendance.GetPersonnelAttendance)
-				r.With(authorize(d, "attendance", "update")).Put("/{id}", d.Attendance.UpdatePersonnelAttendance)
-				r.With(authorize(d, "attendance", "delete")).Delete("/{id}", d.Attendance.DeletePersonnelAttendance)
-				r.With(authorize(d, "attendance", "read")).Get("/school", d.Attendance.ListPersonnelAttendanceBySchoolAndDate)
-				r.With(authorize(d, "attendance", "read")).Get("/{id}/range", d.Attendance.ListPersonnelAttendanceByPersonnelAndRange)
+			// ── AVATARS ───────────────────────────────────────────────────────
+			r.Route("/avatar", func(r chi.Router) {
+				r.With(authorize(d, "avatar", "update")).Put("/personnel/{id}", d.Avatar.UploadPersonnelAvatar)
+				r.With(authorize(d, "avatar", "update")).Put("/students/{id}", d.Avatar.UploadStudentAvatar)
 			})
-			r.Route("/students", func(r chi.Router) {
-				r.With(authorize(d, "attendance", "create")).Post("/", d.Attendance.RecordStudentAttendance)
-				r.With(authorize(d, "attendance", "create")).Post("/bulk", d.Attendance.BulkRecordStudentAttendance)
-				r.With(authorize(d, "attendance", "read")).Get("/{id}", d.Attendance.GetStudentAttendance)
-				r.With(authorize(d, "attendance", "update")).Put("/{id}", d.Attendance.UpdateStudentAttendance)
-				r.With(authorize(d, "attendance", "delete")).Delete("/{id}", d.Attendance.DeleteStudentAttendance)
-				r.With(authorize(d, "attendance", "read")).Get("/school", d.Attendance.ListStudentAttendanceBySchoolAndDate)
-				r.With(authorize(d, "attendance", "read")).Get("/student/{id}/range", d.Attendance.ListStudentAttendanceByStudentAndRange)
-				r.With(authorize(d, "attendance", "read")).Get("/school/range", d.Attendance.ListStudentAttendanceBySchoolAndRange)
+
+			// ── ATTENDANCE ───────────────────────────────────────────────────
+			r.Route("/attendance", func(r chi.Router) {
+				r.Route("/personnel", func(r chi.Router) {
+					r.With(authorize(d, "attendance", "create")).Post("/", d.Attendance.RecordPersonnelAttendance)
+					r.With(authorize(d, "attendance", "read")).Get("/{id}", d.Attendance.GetPersonnelAttendance)
+					r.With(authorize(d, "attendance", "update")).Put("/{id}", d.Attendance.UpdatePersonnelAttendance)
+					r.With(authorize(d, "attendance", "delete")).Delete("/{id}", d.Attendance.DeletePersonnelAttendance)
+					r.With(authorize(d, "attendance", "read")).Get("/school", d.Attendance.ListPersonnelAttendanceBySchoolAndDate)
+					r.With(authorize(d, "attendance", "read")).Get("/{id}/range", d.Attendance.ListPersonnelAttendanceByPersonnelAndRange)
+				})
+				r.Route("/students", func(r chi.Router) {
+					r.With(authorize(d, "attendance", "create")).Post("/", d.Attendance.RecordStudentAttendance)
+					r.With(authorize(d, "attendance", "create")).Post("/bulk", d.Attendance.BulkRecordStudentAttendance)
+					r.With(authorize(d, "attendance", "read")).Get("/{id}", d.Attendance.GetStudentAttendance)
+					r.With(authorize(d, "attendance", "update")).Put("/{id}", d.Attendance.UpdateStudentAttendance)
+					r.With(authorize(d, "attendance", "delete")).Delete("/{id}", d.Attendance.DeleteStudentAttendance)
+					r.With(authorize(d, "attendance", "read")).Get("/school", d.Attendance.ListStudentAttendanceBySchoolAndDate)
+					r.With(authorize(d, "attendance", "read")).Get("/student/{id}/range", d.Attendance.ListStudentAttendanceByStudentAndRange)
+					r.With(authorize(d, "attendance", "read")).Get("/school/range", d.Attendance.ListStudentAttendanceBySchoolAndRange)
+				})
 			})
+
+			r.Route("/predictions", func(r chi.Router) {
+				r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}", d.Prediction.SchoolReport)
+				r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/full", d.Prediction.FullReport)
+				r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/students/{studentId}", d.Prediction.StudentReport)
+			})
+
+			// ── RECOMMENDATIONS ───────────────────────────────────────────────
+			r.With(authorize(d, "reports", "read")).Get("/recommendations", d.Recommendation.GetRecommendations)
+
 		})
-
-		r.Route("/predictions", func(r chi.Router) {
-			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}", d.Prediction.SchoolReport)
-			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/full", d.Prediction.FullReport)
-			r.With(authorize(d, "results", "read")).Get("/schools/{schoolId}/students/{studentId}", d.Prediction.StudentReport)
-		})
-
-		// ── RECOMMENDATIONS ───────────────────────────────────────────────
-		r.With(authorize(d, "reports", "read")).Get("/recommendations", d.Recommendation.GetRecommendations)
-
-	})
 	})
 
 	return r

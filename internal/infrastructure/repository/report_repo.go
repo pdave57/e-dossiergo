@@ -81,3 +81,4 @@ func (r *postgresReportRepository) GetTotalTeachingPersonnel(ctx context.Context
 	}
 	return total, nil
 }
+

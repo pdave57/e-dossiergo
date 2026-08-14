@@ -489,11 +489,11 @@ func (r *studentRepo) CountByGender(ctx context.Context, stateID string) (male, 
 func (r *studentRepo) CountTotalStudents(ctx context.Context, stateID string) (int, error) {
 	var count int
 	err := r.db.QueryRowContext(ctx, `
-		SELECT COUNT(id)
-		FROM students
-		WHERE state_id = $1
-		AND deleted_at IS NULL
-		AND status = 'ACTIVE'
+		SELECT COUNT(*)
+		FROM enrollments e
+		JOIN schools s ON e.school_id = s.id
+		WHERE s.state_id = $1
+		AND e.status = 'ACTIVE'
 	`, stateID).Scan(&count)
 	if err != nil {
 		return 0, apperror.Internal(err)
@@ -941,8 +941,7 @@ func (r *gradeConfigRepo) ListBySchool(ctx context.Context, schoolID string) ([]
 }
 
 func (r *gradeConfigRepo) ListBySchoolAndLevel(ctx context.Context, schoolID, levelID string) ([]*domain.GradeConfig, error) {
-	rows, err := r.db.QueryContext(ctx,
-		gradeConfigSelect+" WHERE school_id=$1 AND level_id=$2 ORDER BY min_score DESC", schoolID, levelID)
+	rows, err := r.db.QueryContext(ctx,	gradeConfigSelect+" WHERE school_id=$1 AND level_id=$2 ORDER BY min_score DESC", schoolID, levelID)
 	if err != nil {
 		return nil, apperror.Internal(err)
 	}

@@ -229,6 +229,7 @@ func Migrate(db *sql.DB) error {
 		// Backfill new columns for databases created before they existed.
 		`ALTER TABLE schools ADD COLUMN IF NOT EXISTS number_of_classrooms INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE schools ADD COLUMN IF NOT EXISTS total_students INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE schools ADD COLUMN IF NOT EXISTS logo_url TEXT`,
 
 		`CREATE INDEX IF NOT EXISTS idx_schools_state_id  ON schools(state_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_schools_zone_id   ON schools(zone_id)`,

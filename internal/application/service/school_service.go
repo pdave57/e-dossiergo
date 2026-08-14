@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 // ─────────────────────────────────────────────────────────────────────────────
 // STATES USE CASES
 // ─────────────────────────────────────────────────────────────────────────────
-
 
 type StateService struct {
 	states domain.StateRepository
@@ -61,7 +61,7 @@ func (uc *StateService) UpdateState(ctx context.Context, id string, req dto.Upda
 
 // — Zones —
 type ZoneService struct {
-	zones  domain.ZoneRepository
+	zones domain.ZoneRepository
 }
 
 func NewZoneService(zones domain.ZoneRepository) *ZoneService {
@@ -98,7 +98,7 @@ func (uc *ZoneService) DeleteZone(ctx context.Context, id string) error {
 
 // — LGAs —
 type LGAService struct {
-	lgas   domain.LGARepository
+	lgas domain.LGARepository
 }
 
 func NewLGAService(lgas domain.LGARepository) *LGAService {
@@ -145,10 +145,11 @@ func (uc *LGAService) DeleteLGA(ctx context.Context, id string) error {
 type SchoolService struct {
 	schools    domain.SchoolRepository
 	facilities domain.SchoolFacilityRepository
+	storage    domain.ImageStorage
 }
 
-func NewSchoolService(schools domain.SchoolRepository, facilities domain.SchoolFacilityRepository) *SchoolService {
-	return &SchoolService{schools: schools, facilities: facilities}
+func NewSchoolService(schools domain.SchoolRepository, facilities domain.SchoolFacilityRepository, storage domain.ImageStorage) *SchoolService {
+	return &SchoolService{schools: schools, facilities: facilities, storage: storage}
 }
 
 func (uc *SchoolService) Create(ctx context.Context, stateID string, req dto.CreateSchoolRequest, createdBy string) (*domain.School, error) {
@@ -255,6 +256,20 @@ func (uc *SchoolService) CountTotalSchools(ctx context.Context, stateID string) 
 	return uc.schools.CountTotalSchools(ctx, stateID)
 }
 
+func (uc *SchoolService) UploadLogo(ctx context.Context, schoolID string, file io.Reader, filename string) (string, error) {
+	url, publicID, err := uc.storage.Upload(ctx, file, filename, "school_logos")
+	if err != nil {
+		return "", err
+	}
+
+	err = uc.schools.UpdateLogo(ctx, schoolID, url)
+	if err != nil {
+		uc.storage.Delete(ctx, publicID)
+		return "", err
+	}
+
+	return url, nil
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ACADEMIC SESSION USE CASE
@@ -425,7 +440,7 @@ func (uc *LevelService) CreateLevel(ctx context.Context, schoolID string, req dt
 	v := validator.New().
 		Required(req.Name, "name").
 		Required(req.Code, "code").
-		OneOf(req.Type, []string{"NURSERY","PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "type")
+		OneOf(req.Type, []string{"NURSERY", "PRIMARY", "JSS", "SSS", "VOCATIONAL"}, "type")
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
 	}
@@ -676,6 +691,7 @@ func (uc *PersonnelService) Update(ctx context.Context, id string, req dto.Updat
 	if req.SchoolID != "" {
 		p.SchoolID = req.SchoolID
 	}
+	p.StaffID = req.StaffID
 	p.FirstName = req.FirstName
 	p.MiddleName = req.MiddleName
 	p.LastName = req.LastName
@@ -828,7 +844,7 @@ func (uc *StudentService) Register(ctx context.Context, stateID string, req dto.
 		FirstName: req.FirstName, MiddleName: req.MiddleName, LastName: req.LastName,
 		Gender: domain.Gender(req.Gender), DateOfBirth: req.DateOfBirth,
 		StateOfOrigin: req.StateOfOrigin, LGAID: req.LGAID, Religion: req.Religion,
-		Address: req.Address,
+		Address:      req.Address,
 		GuardianName: req.GuardianName, GuardianPhone: req.GuardianPhone,
 		GuardianRelation: req.GuardianRelation, Status: domain.StudentStatusActive,
 		AuditFields: domain.AuditFields{CreatedBy: createdBy},

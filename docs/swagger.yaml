@@ -1,0 +1,6468 @@
+basePath: /api/v1
+definitions:
+  apperror.AppError:
+    properties:
+      code:
+        $ref: '#/definitions/apperror.Code'
+      details:
+        additionalProperties: {}
+        type: object
+      message:
+        type: string
+    type: object
+  apperror.Code:
+    enum:
+    - NOT_FOUND
+    - CONFLICT
+    - VALIDATION_ERROR
+    - UNAUTHORIZED
+    - FORBIDDEN
+    - INTERNAL_ERROR
+    - BAD_REQUEST
+    - UNPROCESSABLE
+    type: string
+    x-enum-varnames:
+    - CodeNotFound
+    - CodeConflict
+    - CodeValidation
+    - CodeUnauthorized
+    - CodeForbidden
+    - CodeInternal
+    - CodeBadRequest
+    - CodeUnprocessable
+  domain.AcademicSession:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      end_date:
+        type: string
+      end_year:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      school_id:
+        type: string
+      start_date:
+        type: string
+      start_year:
+        type: integer
+      status:
+        $ref: '#/definitions/domain.SessionStatus'
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.Enrollment:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      enrolled_at:
+        type: string
+      id:
+        type: string
+      level_id:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.EnrollmentStatus'
+      student_id:
+        type: string
+      sub_level_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.EnrollmentStatus:
+    enum:
+    - ACTIVE
+    - COMPLETED
+    - REPEATED
+    - TRANSFERRED
+    - WITHDRAWN
+    type: string
+    x-enum-varnames:
+    - EnrollmentStatusActive
+    - EnrollmentStatusCompleted
+    - EnrollmentStatusRepeated
+    - EnrollmentStatusTransferred
+    - EnrollmentStatusWithdrawn
+  domain.FacilityCondition:
+    enum:
+    - GOOD
+    - FAIR
+    - POOR
+    - DEFUNCT
+    type: string
+    x-enum-varnames:
+    - FacilityGood
+    - FacilityFair
+    - FacilityPoor
+    - FacilityDefunct
+  domain.FacilityType:
+    enum:
+    - LIBRARY
+    - LABORATORY
+    - SPORT_FIELD
+    - ICT_CENTER
+    - TOILET
+    - BOREHOLE
+    - GENERATOR
+    - CANTEEN
+    type: string
+    x-enum-varnames:
+    - FacilityLibrary
+    - FacilityLab
+    - FacilitySportField
+    - FacilityICT
+    - FacilityToilet
+    - FacilityBorehole
+    - FacilityGenerator
+    - FacilityCanteen
+  domain.Factor:
+    properties:
+      detail:
+        description: human-readable explanation
+        type: string
+      name:
+        type: string
+      score:
+        description: 0–100
+        type: number
+      weight:
+        description: 0–1, how much this factor contributes
+        type: number
+    type: object
+  domain.Gender:
+    enum:
+    - MALE
+    - FEMALE
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - GenderMale
+    - GenderFemale
+    - GenderOther
+  domain.GradeConfig:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      grade:
+        type: string
+      id:
+        type: string
+      level_id:
+        type: string
+      max_score:
+        type: number
+      min_score:
+        type: number
+      points:
+        type: number
+      remark:
+        type: string
+      school_id:
+        type: string
+      state_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.LGA:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      state_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      zone_id:
+        type: string
+      zone_name:
+        type: string
+    type: object
+  domain.Level:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        description: used for progression sequencing
+        type: integer
+      school_id:
+        description: owning school
+        type: string
+      type:
+        $ref: '#/definitions/domain.LevelType'
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.LevelProgression:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      decided_by:
+        type: string
+      decision:
+        $ref: '#/definitions/domain.ProgressionDecision'
+      decision_date:
+        type: string
+      deleted_at:
+        type: string
+      from_level_id:
+        type: string
+      from_session_id:
+        type: string
+      id:
+        type: string
+      remarks:
+        type: string
+      school_id:
+        type: string
+      student_id:
+        type: string
+      to_level_id:
+        type: string
+      to_session_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.LevelType:
+    enum:
+    - NURSERY
+    - PRIMARY
+    - JSS
+    - SSS
+    - VOCATIONAL
+    type: string
+    x-enum-varnames:
+    - LevelTypeNursery
+    - LevelTypePrimary
+    - LevelTypeJSS
+    - LevelTypeSSS
+    - LevelTypeVocational
+  domain.Personnel:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_employment:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/domain.Gender'
+      id:
+        type: string
+      last_name:
+        type: string
+      lga_id:
+        type: string
+      middle_name:
+        type: string
+      phone:
+        type: string
+      qualification:
+        type: string
+      role:
+        $ref: '#/definitions/domain.StaffRole'
+      school_id:
+        type: string
+      specialization:
+        type: string
+      staff_id:
+        description: TSC / TRCN number
+        type: string
+      state_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.StaffStatus'
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.PersonnelTransfer:
+    properties:
+      approved_by:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      from_school_id:
+        type: string
+      id:
+        type: string
+      personnel_id:
+        type: string
+      reason:
+        type: string
+      to_school_id:
+        type: string
+      transfer_date:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.PredictionReport:
+    properties:
+      school:
+        $ref: '#/definitions/domain.SchoolPrediction'
+      students:
+        items:
+          $ref: '#/definitions/domain.StudentPrediction'
+        type: array
+    type: object
+  domain.ProgressionDecision:
+    enum:
+    - PROMOTED
+    - REPEATED
+    - GRADUATED
+    type: string
+    x-enum-varnames:
+    - ProgressionPromoted
+    - ProgressionRepeated
+    - ProgressionGraduated
+  domain.ReportCard:
+    properties:
+      attendance:
+        type: integer
+      average_score:
+        type: number
+      class_position:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      level_id:
+        type: string
+      overall_grade:
+        type: string
+      principal_remark:
+        type: string
+      published_at:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      student_id:
+        type: string
+      sub_level_id:
+        type: string
+      subject_count:
+        type: integer
+      teacher_remark:
+        type: string
+      term_id:
+        type: string
+      total_school_days:
+        type: integer
+      total_score:
+        type: number
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.RiskLevel:
+    enum:
+    - LOW
+    - MEDIUM
+    - HIGH
+    type: string
+    x-enum-comments:
+      RiskHigh: predicted avg < 40
+      RiskLow: predicted avg >= 60
+      RiskMedium: predicted avg 40–59
+    x-enum-descriptions:
+    - predicted avg >= 60
+    - predicted avg 40–59
+    - predicted avg < 40
+    x-enum-varnames:
+    - RiskLow
+    - RiskMedium
+    - RiskHigh
+  domain.School:
+    properties:
+      address:
+        type: string
+      category:
+        $ref: '#/definitions/domain.SchoolCategory'
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      founded:
+        type: integer
+      head_teacher:
+        type: string
+      id:
+        type: string
+      lga_id:
+        description: owning Local Government Area
+        type: string
+      logo_url:
+        type: string
+      name:
+        type: string
+      number_of_classrooms:
+        type: integer
+      ownership:
+        $ref: '#/definitions/domain.SchoolOwnership'
+      state_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.SchoolStatus'
+      total_students:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      zone_id:
+        type: string
+    type: object
+  domain.SchoolCategory:
+    enum:
+    - PRIMARY
+    - JUNIOR_SECONDARY
+    - SENIOR_SECONDARY
+    - COMBINED
+    - VOCATIONAL
+    type: string
+    x-enum-varnames:
+    - SchoolCategoryPrimary
+    - SchoolCategoryJuniorSec
+    - SchoolCategorySeniorSec
+    - SchoolCategoryCombined
+    - SchoolCategoryVocational
+  domain.SchoolFacility:
+    properties:
+      condition:
+        $ref: '#/definitions/domain.FacilityCondition'
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      quantity:
+        type: integer
+      school_id:
+        type: string
+      type:
+        $ref: '#/definitions/domain.FacilityType'
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.SchoolLevel:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      level_id:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.SchoolOwnership:
+    enum:
+    - GOVERNMENT
+    - PRIVATE
+    - MISSION
+    - COMMUNITY
+    type: string
+    x-enum-varnames:
+    - SchoolOwnershipGovernment
+    - SchoolOwnershipPrivate
+    - SchoolOwnershipMission
+    - SchoolOwnershipCommunity
+  domain.SchoolPrediction:
+    properties:
+      composite_score:
+        type: number
+      contributing_factors:
+        items:
+          $ref: '#/definitions/domain.Factor'
+        type: array
+      facility_score:
+        type: number
+      generated_at:
+        type: string
+      high_risk_student_count:
+        type: integer
+      historical_score:
+        type: number
+      low_risk_student_count:
+        type: integer
+      medium_risk_student_count:
+        type: integer
+      personnel_score:
+        type: number
+      predicted_pass_rate:
+        type: number
+      rating:
+        $ref: '#/definitions/domain.SchoolRating'
+      school_id:
+        type: string
+      school_name:
+        type: string
+    type: object
+  domain.SchoolRating:
+    enum:
+    - EXCELLENT
+    - GOOD
+    - AVERAGE
+    - POOR
+    type: string
+    x-enum-comments:
+      RatingAverage: composite 50–64
+      RatingExcellent: composite >= 80
+      RatingGood: composite 65–79
+      RatingPoor: composite < 50
+    x-enum-descriptions:
+    - composite >= 80
+    - composite 65–79
+    - composite 50–64
+    - composite < 50
+    x-enum-varnames:
+    - RatingExcellent
+    - RatingGood
+    - RatingAverage
+    - RatingPoor
+  domain.SchoolStatus:
+    enum:
+    - ACTIVE
+    - INACTIVE
+    - SUSPENDED
+    type: string
+    x-enum-varnames:
+    - SchoolStatusActive
+    - SchoolStatusInactive
+    - SchoolStatusSuspended
+  domain.SchoolSubject:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      level_id:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      subject_id:
+        type: string
+      teacher_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.ScoreConfig:
+    properties:
+      ca1_max:
+        type: number
+      ca2_max:
+        type: number
+      ca3_max:
+        type: number
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      exam_max:
+        type: number
+      id:
+        type: string
+      level_id:
+        type: string
+      school_id:
+        type: string
+      state_id:
+        type: string
+      total_max:
+        type: number
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.ScoreRange:
+    properties:
+      label:
+        description: e.g. "60–75%"
+        type: string
+      max:
+        type: number
+      min:
+        type: number
+    type: object
+  domain.ScoreSheet:
+    properties:
+      ca1_score:
+        type: number
+      ca2_score:
+        type: number
+      ca3_score:
+        type: number
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      exam_score:
+        type: number
+      grade:
+        type: string
+      id:
+        type: string
+      level_id:
+        type: string
+      position:
+        type: integer
+      recorded_at:
+        type: string
+      recorded_by:
+        type: string
+      remark:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      student_id:
+        type: string
+      sub_level_id:
+        type: string
+      subject_id:
+        type: string
+      term_id:
+        type: string
+      total_score:
+        description: computed by domain
+        type: number
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.SessionStatus:
+    enum:
+    - DRAFT
+    - ACTIVE
+    - CLOSED
+    type: string
+    x-enum-varnames:
+    - SessionDraft
+    - SessionActive
+    - SessionClosed
+  domain.StaffRole:
+    enum:
+    - TEACHER
+    - HEAD_TEACHER
+    - PRINCIPAL
+    - VICE_PRINCIPAL
+    - ADMIN_OFFICER
+    - COUNSELOR
+    - LIBRARIAN
+    - LAB_TECHNICIAN
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - StaffRoleTeacher
+    - StaffRoleHeadTeacher
+    - StaffRolePrincipal
+    - StaffRoleVicePrincipal
+    - StaffRoleAdmin
+    - StaffRoleCounselor
+    - StaffRoleLibrarian
+    - StaffRoleLabTechnician
+    - StaffRoleOther
+  domain.StaffStatus:
+    enum:
+    - ACTIVE
+    - INACTIVE
+    - SUSPENDED
+    - RETIRED
+    - TRANSFERRED
+    type: string
+    x-enum-varnames:
+    - StaffStatusActive
+    - StaffStatusInactive
+    - StaffStatusSuspended
+    - StaffStatusRetired
+    - StaffStatusTransferred
+  domain.State:
+    properties:
+      code:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.Student:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      date_of_birth:
+        type: string
+      deleted_at:
+        type: string
+      enrollment_no:
+        type: string
+      enrollment_year:
+        type: integer
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/domain.Gender'
+      guardian_name:
+        type: string
+      guardian_phone:
+        type: string
+      guardian_relation:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      lga_id:
+        type: string
+      middle_name:
+        type: string
+      religion:
+        type: string
+      school_id:
+        type: string
+      serial_no:
+        type: integer
+      state_id:
+        type: string
+      state_of_origin:
+        type: string
+      status:
+        $ref: '#/definitions/domain.StudentStatus'
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.StudentPrediction:
+    properties:
+      composite_score:
+        description: weighted blend
+        type: number
+      confidence:
+        description: 0–1, based on data richness
+        type: number
+      contributing_factors:
+        items:
+          $ref: '#/definitions/domain.Factor'
+        type: array
+      facility_score:
+        type: number
+      generated_at:
+        type: string
+      historical_avg:
+        type: number
+      personnel_score:
+        type: number
+      predicted_score_range:
+        $ref: '#/definitions/domain.ScoreRange'
+      risk_level:
+        $ref: '#/definitions/domain.RiskLevel'
+      school_id:
+        type: string
+      student_id:
+        type: string
+      student_name:
+        type: string
+    type: object
+  domain.StudentStatus:
+    enum:
+    - ACTIVE
+    - INACTIVE
+    - GRADUATED
+    - TRANSFERRED
+    - DROPPED_OUT
+    - DECEASED
+    type: string
+    x-enum-varnames:
+    - StudentStatusActive
+    - StudentStatusInactive
+    - StudentStatusGraduated
+    - StudentStatusTransferred
+    - StudentStatusDropped
+    - StudentStatusDeceased
+  domain.SubLevel:
+    properties:
+      capacity:
+        type: integer
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      level_id:
+        type: string
+      name:
+        type: string
+      school_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.Subject:
+    properties:
+      category:
+        $ref: '#/definitions/domain.SubjectCategory'
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      level_type:
+        $ref: '#/definitions/domain.LevelType'
+      name:
+        type: string
+      state_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.SubjectCategory:
+    enum:
+    - PRACTICAL
+    type: string
+    x-enum-varnames:
+    - SubjectPractical
+  domain.Term:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      session_id:
+        type: string
+      start_date:
+        type: string
+      term_number:
+        description: 1 | 2 | 3
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  domain.Zone:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      state_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  dto.AddPermissionRequest:
+    properties:
+      permission_id:
+        type: string
+    required:
+    - permission_id
+    type: object
+  dto.AssignRoleRequest:
+    properties:
+      role_id:
+        type: string
+      school_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  dto.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.BulkStudentAttendanceRequest:
+    properties:
+      date:
+        type: string
+      recorded_by:
+        type: string
+      records:
+        items:
+          $ref: '#/definitions/dto.StudentAttendanceRequest'
+        type: array
+      school_id:
+        type: string
+    required:
+    - date
+    - recorded_by
+    - records
+    - school_id
+    type: object
+  dto.BulkUpsertScoreRequest:
+    properties:
+      scores:
+        items:
+          $ref: '#/definitions/dto.UpsertScoreRequest'
+        type: array
+    required:
+    - scores
+    type: object
+  dto.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  dto.CreateFacilityRequest:
+    properties:
+      condition:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      quantity:
+        type: integer
+      type:
+        type: string
+    required:
+    - condition
+    - name
+    - type
+    type: object
+  dto.CreateLGARequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      zone_id:
+        type: string
+    required:
+    - code
+    - name
+    - zone_id
+    type: object
+  dto.CreateLevelRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      type:
+        type: string
+    required:
+    - code
+    - name
+    - type
+    type: object
+  dto.CreatePersonnelRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_employment:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      last_name:
+        type: string
+      lga_id:
+        type: string
+      middle_name:
+        type: string
+      phone:
+        type: string
+      qualification:
+        type: string
+      role:
+        type: string
+      school_id:
+        type: string
+      specialization:
+        type: string
+      staff_id:
+        type: string
+    required:
+    - first_name
+    - gender
+    - last_name
+    - role
+    - school_id
+    - staff_id
+    type: object
+  dto.CreateRoleRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.CreateSchoolRequest:
+    properties:
+      address:
+        type: string
+      category:
+        type: string
+      code:
+        type: string
+      founded:
+        type: integer
+      head_teacher:
+        type: string
+      lga_id:
+        type: string
+      name:
+        type: string
+      number_of_classrooms:
+        type: integer
+      ownership:
+        type: string
+      state_id:
+        type: string
+      status:
+        type: string
+      total_students:
+        type: integer
+      zone_id:
+        type: string
+    required:
+    - category
+    - code
+    - lga_id
+    - name
+    - state_id
+    - zone_id
+    type: object
+  dto.CreateSchoolSubjectRequest:
+    properties:
+      level_id:
+        type: string
+      session_id:
+        type: string
+      subject_id:
+        type: string
+      teacher_id:
+        type: string
+    required:
+    - level_id
+    - session_id
+    - subject_id
+    type: object
+  dto.CreateSessionRequest:
+    properties:
+      end_date:
+        type: string
+      end_year:
+        type: integer
+      name:
+        type: string
+      start_date:
+        type: string
+      start_year:
+        type: integer
+    required:
+    - end_date
+    - end_year
+    - name
+    - start_date
+    - start_year
+    type: object
+  dto.CreateStateRequest:
+    properties:
+      code:
+        type: string
+      country:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.CreateStudentRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      enrollment_year:
+        type: integer
+      first_name:
+        type: string
+      gender:
+        type: string
+      guardian_name:
+        type: string
+      guardian_phone:
+        type: string
+      guardian_relation:
+        type: string
+      last_name:
+        type: string
+      lga_id:
+        type: string
+      middle_name:
+        type: string
+      religion:
+        type: string
+      school_id:
+        type: string
+      state_of_origin:
+        type: string
+    required:
+    - date_of_birth
+    - enrollment_year
+    - first_name
+    - gender
+    - guardian_name
+    - guardian_phone
+    - last_name
+    - school_id
+    type: object
+  dto.CreateSubLevelRequest:
+    properties:
+      capacity:
+        type: integer
+      code:
+        type: string
+      level_id:
+        type: string
+      name:
+        type: string
+      school_id:
+        type: string
+    required:
+    - code
+    - level_id
+    - name
+    type: object
+  dto.CreateSubjectRequest:
+    properties:
+      category:
+        type: string
+      code:
+        type: string
+      level_type:
+        type: string
+      name:
+        type: string
+    required:
+    - category
+    - code
+    - level_type
+    - name
+    type: object
+  dto.CreateTermRequest:
+    properties:
+      end_date:
+        type: string
+      name:
+        type: string
+      session_id:
+        type: string
+      start_date:
+        type: string
+      term_number:
+        type: integer
+    required:
+    - end_date
+    - name
+    - start_date
+    - term_number
+    type: object
+  dto.CreateZoneRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.EnrollStudentRequest:
+    properties:
+      level_id:
+        type: string
+      school_id:
+        type: string
+      session_id:
+        type: string
+      student_id:
+        type: string
+      sub_level_id:
+        type: string
+    required:
+    - level_id
+    - school_id
+    - session_id
+    - student_id
+    - sub_level_id
+    type: object
+  dto.GenerateReportCardRequest:
+    properties:
+      school_id:
+        type: string
+      session_id:
+        type: string
+      sub_level_id:
+        type: string
+      term_id:
+        type: string
+    required:
+    - school_id
+    - session_id
+    - sub_level_id
+    - term_id
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      resource:
+        type: string
+    type: object
+  dto.PersonnelAttendanceRequest:
+    properties:
+      date:
+        type: string
+      personnel_id:
+        type: string
+      recorded_by:
+        type: string
+      remarks:
+        type: string
+      school_id:
+        type: string
+      status:
+        enum:
+        - PRESENT
+        - ABSENT
+        - LATE
+        - EXCUSED
+        type: string
+    required:
+    - date
+    - personnel_id
+    - recorded_by
+    - school_id
+    - status
+    type: object
+  dto.PersonnelAttendanceResponse:
+    properties:
+      attendance_date:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      personnel_id:
+        type: string
+      personnel_name:
+        type: string
+      recorded_by:
+        type: string
+      remarks:
+        type: string
+      school_id:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.RecordProgressionRequest:
+    properties:
+      decision:
+        type: string
+      decision_date:
+        type: string
+      from_level_id:
+        type: string
+      from_session_id:
+        type: string
+      remarks:
+        type: string
+      student_id:
+        type: string
+      to_level_id:
+        type: string
+      to_session_id:
+        type: string
+    required:
+    - decision
+    - decision_date
+    - from_level_id
+    - from_session_id
+    - student_id
+    type: object
+  dto.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      school_id:
+        type: string
+      state_id:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - state_id
+    type: object
+  dto.RoleResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_system:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/dto.PermissionResponse'
+        type: array
+      state_id:
+        type: string
+    type: object
+  dto.StudentAttendanceRequest:
+    properties:
+      date:
+        type: string
+      recorded_by:
+        type: string
+      remarks:
+        type: string
+      school_id:
+        type: string
+      status:
+        enum:
+        - PRESENT
+        - ABSENT
+        - LATE
+        - EXCUSED
+        type: string
+      student_id:
+        type: string
+    required:
+    - date
+    - recorded_by
+    - school_id
+    - status
+    - student_id
+    type: object
+  dto.StudentAttendanceResponse:
+    properties:
+      attendance_date:
+        type: string
+      created_at:
+        type: string
+      enrollment_no:
+        type: string
+      id:
+        type: string
+      recorded_by:
+        type: string
+      remarks:
+        type: string
+      school_id:
+        type: string
+      status:
+        type: string
+      student_id:
+        type: string
+      student_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.StudentInfo:
+    properties:
+      enrollment_no:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      school_id:
+        type: string
+      state_id:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.StudentLoginRequest:
+    properties:
+      enrollment_no:
+        type: string
+      school_code:
+        type: string
+    required:
+    - enrollment_no
+    - school_code
+    type: object
+  dto.StudentLoginResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+      student:
+        $ref: '#/definitions/dto.StudentInfo'
+    type: object
+  dto.TransferPersonnelRequest:
+    properties:
+      approved_by:
+        type: string
+      reason:
+        type: string
+      to_school_id:
+        type: string
+      transfer_date:
+        type: string
+    required:
+    - to_school_id
+    - transfer_date
+    type: object
+  dto.UpdateEnrollmentRequest:
+    properties:
+      status:
+        type: string
+      sub_level_id:
+        type: string
+    type: object
+  dto.UpdateFacilityRequest:
+    properties:
+      condition:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      quantity:
+        type: integer
+      type:
+        type: string
+    required:
+    - condition
+    - name
+    - type
+    type: object
+  dto.UpdateLGARequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      zone_id:
+        type: string
+    required:
+    - code
+    - name
+    - zone_id
+    type: object
+  dto.UpdateLevelRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      type:
+        type: string
+    required:
+    - code
+    - name
+    - type
+    type: object
+  dto.UpdatePersonnelAttendanceRequest:
+    properties:
+      remarks:
+        type: string
+      status:
+        enum:
+        - PRESENT
+        - ABSENT
+        - LATE
+        - EXCUSED
+        type: string
+    required:
+    - status
+    type: object
+  dto.UpdatePersonnelRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_employment:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      phone:
+        type: string
+      qualification:
+        type: string
+      role:
+        type: string
+      school_id:
+        type: string
+      specialization:
+        type: string
+      staff_id:
+        type: string
+      status:
+        type: string
+    required:
+    - first_name
+    - gender
+    - last_name
+    - role
+    - staff_id
+    type: object
+  dto.UpdateReportCardRemarksRequest:
+    properties:
+      attendance:
+        type: integer
+      principal_remark:
+        type: string
+      teacher_remark:
+        type: string
+      total_school_days:
+        type: integer
+    type: object
+  dto.UpdateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateSchoolRequest:
+    properties:
+      address:
+        type: string
+      category:
+        type: string
+      code:
+        type: string
+      founded:
+        type: integer
+      head_teacher:
+        type: string
+      lga_id:
+        type: string
+      name:
+        type: string
+      number_of_classrooms:
+        type: integer
+      ownership:
+        type: string
+      state_id:
+        type: string
+      status:
+        type: string
+      total_students:
+        type: integer
+      zone_id:
+        type: string
+    required:
+    - category
+    - code
+    - lga_id
+    - name
+    - state_id
+    - zone_id
+    type: object
+  dto.UpdateSchoolSubjectRequest:
+    properties:
+      is_active:
+        type: boolean
+      teacher_id:
+        type: string
+    type: object
+  dto.UpdateSessionRequest:
+    properties:
+      end_date:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateStateRequest:
+    properties:
+      country:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateStudentAttendanceRequest:
+    properties:
+      remarks:
+        type: string
+      status:
+        enum:
+        - PRESENT
+        - ABSENT
+        - LATE
+        - EXCUSED
+        type: string
+    required:
+    - status
+    type: object
+  dto.UpdateStudentRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      guardian_name:
+        type: string
+      guardian_phone:
+        type: string
+      guardian_relation:
+        type: string
+      last_name:
+        type: string
+      lga_id:
+        type: string
+      middle_name:
+        type: string
+      religion:
+        type: string
+      state_of_origin:
+        type: string
+      status:
+        type: string
+    required:
+    - first_name
+    - gender
+    - guardian_name
+    - guardian_phone
+    - last_name
+    type: object
+  dto.UpdateSubLevelRequest:
+    properties:
+      capacity:
+        type: integer
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.UpdateSubjectRequest:
+    properties:
+      category:
+        type: string
+      code:
+        type: string
+      level_type:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.UpdateTermRequest:
+    properties:
+      end_date:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      school_id:
+        type: string
+      status:
+        type: string
+    required:
+    - first_name
+    - last_name
+    type: object
+  dto.UpdateZoneRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  dto.UpsertGradeConfigRequest:
+    properties:
+      grade:
+        type: string
+      level_id:
+        description: optional
+        type: string
+      max_score:
+        type: number
+      min_score:
+        type: number
+      points:
+        type: number
+      remark:
+        type: string
+      school_id:
+        description: optional
+        type: string
+    required:
+    - grade
+    - max_score
+    - remark
+    type: object
+  dto.UpsertSchoolLevelRequest:
+    properties:
+      is_active:
+        type: boolean
+      level_id:
+        type: string
+      session_id:
+        type: string
+    required:
+    - level_id
+    - session_id
+    type: object
+  dto.UpsertScoreConfigRequest:
+    properties:
+      ca1_max:
+        type: number
+      ca2_max:
+        type: number
+      ca3_max:
+        type: number
+      exam_max:
+        type: number
+      level_id:
+        description: optional — empty = school/state default
+        type: string
+      school_id:
+        description: optional — empty = state default
+        type: string
+      total_max:
+        type: number
+    required:
+    - ca1_max
+    - ca2_max
+    - ca3_max
+    - exam_max
+    - total_max
+    type: object
+  dto.UpsertScoreRequest:
+    properties:
+      ca1_score:
+        type: number
+      ca2_score:
+        type: number
+      ca3_score:
+        type: number
+      exam_score:
+        type: number
+      level_id:
+        type: string
+      student_id:
+        type: string
+      sub_level_id:
+        type: string
+      subject_id:
+        type: string
+      term_id:
+        type: string
+    required:
+    - level_id
+    - student_id
+    - sub_level_id
+    - subject_id
+    - term_id
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_login_at:
+        type: string
+      last_name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      school_id:
+        type: string
+      state_id:
+        type: string
+      status:
+        type: string
+    type: object
+  ml.FactorDetail:
+    properties:
+      factor:
+        type: string
+      recommendation:
+        type: string
+      severity:
+        type: string
+      value:
+        type: string
+    type: object
+  ml.RecommendResponse:
+    properties:
+      critical_count:
+        type: integer
+      flagged_schools:
+        type: integer
+      high_count:
+        type: integer
+      recommendations:
+        items:
+          $ref: '#/definitions/ml.SchoolRecommendation'
+        type: array
+      total_schools:
+        type: integer
+    type: object
+  ml.SchoolRecommendation:
+    properties:
+      anomaly:
+        type: boolean
+      factors:
+        items:
+          $ref: '#/definitions/ml.FactorDetail'
+        type: array
+      level_type:
+        type: string
+      lga:
+        type: string
+      risk_score:
+        type: number
+      risk_tier:
+        type: string
+      school_id:
+        type: integer
+      school_name:
+        type: string
+      summary:
+        type: string
+      zone:
+        type: string
+    type: object
+  pagination.Meta:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@edossier.com
+    name: API Support
+  description: e-Dossier School Management System API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: e-Dossier API
+  version: "1.0"
+paths:
+  /attendance/personnel:
+    post:
+      consumes:
+      - application/json
+      description: Record attendance for personnel
+      parameters:
+      - description: Attendance info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PersonnelAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PersonnelAttendanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Record personnel attendance
+      tags:
+      - attendance
+  /attendance/personnel/{id}:
+    delete:
+      description: Delete a personnel attendance record
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete personnel attendance
+      tags:
+      - attendance
+    get:
+      description: Get a personnel attendance record by ID
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PersonnelAttendanceResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get personnel attendance
+      tags:
+      - attendance
+    put:
+      consumes:
+      - application/json
+      description: Update personnel attendance record
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated attendance info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePersonnelAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PersonnelAttendanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update personnel attendance
+      tags:
+      - attendance
+  /attendance/personnel/{id}/range:
+    get:
+      description: List personnel attendance for a date range
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PersonnelAttendanceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List personnel attendance by range
+      tags:
+      - attendance
+  /attendance/personnel/school:
+    get:
+      description: List personnel attendance for a school on a specific date
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        required: true
+        type: string
+      - description: Date (YYYY-MM-DD)
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PersonnelAttendanceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List personnel attendance by school and date
+      tags:
+      - attendance
+  /attendance/students:
+    post:
+      consumes:
+      - application/json
+      description: Record attendance for a student
+      parameters:
+      - description: Attendance info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.StudentAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.StudentAttendanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Record student attendance
+      tags:
+      - attendance
+  /attendance/students/{id}:
+    delete:
+      description: Delete a student attendance record
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete student attendance
+      tags:
+      - attendance
+    get:
+      description: Get a student attendance record by ID
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StudentAttendanceResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get student attendance
+      tags:
+      - attendance
+    put:
+      consumes:
+      - application/json
+      description: Update student attendance record
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated attendance info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateStudentAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StudentAttendanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update student attendance
+      tags:
+      - attendance
+  /attendance/students/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Bulk record attendance for students
+      parameters:
+      - description: Bulk attendance info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkStudentAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Bulk record student attendance
+      tags:
+      - attendance
+  /attendance/students/school:
+    get:
+      description: List student attendance for a school on a specific date
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        required: true
+        type: string
+      - description: Date (YYYY-MM-DD)
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.StudentAttendanceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List student attendance by school and date
+      tags:
+      - attendance
+  /attendance/students/school/range:
+    get:
+      description: List student attendance for a school in a date range
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        required: true
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.StudentAttendanceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List student attendance by school and range
+      tags:
+      - attendance
+  /attendance/students/student/{id}/range:
+    get:
+      description: List student attendance for a date range
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.StudentAttendanceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List student attendance by range
+      tags:
+      - attendance
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change the authenticated user's password
+      parameters:
+      - description: Password change info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Change user password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Logout user by invalidating refresh token
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Logout user
+      tags:
+      - auth
+  /auth/me:
+    get:
+      description: Get the currently authenticated user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get current user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: User registration info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/student-login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate student using school code and enrollment number
+      parameters:
+      - description: Student login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.StudentLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StudentLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Student login
+      tags:
+      - auth
+  /avatar/personnel/{id}:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a profile picture for personnel
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upload personnel avatar
+      tags:
+      - avatar
+  /enrollments:
+    get:
+      description: List student enrollments with optional filters
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by session ID
+        in: query
+        name: session_id
+        type: string
+      - description: Filter by level ID
+        in: query
+        name: level_id
+        type: string
+      - description: Filter by sub-level ID
+        in: query
+        name: sub_level_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+      summary: List enrollments
+      tags:
+      - enrollments
+    post:
+      consumes:
+      - application/json
+      description: Enroll a student in a class
+      parameters:
+      - description: Enrollment info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EnrollStudentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Enrollment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Enroll student
+      tags:
+      - enrollments
+  /enrollments/{enrollmentId}:
+    put:
+      consumes:
+      - application/json
+      description: Update an enrollment record
+      parameters:
+      - description: Enrollment ID
+        in: path
+        name: enrollmentId
+        required: true
+        type: string
+      - description: Updated enrollment info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateEnrollmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Enrollment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update enrollment
+      tags:
+      - enrollments
+  /levels:
+    get:
+      description: List all levels
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Level'
+            type: array
+      summary: List levels
+      tags:
+      - levels
+    post:
+      consumes:
+      - application/json
+      description: Create a new level
+      parameters:
+      - description: Level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Level'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create level
+      tags:
+      - levels
+  /levels/{id}:
+    delete:
+      description: Delete a level
+      parameters:
+      - description: Level ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete level
+      tags:
+      - levels
+    get:
+      description: Get a single level by ID
+      parameters:
+      - description: Level ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Level'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get level by ID
+      tags:
+      - levels
+    put:
+      consumes:
+      - application/json
+      description: Update level details
+      parameters:
+      - description: Level ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Level'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update level
+      tags:
+      - levels
+  /levels/{levelId}/sub-levels:
+    get:
+      description: List sub-levels (class arms) for a school and level
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Level ID
+        in: path
+        name: levelId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SubLevel'
+            type: array
+      summary: List sub-levels
+      tags:
+      - levels
+  /lgas/{id}:
+    delete:
+      description: Delete an LGA
+      parameters:
+      - description: LGA ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete LGA
+      tags:
+      - lgas
+    put:
+      consumes:
+      - application/json
+      description: Update LGA details
+      parameters:
+      - description: LGA ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated LGA info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateLGARequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LGA'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update LGA
+      tags:
+      - lgas
+  /permissions:
+    get:
+      description: List all permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PermissionResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List permissions
+      tags:
+      - roles
+  /personnel:
+    get:
+      description: List personnel with optional filters
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by role
+        in: query
+        name: role
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+      summary: List personnel
+      tags:
+      - personnel
+    post:
+      consumes:
+      - application/json
+      description: Create a new personnel record
+      parameters:
+      - description: Personnel info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePersonnelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Personnel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create personnel
+      tags:
+      - personnel
+  /personnel/{id}:
+    delete:
+      description: Delete a personnel record
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete personnel
+      tags:
+      - personnel
+    get:
+      description: Get a single personnel by ID
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Personnel'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get personnel by ID
+      tags:
+      - personnel
+    put:
+      consumes:
+      - application/json
+      description: Update personnel details
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated personnel info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePersonnelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Personnel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update personnel
+      tags:
+      - personnel
+  /personnel/{id}/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfer personnel to another school
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Transfer info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TransferPersonnelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.PersonnelTransfer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Transfer personnel
+      tags:
+      - personnel
+  /personnel/{id}/transfers:
+    get:
+      description: List transfer history for a personnel
+      parameters:
+      - description: Personnel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.PersonnelTransfer'
+            type: array
+      summary: List personnel transfers
+      tags:
+      - personnel
+  /predictions/schools/{schoolId}:
+    get:
+      description: Get school-level performance prediction
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Session ID
+        in: query
+        name: session_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SchoolPrediction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: School prediction report
+      tags:
+      - predictions
+  /predictions/schools/{schoolId}/full:
+    get:
+      description: Get full school prediction report
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PredictionReport'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Full prediction report
+      tags:
+      - predictions
+  /predictions/schools/{schoolId}/students/{studentId}:
+    get:
+      description: Get prediction report for a student
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Student ID
+        in: path
+        name: studentId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.StudentPrediction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Student prediction report
+      tags:
+      - predictions
+  /recommendations:
+    get:
+      description: Get course recommendations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ml.RecommendResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get recommendations
+      tags:
+      - recommendations
+  /reports/dashboard:
+    get:
+      description: Retrieve dashboard statistics for the authenticated user's state/school
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get dashboard stats
+      tags:
+      - reports
+  /reports/gender/total:
+    get:
+      description: Count students by gender for a state
+      parameters:
+      - description: State ID
+        in: query
+        name: state_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Count by gender
+      tags:
+      - reports
+  /reports/personnel/total:
+    get:
+      description: Count total personnel by state
+      parameters:
+      - description: State ID
+        in: query
+        name: state_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Count total personnel
+      tags:
+      - personnel
+  /reports/public/teaching-personnel:
+    get:
+      description: Get total count of active teaching personnel (public endpoint)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Get public teaching personnel count
+      tags:
+      - reports
+  /reports/schools/total:
+    get:
+      description: Count total schools by state
+      parameters:
+      - description: State ID
+        in: query
+        name: state_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Count total schools
+      tags:
+      - schools
+  /reports/students/total:
+    get:
+      description: Count total students by state
+      parameters:
+      - description: State ID
+        in: query
+        name: state_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Count total students
+      tags:
+      - reports
+  /results/grade-config:
+    get:
+      description: List grade configurations
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by level ID
+        in: query
+        name: level_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.GradeConfig'
+            type: array
+      summary: List grade configs
+      tags:
+      - results
+    post:
+      consumes:
+      - application/json
+      description: Create or update grade configuration
+      parameters:
+      - description: Grade config info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpsertGradeConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GradeConfig'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upsert grade config
+      tags:
+      - results
+  /results/grade-config/{id}:
+    delete:
+      description: Delete a grade configuration
+      parameters:
+      - description: Grade Config ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete grade config
+      tags:
+      - results
+  /results/report-cards:
+    get:
+      description: List report cards with optional filters
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by term ID
+        in: query
+        name: term_id
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+      summary: List report cards
+      tags:
+      - results
+  /results/report-cards/{id}:
+    get:
+      description: Get a single report card by ID
+      parameters:
+      - description: Report Card ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ReportCard'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get report card
+      tags:
+      - results
+  /results/report-cards/{id}/publish:
+    post:
+      description: Publish a report card
+      parameters:
+      - description: Report Card ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Publish report card
+      tags:
+      - results
+  /results/report-cards/{id}/remarks:
+    put:
+      consumes:
+      - application/json
+      description: Update remarks on a report card
+      parameters:
+      - description: Report Card ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Remarks info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateReportCardRemarksRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ReportCard'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update report card remarks
+      tags:
+      - results
+  /results/report-cards/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate report cards for a class
+      parameters:
+      - description: Report card generation info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GenerateReportCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Generate report cards
+      tags:
+      - results
+  /results/score-config:
+    post:
+      consumes:
+      - application/json
+      description: Create or update score configuration
+      parameters:
+      - description: Score config info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpsertScoreConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ScoreConfig'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upsert score config
+      tags:
+      - results
+  /results/scores:
+    post:
+      consumes:
+      - application/json
+      description: Create or update a student score
+      parameters:
+      - description: Score info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpsertScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ScoreSheet'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upsert score
+      tags:
+      - results
+  /results/scores/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Bulk create or update student scores
+      parameters:
+      - description: Bulk score info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkUpsertScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Bulk upsert scores
+      tags:
+      - results
+  /results/scores/compute-positions:
+    post:
+      description: Compute student positions in class
+      parameters:
+      - description: Term ID
+        in: query
+        name: term_id
+        type: string
+      - description: Sub-level ID
+        in: query
+        name: sub_level_id
+        type: string
+      - description: Subject ID
+        in: query
+        name: subject_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Compute positions
+      tags:
+      - results
+  /roles:
+    get:
+      description: List all roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RoleResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role
+      parameters:
+      - description: Role info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create role
+      tags:
+      - roles
+  /roles/{id}:
+    delete:
+      description: Delete a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete role
+      tags:
+      - roles
+    get:
+      description: Get a single role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get role by ID
+      tags:
+      - roles
+    put:
+      consumes:
+      - application/json
+      description: Update role details
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated role info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update role
+      tags:
+      - roles
+  /roles/{id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Add a permission to a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddPermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Add permission to role
+      tags:
+      - roles
+  /roles/{id}/permissions/{permId}:
+    delete:
+      description: Remove a permission from a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: permId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Remove permission from role
+      tags:
+      - roles
+  /school-subjects/{id}:
+    delete:
+      description: Remove a subject from a school
+      parameters:
+      - description: School Subject ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Remove school subject
+      tags:
+      - subjects
+    put:
+      consumes:
+      - application/json
+      description: Update a school subject assignment
+      parameters:
+      - description: School Subject ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated school subject info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSchoolSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SchoolSubject'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update school subject
+      tags:
+      - subjects
+  /schools:
+    get:
+      description: List schools with optional filters
+      parameters:
+      - description: Filter by state ID
+        in: query
+        name: state_id
+        type: string
+      - description: Filter by zone ID
+        in: query
+        name: zone_id
+        type: string
+      - description: Filter by LGA ID
+        in: query
+        name: lga_id
+        type: string
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by ownership
+        in: query
+        name: ownership
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name or code
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+      summary: List schools
+      tags:
+      - schools
+    post:
+      consumes:
+      - application/json
+      description: Create a new school
+      parameters:
+      - description: School info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSchoolRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.School'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create school
+      tags:
+      - schools
+  /schools/{id}:
+    delete:
+      description: Delete a school
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete school
+      tags:
+      - schools
+    get:
+      description: Get a single school by ID
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.School'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get school by ID
+      tags:
+      - schools
+    put:
+      consumes:
+      - application/json
+      description: Update school details
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated school info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSchoolRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.School'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update school
+      tags:
+      - schools
+  /schools/{id}/facilities:
+    get:
+      description: List facilities for a school
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchoolFacility'
+            type: array
+      summary: List school facilities
+      tags:
+      - schools
+    post:
+      consumes:
+      - application/json
+      description: Add a facility to a school
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Facility info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateFacilityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.SchoolFacility'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Add facility to school
+      tags:
+      - schools
+  /schools/{id}/facilities/{facilityId}:
+    delete:
+      description: Delete a school facility
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Facility ID
+        in: path
+        name: facilityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete school facility
+      tags:
+      - schools
+    put:
+      consumes:
+      - application/json
+      description: Update a school facility
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Facility ID
+        in: path
+        name: facilityId
+        required: true
+        type: string
+      - description: Updated facility info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateFacilityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SchoolFacility'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update school facility
+      tags:
+      - schools
+  /schools/{id}/logo:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a logo for a school
+      parameters:
+      - description: School ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Logo image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upload school logo
+      tags:
+      - schools
+  /schools/{schoolId}/levels:
+    get:
+      description: List levels assigned to a school
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Filter by session ID
+        in: query
+        name: session_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchoolLevel'
+            type: array
+      summary: List school levels
+      tags:
+      - levels
+    post:
+      consumes:
+      - application/json
+      description: Assign or update a level for a school
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: School level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpsertSchoolLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Upsert school level
+      tags:
+      - levels
+  /schools/{schoolId}/sub-levels:
+    post:
+      consumes:
+      - application/json
+      description: Create a sub-level for a school
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Sub-level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSubLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.SubLevel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create sub-level
+      tags:
+      - levels
+  /schools/{schoolId}/subjects:
+    get:
+      description: List subjects assigned to a school
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: Filter by session ID
+        in: query
+        name: session_id
+        type: string
+      - description: Filter by level ID
+        in: query
+        name: level_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchoolSubject'
+            type: array
+      summary: List school subjects
+      tags:
+      - subjects
+    post:
+      consumes:
+      - application/json
+      description: Assign a subject to a school
+      parameters:
+      - description: School ID
+        in: path
+        name: schoolId
+        required: true
+        type: string
+      - description: School subject info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSchoolSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.SchoolSubject'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Assign subject to school
+      tags:
+      - subjects
+  /sessions:
+    get:
+      description: List academic sessions for a school
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List academic sessions
+      tags:
+      - academic
+    post:
+      consumes:
+      - application/json
+      description: Create a new academic session
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      - description: Session info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.AcademicSession'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create academic session
+      tags:
+      - academic
+  /sessions/{id}:
+    delete:
+      description: Delete an academic session
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete session
+      tags:
+      - academic
+    get:
+      description: Get a single academic session by ID
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AcademicSession'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get session by ID
+      tags:
+      - academic
+    put:
+      consumes:
+      - application/json
+      description: Update academic session details
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated session info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AcademicSession'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update session
+      tags:
+      - academic
+  /sessions/{id}/activate:
+    post:
+      description: Activate an academic session
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Activate session
+      tags:
+      - academic
+  /sessions/{sessionId}/terms:
+    get:
+      description: List terms for a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Term'
+            type: array
+      summary: List terms
+      tags:
+      - academic
+    post:
+      consumes:
+      - application/json
+      description: Create a new term
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Term info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTermRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Term'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create term
+      tags:
+      - academic
+  /sessions/{sessionId}/terms/{id}:
+    delete:
+      description: Delete a term
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete term
+      tags:
+      - academic
+    put:
+      consumes:
+      - application/json
+      description: Update term details
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated term info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTermRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Term'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update term
+      tags:
+      - academic
+  /sessions/{sessionId}/terms/{id}/activate:
+    post:
+      description: Activate a term
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Activate term
+      tags:
+      - academic
+  /sessions/active:
+    get:
+      description: Get the active academic session
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AcademicSession'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get active session
+      tags:
+      - academic
+  /states:
+    get:
+      description: List all states
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.State'
+            type: array
+      summary: List states
+      tags:
+      - states
+    post:
+      consumes:
+      - application/json
+      description: Create a new state
+      parameters:
+      - description: State info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateStateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.State'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create state
+      tags:
+      - states
+  /states/{id}:
+    get:
+      description: Get a single state by ID
+      parameters:
+      - description: State ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.State'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get state by ID
+      tags:
+      - states
+    put:
+      consumes:
+      - application/json
+      description: Update state details
+      parameters:
+      - description: State ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated state info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateStateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.State'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update state
+      tags:
+      - states
+  /states/{stateId}/lgas:
+    get:
+      description: List LGAs for a state or zone
+      parameters:
+      - description: State ID
+        in: path
+        name: stateId
+        required: true
+        type: string
+      - description: Filter by zone ID
+        in: query
+        name: zone_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.LGA'
+            type: array
+      summary: List LGAs
+      tags:
+      - lgas
+    post:
+      consumes:
+      - application/json
+      description: Create a new LGA
+      parameters:
+      - description: State ID
+        in: path
+        name: stateId
+        required: true
+        type: string
+      - description: LGA info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateLGARequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.LGA'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create LGA
+      tags:
+      - lgas
+  /states/{stateId}/zones:
+    get:
+      description: List zones for a state
+      parameters:
+      - description: State ID
+        in: path
+        name: stateId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Zone'
+            type: array
+      summary: List zones
+      tags:
+      - zones
+    post:
+      consumes:
+      - application/json
+      description: Create a new zone
+      parameters:
+      - description: State ID
+        in: path
+        name: stateId
+        required: true
+        type: string
+      - description: Zone info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateZoneRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Zone'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create zone
+      tags:
+      - zones
+  /students:
+    get:
+      description: List students with optional filters
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+      summary: List students
+      tags:
+      - students
+    post:
+      consumes:
+      - application/json
+      description: Register a new student
+      parameters:
+      - description: Student info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateStudentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create student
+      tags:
+      - students
+  /students/{id}:
+    delete:
+      description: Delete a student
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete student
+      tags:
+      - students
+    get:
+      description: Get a single student by ID
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Student'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get student by ID
+      tags:
+      - students
+    put:
+      consumes:
+      - application/json
+      description: Update student details
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated student info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateStudentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update student
+      tags:
+      - students
+  /students/{id}/progressions:
+    get:
+      description: List level progressions for a student
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.LevelProgression'
+            type: array
+      summary: List progressions
+      tags:
+      - students
+    post:
+      consumes:
+      - application/json
+      description: Record a student level progression
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      - description: Progression info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RecordProgressionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.LevelProgression'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Record progression
+      tags:
+      - students
+  /students/{studentId}/report-card:
+    get:
+      description: Get a student report card for a term
+      parameters:
+      - description: Student ID
+        in: path
+        name: studentId
+        required: true
+        type: string
+      - description: Term ID
+        in: query
+        name: term_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ReportCard'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get student report card
+      tags:
+      - results
+  /students/{studentId}/report-cards:
+    get:
+      description: Get all report cards for a student
+      parameters:
+      - description: Student ID
+        in: path
+        name: studentId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ReportCard'
+            type: array
+      summary: Get all student reports
+      tags:
+      - results
+  /students/{studentId}/scores:
+    get:
+      description: Get scores for a student
+      parameters:
+      - description: Student ID
+        in: path
+        name: studentId
+        required: true
+        type: string
+      - description: Filter by session ID
+        in: query
+        name: session_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ScoreSheet'
+            type: array
+      summary: Get student scores
+      tags:
+      - results
+  /students/next-serial:
+    get:
+      description: Get the next student serial number for a school
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        type: string
+      - description: Enrollment year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Get next serial number
+      tags:
+      - students
+  /sub-levels:
+    post:
+      consumes:
+      - application/json
+      description: Create a sub-level via top-level endpoint
+      parameters:
+      - description: School ID
+        in: query
+        name: school_id
+        required: true
+        type: string
+      - description: Level ID
+        in: query
+        name: level_id
+        required: true
+        type: string
+      - description: Sub-level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSubLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.SubLevel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create sub-level (global)
+      tags:
+      - levels
+  /sub-levels/{id}:
+    delete:
+      description: Delete a sub-level
+      parameters:
+      - description: Sub-level ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete sub-level
+      tags:
+      - levels
+    put:
+      consumes:
+      - application/json
+      description: Update sub-level details
+      parameters:
+      - description: Sub-level ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated sub-level info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSubLevelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SubLevel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update sub-level
+      tags:
+      - levels
+  /subjects:
+    get:
+      description: List all subjects
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Subject'
+            type: array
+      summary: List subjects
+      tags:
+      - subjects
+    post:
+      consumes:
+      - application/json
+      description: Create a new subject
+      parameters:
+      - description: Subject info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Subject'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create subject
+      tags:
+      - subjects
+  /subjects/{id}:
+    delete:
+      description: Delete a subject
+      parameters:
+      - description: Subject ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete subject
+      tags:
+      - subjects
+    get:
+      description: Get a single subject by ID
+      parameters:
+      - description: Subject ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Subject'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get subject by ID
+      tags:
+      - subjects
+    put:
+      consumes:
+      - application/json
+      description: Update subject details
+      parameters:
+      - description: Subject ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated subject info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Subject'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update subject
+      tags:
+      - subjects
+  /terms:
+    get:
+      description: List all terms across every session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Term'
+            type: array
+      summary: List all terms
+      tags:
+      - academic
+    post:
+      consumes:
+      - application/json
+      description: Create a term via the top-level endpoint
+      parameters:
+      - description: Term info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTermRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Term'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Create term (top-level)
+      tags:
+      - academic
+  /terms/{id}:
+    get:
+      description: Get a single term by ID
+      parameters:
+      - description: Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Term'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get term by ID
+      tags:
+      - academic
+  /terms/active:
+    get:
+      description: Get the active term
+      parameters:
+      - description: Session ID
+        in: query
+        name: session_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Term'
+      summary: Get active term
+      tags:
+      - academic
+  /test-router:
+    get:
+      description: Test description
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test router
+      tags:
+      - test
+  /users:
+    get:
+      description: List users with optional filters
+      parameters:
+      - description: Filter by school ID
+        in: query
+        name: school_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name or email
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Meta'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: List users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Delete a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Get a single user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update user details
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated user info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update user
+      tags:
+      - users
+  /users/{id}/roles:
+    get:
+      description: Get roles assigned to a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RoleResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Get user roles
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Assign a role to a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role assignment info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AssignRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Assign role to user
+      tags:
+      - users
+  /users/{id}/roles/{roleId}:
+    delete:
+      description: Revoke a role from a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: roleId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Revoke role from user
+      tags:
+      - users
+  /zones/{id}:
+    delete:
+      description: Delete a zone
+      parameters:
+      - description: Zone ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Delete zone
+      tags:
+      - zones
+    put:
+      consumes:
+      - application/json
+      description: Update zone details
+      parameters:
+      - description: Zone ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated zone info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateZoneRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Zone'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.AppError'
+      summary: Update zone
+      tags:
+      - zones
+securityDefinitions:
+  BasicAuth:
+    type: basic
+  BearerAuth:
+    description: Type "Bearer" + space + JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
