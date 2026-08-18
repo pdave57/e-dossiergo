@@ -659,7 +659,7 @@ type DashboardStats struct {
 
 type ZoneSummaryReport struct {
 	Zone                string   `json:"zone" gorm:"column:zone"`
-	SchoolCount         int64    `json:"school" gorm:"column:school"`
+	SchoolCount         int64    `json:"schools" gorm:"column:school"`
 	TeachingStaffCount  int64    `json:"teaching_staff" gorm:"column:teaching_staff"`
 	StudentCount        int64    `json:"students" gorm:"column:students"`
 	StudentTeacherRatio *float64 `json:"students_teachers_ratio,omitempty" gorm:"column:students_teachers_ratio"`

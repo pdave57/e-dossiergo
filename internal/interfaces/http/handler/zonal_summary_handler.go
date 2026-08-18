@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/edossier/api/internal/application/service"
+	"github.com/edossier/api/internal/domain"
 	"github.com/edossier/api/internal/interfaces/http/middleware"
 	"github.com/edossier/api/internal/interfaces/presenter"
 	"github.com/edossier/api/pkg/apperror"
@@ -22,13 +23,14 @@ func NewZonalSummaryHandler(zonalSummaryUC *service.ZonalSummaryService) *ZonalS
 }
 
 // GetZoneSummaryReport handles GET /reports/zonal/summary
-// It retrieves the active session from the authenticated user's school and returns the zone summary report.
+// It retrieves the active session from the authenticated user's school (or state) and returns the zone summary report.
 //
 //	@Summary		Get zonal summary report
 //	@Description	Retrieve zone summary report for the current active session
 //	@Tags			reports
 //	@Produce		json
-//	@Param			school_id	query		string	false	"School ID (required for state admins)"
+//	@Param			school_id	query		string	false	"School ID (required for school-level access)"
+//	@Param			state_id	query		string	false	"State ID (required for state-level access)"
 //	@Success		200	{array}		domain.ZoneSummaryReport
 //	@Failure		400	{object}	apperror.AppError
 //	@Failure		401	{object}	apperror.AppError
@@ -43,16 +45,27 @@ func (h *ZonalSummaryHandler) GetZoneSummaryReport(w http.ResponseWriter, r *htt
 		return
 	}
 
+	stateID := claims.StateID
+	if stateID == "" {
+		stateID = r.URL.Query().Get("state_id")
+	}
 	schoolID := claims.SchoolID
 	if schoolID == "" {
 		schoolID = r.URL.Query().Get("school_id")
 	}
-	if schoolID == "" {
-		presenter.Error(w, apperror.BadRequest("school_id is required"))
+
+	var reports []domain.ZoneSummaryReport
+	var err error
+
+	if schoolID != "" {
+		reports, err = h.zonalSummaryUC.GetZoneSummaryReport(ctx, schoolID, stateID)
+	} else if stateID != "" {
+		reports, err = h.zonalSummaryUC.GetZoneSummaryReportByState(ctx, stateID)
+	} else {
+		presenter.Error(w, apperror.BadRequest("school_id or state_id is required"))
 		return
 	}
 
-	reports, err := h.zonalSummaryUC.GetZoneSummaryReport(ctx, schoolID)
 	if err != nil {
 		presenter.Error(w, err)
 		return

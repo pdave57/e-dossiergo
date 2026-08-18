@@ -18,6 +18,7 @@
 8. [Report Cards](#report-cards)
 9. [Score & Grade Configuration](#score--grade-configuration)
 10. [Avatars](#avatars)
+11. [Zonal Summary Report](#zonal-summary-report)
 
 ---
 
@@ -834,6 +835,34 @@ views. Creation still requires the owning `session_id` in the request body.
     "avatar_url": "https://cdn.example.com/avatars/students/uuid",
     "uploaded_at": "2024-01-15T10:00:00Z"
   }
+  ```
+
+## Zonal Summary Report
+
+### Get Zonal Summary Report
+- **URL:** `GET /reports/zonal/summary`
+- **Auth:** 🔐 Required (`reports:read`)
+- **Description:** Retrieve zone summary report for the current active session
+- **Query Parameters:**
+  - `school_id` (required for state admins): School ID to determine the active session
+- **Response:**
+  ```json
+  [
+    {
+      "zone": "Southern Zone",
+      "school": 12,
+      "teaching_staff": 45,
+      "students": 1200,
+      "students_teachers_ratio": 26.67
+    },
+    {
+      "zone": "Northern Zone",
+      "school": 8,
+      "teaching_staff": 30,
+      "students": 950,
+      "students_teachers_ratio": 31.67
+    }
+  ]
   ```
 
 ---

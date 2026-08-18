@@ -175,6 +175,7 @@ type AcademicSessionRepository interface {
 	Create(ctx context.Context, s *AcademicSession) error
 	GetByID(ctx context.Context, id string) (*AcademicSession, error)
 	GetActive(ctx context.Context, schoolID string) (*AcademicSession, error)
+	GetActiveForState(ctx context.Context, stateID string) (*AcademicSession, error)
 	Update(ctx context.Context, s *AcademicSession) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, schoolID string, p pagination.Params) ([]*AcademicSession, int, error)
@@ -371,7 +372,7 @@ type ReportRepository interface {
 }
 
 type ZonalReportRepository interface {
-	GetZoneSummaryReport(ctx context.Context, sessionID string) ([]ZoneSummaryReport, error)
+	GetZoneSummaryReport(ctx context.Context, sessionID string, stateID string) ([]ZoneSummaryReport, error)
 }
 
 
