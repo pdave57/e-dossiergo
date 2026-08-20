@@ -17,7 +17,7 @@ func NewZonalReportRepository(db *gorm.DB) domain.ZonalReportRepository {
 	return &postgresZonalReportRepository{db: db}
 }
 
-func (r *postgresZonalReportRepository) GetZoneSummaryReport(ctx context.Context, sessionID, stateID string) ([]domain.ZoneSummaryReport, error) {
+func (r *postgresZonalReportRepository) GetZoneSummaryReport(ctx context.Context, _sessionID, stateID string) ([]domain.ZoneSummaryReport, error) {
 	var results []domain.ZoneSummaryReport
 
 	const (
@@ -32,12 +32,6 @@ func (r *postgresZonalReportRepository) GetZoneSummaryReport(ctx context.Context
 		statusActiveStaff,
 		statusActiveEnrollment,
 		statusActiveStudent,
-	}
-
-	sessionFilter := ""
-	if sessionID != "" {
-		sessionFilter = "AND e.session_id = ?"
-		args = append(args, sessionID)
 	}
 
 	stateFilter := ""
@@ -78,7 +72,6 @@ func (r *postgresZonalReportRepository) GetZoneSummaryReport(ctx context.Context
 			WHERE e.status = ?
 			  AND st.status = ?
 			  AND s.zone_id IS NOT NULL
-			  %s
 			GROUP BY s.zone_id
 		)
 
@@ -101,7 +94,7 @@ func (r *postgresZonalReportRepository) GetZoneSummaryReport(ctx context.Context
 		LEFT JOIN zone_students zstu ON zstu.zone_id = z.id
 		WHERE 1=1 %s
 		ORDER BY z.name;
-	`, sessionFilter, stateFilter)
+	`, stateFilter)
 
 	err := r.db.Raw(query, args...).Scan(&results).Error
 	if err != nil {

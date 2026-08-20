@@ -226,6 +226,22 @@ func (uc *ResultService) ComputePositions(ctx context.Context, termID, subLevelI
 	return uc.scores.ComputePositions(ctx, termID, subLevelID, subjectID)
 }
 
+// ComputePositionsBulk re-ranks all students in a class arm across all subjects for a given term.
+func (uc *ResultService) ComputePositionsBulk(ctx context.Context, termID, subLevelID string) error {
+	if termID == "" || subLevelID == "" {
+		return apperror.BadRequest("term_id and sub_level_id are required")
+	}
+	return uc.scores.ComputePositionsBulk(ctx, termID, subLevelID)
+}
+
+// ComputeClassSubjectStats returns per-subject class stats (highest, lowest, average).
+func (uc *ResultService) ComputeClassSubjectStats(ctx context.Context, termID, subLevelID string) ([]domain.ClassSubjectStat, error) {
+	if termID == "" || subLevelID == "" {
+		return nil, apperror.BadRequest("term_id and sub_level_id are required")
+	}
+	return uc.scores.GetClassSubjectStats(ctx, termID, subLevelID)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // REPORT CARD GENERATION
 // ─────────────────────────────────────────────────────────────────────────────

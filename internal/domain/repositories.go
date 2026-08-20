@@ -175,7 +175,6 @@ type AcademicSessionRepository interface {
 	Create(ctx context.Context, s *AcademicSession) error
 	GetByID(ctx context.Context, id string) (*AcademicSession, error)
 	GetActive(ctx context.Context, schoolID string) (*AcademicSession, error)
-	GetActiveForState(ctx context.Context, stateID string) (*AcademicSession, error)
 	Update(ctx context.Context, s *AcademicSession) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, schoolID string, p pagination.Params) ([]*AcademicSession, int, error)
@@ -325,6 +324,8 @@ type ScoreSheetRepository interface {
 	List(ctx context.Context, filter ScoreSheetFilter, p pagination.Params) ([]*ScoreSheet, int, error)
 	ListByStudent(ctx context.Context, studentID, sessionID string) ([]*ScoreSheet, error)
 	ComputePositions(ctx context.Context, termID, subLevelID, subjectID string) error
+	ComputePositionsBulk(ctx context.Context, termID, subLevelID string) error
+	GetClassSubjectStats(ctx context.Context, termID, subLevelID string) ([]ClassSubjectStat, error)
 }
 
 type ReportCardRepository interface {

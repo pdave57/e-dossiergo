@@ -870,6 +870,50 @@ func (r *scoreSheetRepo) ComputePositions(ctx context.Context, termID, subLevelI
 	return err
 }
 
+// ComputePositionsBulk ranks students in a sub-level across ALL subjects for a given term.
+func (r *scoreSheetRepo) ComputePositionsBulk(ctx context.Context, termID, subLevelID string) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE score_sheets ss
+		SET position = ranked.pos
+		FROM (
+		  SELECT ss2.id,
+		         RANK() OVER (PARTITION BY ss2.subject_id ORDER BY ss2.total_score DESC) AS pos
+		  FROM score_sheets ss2
+		  WHERE ss2.term_id=$1 AND ss2.sub_level_id=$2
+		) ranked
+		WHERE ss.id = ranked.id`, termID, subLevelID)
+	return err
+}
+
+// GetClassSubjectStats returns highest, lowest, and average scores per subject for a sub-level/term.
+func (r *scoreSheetRepo) GetClassSubjectStats(ctx context.Context, termID, subLevelID string) ([]domain.ClassSubjectStat, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT
+			subject_id,
+			MAX(total_score) AS highest_score,
+			MIN(total_score) AS lowest_score,
+			ROUND(AVG(total_score)::numeric, 2) AS average_score
+		FROM score_sheets
+		WHERE term_id = $1 AND sub_level_id = $2 AND total_score > 0
+		GROUP BY subject_id
+		ORDER BY subject_id
+	`, termID, subLevelID)
+	if err != nil {
+		return nil, fmt.Errorf("query class subject stats: %w", err)
+	}
+	defer rows.Close()
+
+	var stats []domain.ClassSubjectStat
+	for rows.Next() {
+		var s domain.ClassSubjectStat
+		if err := rows.Scan(&s.SubjectID, &s.HighestScore, &s.LowestScore, &s.AverageScore); err != nil {
+			return nil, fmt.Errorf("scan class subject stat: %w", err)
+		}
+		stats = append(stats, s)
+	}
+	return stats, rows.Err()
+}
+
 const scoreSheetSelect = `
 	SELECT id,student_id,level_id,sub_level_id,school_id,session_id,term_id,subject_id,
 	       ca1_score,ca2_score,ca3_score,exam_score,total_score,

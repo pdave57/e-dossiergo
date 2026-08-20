@@ -51,11 +51,6 @@ func (r *sessionRepo) GetActive(ctx context.Context, schoolID string) (*domain.A
 		sessionSelect+" WHERE school_id=$1 AND status='ACTIVE' AND deleted_at IS NULL", schoolID))
 }
 
-func (r *sessionRepo) GetActiveForState(ctx context.Context, stateID string) (*domain.AcademicSession, error) {
-	return scanSession(r.db.QueryRowContext(ctx,
-		sessionSelect+" WHERE school_id IN (SELECT id FROM schools WHERE state_id=$1 AND deleted_at IS NULL) AND status='ACTIVE' AND deleted_at IS NULL ORDER BY start_year DESC LIMIT 1", stateID))
-}
-
 func (r *sessionRepo) Update(ctx context.Context, s *domain.AcademicSession) error {
 	s.UpdatedAt = time.Now()
 	res, err := r.db.ExecContext(ctx,

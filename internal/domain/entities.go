@@ -580,6 +580,14 @@ func (s *ScoreSheet) ComputeTotal() {
 	s.TotalScore = s.CA1Score + s.CA2Score + s.CA3Score + s.ExamScore
 }
 
+// ClassSubjectStat holds class-level statistics for a single subject within a sub-level/term.
+type ClassSubjectStat struct {
+	SubjectID    string  `json:"subject_id" gorm:"column:subject_id"`
+	HighestScore float64 `json:"highest_score" gorm:"column:highest_score"`
+	LowestScore  float64 `json:"lowest_score" gorm:"column:lowest_score"`
+	AverageScore float64 `json:"average_score" gorm:"column:average_score"`
+}
+
 // ReportCard is the compiled end-of-term result per student.
 type ReportCard struct {
 	ID              string     `json:"id"`

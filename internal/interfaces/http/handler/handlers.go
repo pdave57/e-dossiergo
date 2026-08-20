@@ -2650,6 +2650,54 @@ func (h *ResultHandler) ComputePositions(w http.ResponseWriter, r *http.Request)
 	presenter.JSON(w, http.StatusOK, map[string]string{"message": "positions computed"})
 }
 
+// ComputePositionsBulk handles POST /results/scores/compute-positions-bulk
+// It re-ranks all students in a class arm across all subjects for a given term.
+//
+//	@Summary		Compute class positions for all subjects
+//	@Description	Re-rank all students in a sub-level across all subjects for a given term
+//	@Tags			results
+//	@Produce		json
+//	@Param			term_id		query		string	true	"Term ID"
+//	@Param			sub_level_id	query		string	true	"Sub-level (class arm) ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	apperror.AppError
+//	@Failure		401	{object}	apperror.AppError
+//	@Failure		403	{object}	apperror.AppError
+//	@Router			/results/scores/compute-positions-bulk [post]
+func (h *ResultHandler) ComputePositionsBulk(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	err := h.uc.ComputePositionsBulk(r.Context(), q.Get("term_id"), q.Get("sub_level_id"))
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, map[string]string{"message": "positions computed for all subjects"})
+}
+
+// ComputeClassSubjectStats handles GET /results/scores/class-stats
+// It returns per-subject highest, lowest, and average scores for a sub-level/term.
+//
+//	@Summary		Get class subject stats
+//	@Description	Return highest, lowest, and average scores per subject for a class arm
+//	@Tags			results
+//	@Produce		json
+//	@Param			term_id		query		string	true	"Term ID"
+//	@Param			sub_level_id	query		string	true	"Sub-level (class arm) ID"
+//	@Success		200	{array}		domain.ClassSubjectStat
+//	@Failure		400	{object}	apperror.AppError
+//	@Failure		401	{object}	apperror.AppError
+//	@Failure		403	{object}	apperror.AppError
+//	@Router			/results/scores/class-stats [get]
+func (h *ResultHandler) ComputeClassSubjectStats(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	stats, err := h.uc.ComputeClassSubjectStats(r.Context(), q.Get("term_id"), q.Get("sub_level_id"))
+	if err != nil {
+		presenter.Error(w, err)
+		return
+	}
+	presenter.JSON(w, http.StatusOK, stats)
+}
+
 // @Summary Generate report cards
 // @Description Generate report cards for a class
 // @Tags results

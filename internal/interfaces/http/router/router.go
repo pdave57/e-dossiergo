@@ -300,9 +300,11 @@ func New(d Deps) http.Handler {
 				// Score entry
 				r.With(authorize(d, "results", "create")).Post("/scores", d.Result.UpsertScore)
 				r.With(authorize(d, "results", "create")).Post("/scores/bulk", d.Result.BulkUpsertScores)
-				r.With(authorize(d, "results", "update")).Post("/scores/compute-positions", d.Result.ComputePositions)
+			r.With(authorize(d, "results", "update")).Post("/scores/compute-positions", d.Result.ComputePositions)
+			r.With(authorize(d, "results", "read")).Post("/scores/compute-positions-bulk", d.Result.ComputePositionsBulk)
+			r.With(authorize(d, "results", "read")).Get("/scores/class-stats", d.Result.ComputeClassSubjectStats)
 
-				// Report cards
+			// Report cards
 				r.With(authorize(d, "results", "read")).Get("/report-cards", d.Result.ListReportCards)
 				r.With(authorize(d, "results", "create")).Post("/report-cards/generate", d.Result.GenerateReportCards)
 				r.With(authorize(d, "results", "read")).Get("/report-cards/{id}", d.Result.GetReportCard)
