@@ -123,10 +123,19 @@ func (uc *LGAService) ListLGAsByZone(ctx context.Context, zoneID string) ([]*dom
 }
 
 func (uc *LGAService) UpdateLGA(ctx context.Context, id string, req dto.UpdateLGARequest, updatedBy string) (*domain.LGA, error) {
+	v := validator.New().
+		Required(req.StateID, "state_id").
+		Required(req.ZoneID, "zone_id").
+		Required(req.Name, "name").
+		Required(req.Code, "code")
+	if !v.Valid() {
+		return nil, apperror.Validation(v.Errors())
+	}
 	l, err := uc.lgas.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
+	l.StateID = req.StateID
 	l.ZoneID = req.ZoneID
 	l.Name = req.Name
 	l.Code = req.Code
@@ -785,6 +794,8 @@ type StudentService struct {
 	schools      domain.SchoolRepository
 	states       domain.StateRepository
 	lgas         domain.LGARepository
+	scores       domain.ScoreSheetRepository
+	terms        domain.TermRepository
 }
 
 func NewStudentService(
@@ -796,11 +807,14 @@ func NewStudentService(
 	schools domain.SchoolRepository,
 	states domain.StateRepository,
 	lgas domain.LGARepository,
+	scores domain.ScoreSheetRepository,
+	terms domain.TermRepository,
 ) *StudentService {
 	return &StudentService{
 		students: students, enrollments: enrollments,
 		subLevels: subLevels, progressions: progressions, levels: levels,
 		schools: schools, states: states, lgas: lgas,
+		scores: scores, terms: terms,
 	}
 }
 

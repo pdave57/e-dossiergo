@@ -207,9 +207,10 @@ type CreateLGARequest struct {
 }
 
 type UpdateLGARequest struct {
-	ZoneID string `json:"zone_id" validate:"required"`
-	Name   string `json:"name"    validate:"required"`
-	Code   string `json:"code"    validate:"required"`
+	StateID string `json:"state_id" validate:"required"`
+	ZoneID  string `json:"zone_id"  validate:"required"`
+	Name    string `json:"name"     validate:"required"`
+	Code    string `json:"code"     validate:"required"`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,6 +476,34 @@ type RecordProgressionRequest struct {
 	Decision      string    `json:"decision"        validate:"required"`
 	DecisionDate  time.Time `json:"decision_date"   validate:"required"`
 	Remarks       string    `json:"remarks"`
+}
+
+// ComputePromotionsRequest asks the backend to evaluate third-term scores and
+// auto-advance students whose class-wide average is >= 35.  Students below the
+// threshold are still progressed but flagged for principal review.
+type ComputePromotionsRequest struct {
+	SchoolID   string `json:"school_id"   validate:"required"`
+	SessionID  string `json:"session_id"  validate:"required"`
+	LevelID    string `json:"level_id"    validate:"required"`
+	SubLevelID string `json:"sub_level_id" validate:"required"`
+}
+
+// PromotedStudent captures the outcome for one learner during promotion review.
+type PromotedStudent struct {
+	StudentID  string `json:"student_id"`
+	StudentName string `json:"student_name"`
+	FromLevelID   string `json:"from_level_id"`
+	FromLevelName string `json:"from_level_name"`
+	ToLevelID     string `json:"to_level_id,omitempty"`
+	ToLevelName   string `json:"to_level_name,omitempty"`
+	AverageScore  float64 `json:"average_score"`
+	Decision      string `json:"decision"`
+	Remarks       string `json:"remarks,omitempty"`
+}
+
+type ComputePromotionsResponse struct {
+	Total   int                `json:"total"`
+	Results []*PromotedStudent `json:"results"`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

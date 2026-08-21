@@ -198,6 +198,9 @@ func (r *lgaRepo) Create(ctx context.Context, l *domain.LGA) error {
 		if isUniqueViolation(err) {
 			return apperror.Conflict("LGA code already exists in this state")
 		}
+		if isFKViolation(err) {
+			return apperror.BadRequest("invalid zone or state reference")
+		}
 		return apperror.Internal(err)
 	}
 	return nil
@@ -213,10 +216,20 @@ func (r *lgaRepo) GetByID(ctx context.Context, id string) (*domain.LGA, error) {
 func (r *lgaRepo) Update(ctx context.Context, l *domain.LGA) error {
 	l.UpdatedAt = time.Now()
 	res, err := r.db.ExecContext(ctx,
-		`UPDATE lgas SET zone_id=$1,name=$2,code=$3,updated_at=$4,updated_by=$5
-		 WHERE id=$6 AND deleted_at IS NULL`,
-		l.ZoneID, l.Name, l.Code, l.UpdatedAt, l.UpdatedBy, l.ID)
-	return checkRowsAffected(res, err, "lga", l.ID)
+		`UPDATE lgas SET state_id=$1,zone_id=$2,name=$3,code=$4,updated_at=$5,updated_by=$6
+		 WHERE id=$7 AND deleted_at IS NULL`,
+		l.StateID, l.ZoneID, l.Name, l.Code, l.UpdatedAt, l.UpdatedBy, l.ID)
+	if err != nil {
+		fmt.Printf("LGA_UPDATE_RAW_ERR type=%T err=%+v\n", err, err)
+		if isUniqueViolation(err) {
+			return apperror.Conflict("LGA code already exists in this state")
+		}
+		if isFKViolation(err) {
+			return apperror.BadRequest("invalid zone or state reference")
+		}
+		return apperror.Internal(err)
+	}
+	return checkRowsAffected(res, nil, "lga", l.ID)
 }
 
 func (r *lgaRepo) Delete(ctx context.Context, id string) error {
