@@ -589,6 +589,34 @@ type StudentInfo struct {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NEWS & ANNOUNCEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// CreateNewsRequest is the payload for publishing a news item or announcement.
+// state_id is optional — it falls back to the caller's state from the JWT.
+// type is optional and defaults to NEWS.
+type CreateNewsRequest struct {
+	StateID     string    `json:"state_id"`
+	Type        string    `json:"type"`
+	Headline    string    `json:"headline"     validate:"required"`
+	SubHeadline string    `json:"sub_headline"`
+	NewsBody    string    `json:"news_body"`
+	NewsDate    time.Time `json:"news_date"    validate:"required"`
+	PostedBy    string    `json:"posted_by"    validate:"required"`
+}
+
+// UpdateNewsRequest is the payload for editing an existing news item.
+// The owning state is immutable and therefore not accepted here.
+type UpdateNewsRequest struct {
+	Type        string    `json:"type"`
+	Headline    string    `json:"headline"     validate:"required"`
+	SubHeadline string    `json:"sub_headline"`
+	NewsBody    string    `json:"news_body"`
+	NewsDate    time.Time `json:"news_date"    validate:"required"`
+	PostedBy    string    `json:"posted_by"    validate:"required"`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GENERIC LIST RESPONSE WRAPPER
 // ─────────────────────────────────────────────────────────────────────────────
 

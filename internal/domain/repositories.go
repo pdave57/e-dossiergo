@@ -363,6 +363,26 @@ type StudentAttendanceRepository interface {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NEWS & ANNOUNCEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+type NewsFilter struct {
+	StateID string
+	Type    string
+	Search  string
+	From    *time.Time
+	To      *time.Time
+}
+
+type NewsAnnouncementRepository interface {
+	Create(ctx context.Context, n *NewsAnnouncement) error
+	GetByID(ctx context.Context, id string) (*NewsAnnouncement, error)
+	Update(ctx context.Context, n *NewsAnnouncement) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, f NewsFilter, p pagination.Params) ([]*NewsAnnouncement, int, error)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // REPORTS & ANALYTICS
 // ─────────────────────────────────────────────────────────────────────────────
 

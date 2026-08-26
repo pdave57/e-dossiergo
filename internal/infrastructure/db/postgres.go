@@ -598,6 +598,27 @@ func Migrate(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_student_attendance_school_id ON student_attendance(school_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_student_attendance_date ON student_attendance(attendance_date)`,
 
+		`CREATE TABLE IF NOT EXISTS news_announcements (
+            id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+            state_id      TEXT NOT NULL REFERENCES states(id),
+            type          TEXT NOT NULL DEFAULT 'NEWS',
+            headline      TEXT NOT NULL,
+            sub_headline  TEXT,
+            news_body     TEXT,
+            news_date     DATE NOT NULL,
+            posted_by     TEXT NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            deleted_at    TIMESTAMPTZ,
+            created_by    TEXT,
+            updated_by    TEXT
+        )`,
+
+		`ALTER TABLE news_announcements ADD COLUMN IF NOT EXISTS news_body TEXT`,
+		`CREATE INDEX IF NOT EXISTS idx_news_state_id ON news_announcements(state_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_news_date ON news_announcements(news_date DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_news_type ON news_announcements(type)`,
+
 		`INSERT INTO permissions (id, resource, action, description) VALUES
         (gen_random_uuid()::TEXT, 'schools',       'create',  'Create a school'),
         (gen_random_uuid()::TEXT, 'schools',       'read',    'View school details'),
@@ -664,6 +685,9 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'roles',         'update',  'Update roles'),
         (gen_random_uuid()::TEXT, 'roles',         'delete',  'Delete roles'),
         (gen_random_uuid()::TEXT, 'reports',       'read',    'View reports and dashboards'),
+        (gen_random_uuid()::TEXT, 'news',          'create',  'Publish news or announcement'),
+        (gen_random_uuid()::TEXT, 'news',          'update',  'Update news or announcement'),
+        (gen_random_uuid()::TEXT, 'news',          'delete',  'Delete news or announcement'),
         (gen_random_uuid()::TEXT, 'avatar',        'update',  'Upload avatar')
         ON CONFLICT (resource, action) DO NOTHING;`,
 

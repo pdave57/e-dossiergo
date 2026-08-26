@@ -19,6 +19,7 @@
 9. [Score & Grade Configuration](#score--grade-configuration)
 10. [Avatars](#avatars)
 11. [Zonal Summary Report](#zonal-summary-report)
+12. [News & Announcements](#news--announcements)
 
 ---
 
@@ -864,6 +865,85 @@ views. Creation still requires the owning `session_id` in the request body.
     }
   ]
   ```
+
+---
+
+## News & Announcements
+
+Reads are **public** — no token required. Create, update and delete require the
+corresponding `news:*` permission.
+
+### List News & Announcements
+- **URL:** `GET /news`
+- **Auth:** Public (no token required)
+- **Description:** Paginated feed of news items and announcements, newest first (`news_date DESC`)
+- **Query Parameters:**
+  - `state_id` (optional): Filter by state
+  - `type` (optional): `NEWS` or `ANNOUNCEMENT`
+  - `search` (optional): Case-insensitive match against headline and sub-headline
+  - `from` (optional): Earliest news date, `YYYY-MM-DD`
+  - `to` (optional): Latest news date, `YYYY-MM-DD`
+  - `page` (optional, default 1)
+  - `per_page` (optional, default 20, max 100)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "b2f1c9e4-...",
+        "state_id": "a1d3...",
+        "type": "ANNOUNCEMENT",
+        "headline": "Term 2 resumes Sept 15",
+        "sub_headline": "All JSS students report by 8am",
+        "news_date": "2026-09-01T00:00:00Z",
+        "posted_by": "Ministry of Education",
+        "created_at": "2026-08-26T10:12:04Z",
+        "updated_at": "2026-08-26T10:12:04Z"
+      }
+    ],
+    "meta": { "page": 1, "per_page": 20, "total": 1, "total_pages": 1 }
+  }
+  ```
+
+### Get News Item by ID
+- **URL:** `GET /news/{id}`
+- **Auth:** Public (no token required)
+- **Description:** Retrieve a single news item or announcement
+- **Response:** `200` with a single object in `data`; `404` if not found or soft-deleted
+
+### Publish News or Announcement
+- **URL:** `POST /news`
+- **Auth:** 🔐 Required (`news:create`)
+- **Description:** Publish a news item or announcement. `state_id` defaults to the caller's
+  state from the token, and `type` defaults to `NEWS`.
+- **Request Body:**
+  ```json
+  {
+    "headline": "Term 2 resumes Sept 15",
+    "sub_headline": "All JSS students report by 8am",
+    "news_date": "2026-09-01T00:00:00Z",
+    "posted_by": "Ministry of Education",
+    "type": "ANNOUNCEMENT",
+    "state_id": "a1d3..."
+  }
+  ```
+  Required: `headline`, `news_date`, `posted_by`. Optional: `sub_headline`, `type`, `state_id`.
+- **Response:** `201` with the created record
+
+### Update News or Announcement
+- **URL:** `PUT /news/{id}`
+- **Auth:** 🔐 Required (`news:update`)
+- **Description:** Update an existing news item. The owning `state_id` is immutable and is
+  not accepted in the body.
+- **Request Body:** Same as create, minus `state_id`
+- **Response:** `200` with the updated record
+
+### Delete News or Announcement
+- **URL:** `DELETE /news/{id}`
+- **Auth:** 🔐 Required (`news:delete`)
+- **Description:** Soft-delete a news item — it disappears from all reads but the row is retained
+- **Response:** `204 No Content`
 
 ---
 

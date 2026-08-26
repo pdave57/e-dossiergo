@@ -649,6 +649,32 @@ type StudentAttendance struct {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NEWS & ANNOUNCEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// NewsType distinguishes general news items from official announcements.
+type NewsType string
+
+const (
+	NewsTypeNews         NewsType = "NEWS"
+	NewsTypeAnnouncement NewsType = "ANNOUNCEMENT"
+)
+
+// NewsAnnouncement is a publicly readable news item or announcement.
+// Reads are open to everyone; writes require the news:* permissions.
+type NewsAnnouncement struct {
+	ID          string    `json:"id"`
+	StateID     string    `json:"state_id"`
+	Type        NewsType  `json:"type"`
+	Headline    string    `json:"headline"`
+	SubHeadline string    `json:"sub_headline,omitempty"`
+	NewsBody    string    `json:"news_body"`
+	NewsDate    time.Time `json:"news_date"`
+	PostedBy    string    `json:"posted_by"`
+	AuditFields
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DASHBOARD STATISTICS
 // ─────────────────────────────────────────────────────────────────────────────
 

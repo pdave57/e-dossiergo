@@ -12,7 +12,7 @@
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 //
-//	@host		localhost:8080
+//	@host		localhost:9000
 //	@BasePath	/api/v1
 //
 //	@securityDefinitions.basic	BasicAuth
@@ -142,6 +142,7 @@ func main() {
 	studentAttendanceRepo := repository.NewStudentAttendanceRepository(db)
 	predictionRepo := repository.NewPredictionRepository(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
+	newsRepo := repository.NewNewsAnnouncementRepository(db)
 
 	// ── Use Cases ─────────────────────────────────────────────────────────────
 	authUC := service.NewAuthService(userRepo, userRoleRepo, roleRepo, refreshTokenRepo, tokenMaker)
@@ -161,6 +162,7 @@ func main() {
 
 	studentUC := service.NewStudentService(
 		studentRepo, enrollmentRepo, subLevelRepo, progressionRepo, levelRepo, schoolRepo, stateRepo, lgaRepo,
+		scoreSheetRepo, termRepo,
 	)
 	genderUC := service.NewGenderService(studentRepo)
 
@@ -181,6 +183,7 @@ func main() {
 	recommendationUC := service.NewRecommendationService(recommendationRepo, ml.NewRecommenderClient(cfg.MLServiceURL, 30*time.Second))
 
 	studentAuthUC := service.NewStudentAuthService(studentRepo, schoolRepo, refreshTokenRepo, tokenMaker)
+	newsUC := service.NewNewsService(newsRepo)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	authHandler := handler.NewAuthHandler(authUC)
@@ -204,6 +207,7 @@ func main() {
 	attendanceHandler := handler.NewAttendanceHandler(attendanceUC)
 	predictionHandler := handler.NewPredictionHandler(predictionUC)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationUC)
+	newsHandler := handler.NewNewsHandler(newsUC)
 
 	// ── Router ────────────────────────────────────────────────────────────────
 	httpHandler := router.New(router.Deps{
@@ -231,6 +235,7 @@ func main() {
 		Attendance:     attendanceHandler,
 		Prediction:     predictionHandler,
 		Recommendation: recommendationHandler,
+		News:           newsHandler,
 	})
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

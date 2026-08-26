@@ -40,6 +40,7 @@ type Deps struct {
 	Avatar         *handler.AvatarHandler
 	StudentAuth    *handler.StudentAuthHandler
 	Attendance     *handler.AttendanceHandler
+	News           *handler.NewsHandler
 	Prediction     *handler.PredictionHandler
 	Recommendation *handler.RecommendationHandler
 }
@@ -146,6 +147,15 @@ func New(d Deps) http.Handler {
 			// School subjects
 			r.Get("/{schoolId}/subjects", d.Subject.ListSchoolSubjects)
 			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "schools", "update")).Post("/{schoolId}/subjects", d.Subject.AssignToSchool)
+		})
+
+		// ── NEWS & ANNOUNCEMENTS (public read) ──────────────────────────────
+		r.Route("/news", func(r chi.Router) {
+			r.Get("/", d.News.List)
+			r.Get("/{id}", d.News.GetByID)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "news", "create")).Post("/", d.News.Create)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "news", "update")).Put("/{id}", d.News.Update)
+			r.With(middleware.Authenticate(d.TokenMaker), authorize(d, "news", "delete")).Delete("/{id}", d.News.Delete)
 		})
 
 		r.Route("/sub-levels", func(r chi.Router) {
@@ -300,11 +310,11 @@ func New(d Deps) http.Handler {
 				// Score entry
 				r.With(authorize(d, "results", "create")).Post("/scores", d.Result.UpsertScore)
 				r.With(authorize(d, "results", "create")).Post("/scores/bulk", d.Result.BulkUpsertScores)
-			r.With(authorize(d, "results", "update")).Post("/scores/compute-positions", d.Result.ComputePositions)
-			r.With(authorize(d, "results", "read")).Post("/scores/compute-positions-bulk", d.Result.ComputePositionsBulk)
-			r.With(authorize(d, "results", "read")).Get("/scores/class-stats", d.Result.ComputeClassSubjectStats)
+				r.With(authorize(d, "results", "update")).Post("/scores/compute-positions", d.Result.ComputePositions)
+				r.With(authorize(d, "results", "read")).Post("/scores/compute-positions-bulk", d.Result.ComputePositionsBulk)
+				r.With(authorize(d, "results", "read")).Get("/scores/class-stats", d.Result.ComputeClassSubjectStats)
 
-			// Report cards
+				// Report cards
 				r.With(authorize(d, "results", "read")).Get("/report-cards", d.Result.ListReportCards)
 				r.With(authorize(d, "results", "create")).Post("/report-cards/generate", d.Result.GenerateReportCards)
 				r.With(authorize(d, "results", "read")).Get("/report-cards/{id}", d.Result.GetReportCard)
