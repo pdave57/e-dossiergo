@@ -31,3 +31,13 @@ func (s *ReportService) GetTotalTeachingPersonnel(ctx context.Context) (*domain.
 	}
 	return &domain.PublicTeachingPersonnel{Total: total}, nil
 }
+
+// GetOSCReport returns the out-of-school children report grouped by LGA.
+func (s *ReportService) GetOSCReport(ctx context.Context, stateID string) ([]domain.OSCReportRow, error) {
+	return s.reportRepo.GetOSCReport(ctx, stateID)
+}
+
+// GetOSCChartData returns chart-ready OSC data grouped by LGA.
+func (s *ReportService) GetOSCChartData(ctx context.Context, stateID string) ([]domain.OSCChartPoint, error) {
+	return s.reportRepo.GetOSCChartData(ctx, stateID)
+}

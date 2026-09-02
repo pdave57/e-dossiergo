@@ -44,7 +44,7 @@ func (r *recommendationRepo) ListSchoolsWithAggregates(ctx context.Context) ([]d
 			SELECT
 				school_id,
 				COUNT(CASE WHEN role = 'TEACHER' THEN 1 END) AS total_teachers,
-				COUNT(CASE WHEN role = 'TEACHER' AND qualification IN ('NCE','B.Ed','M.Ed','Ph.D') THEN 1 END) AS qualified_teachers
+				COUNT(CASE WHEN role = 'TEACHER' AND qualification IN ('NCE','BA_ED','PGD_EDU', 'BSC_ED','MSC_ED','Ph.D') THEN 1 END) AS qualified_teachers
 			FROM personnel
 			WHERE deleted_at IS NULL
 			GROUP BY school_id

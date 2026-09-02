@@ -389,7 +389,8 @@ type NewsAnnouncementRepository interface {
 type ReportRepository interface {
 	GetDashboardStats(ctx context.Context, stateID, schoolID string) (*DashboardStats, error)
 	GetTotalTeachingPersonnel(ctx context.Context) (int, error)
-	
+	GetOSCReport(ctx context.Context, stateID string) ([]OSCReportRow, error)
+	GetOSCChartData(ctx context.Context, stateID string) ([]OSCChartPoint, error)
 }
 
 type ZonalReportRepository interface {

@@ -128,7 +128,7 @@ def engineer_features(schools: List[SchoolInput]) -> pd.DataFrame:
 
         ptr = _safe_div(s.total_students, s.total_teachers, default=999)
         pcr = _safe_div(
-            s.total_students, s.functional_classrooms, default=999
+            s.total_students, s.total_classrooms, default=999
         )
         qual_ratio = _safe_div(s.qualified_teachers, max(s.total_teachers, 1))
         subj_coverage = _safe_div(s.subjects_offered, expected_subj)
@@ -230,7 +230,7 @@ def compute_risk_score(row: pd.Series, school: SchoolInput) -> tuple[float, List
             severity=sev,
             recommendation=(
                 f"Construct or rehabilitate at least "
-                f"{math.ceil(school.total_students / SAFE_PCR - school.functional_classrooms)} "
+                f"{math.ceil(school.total_students / SAFE_PCR - school.total_classrooms)} "
                 f"classrooms to reduce congestion."
             ),
         ))

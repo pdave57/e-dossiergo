@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	_"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 // Open creates and validates a *sql.DB connection pool.
@@ -49,6 +49,24 @@ func Migrate(db *sql.DB) error {
 			created_by TEXT,
             updated_by      TEXT
         )`,
+
+		`CREATE TABLE IF NOT EXISTS lga_population_profiles (
+            id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+            lga_id          TEXT NOT NULL REFERENCES lgas(id),
+            state_id        TEXT NOT NULL REFERENCES states(id),
+            base_year       INTEGER NOT NULL DEFAULT 2006,
+            population_4_14 BIGINT NOT NULL DEFAULT 0,
+            annual_growth_rate NUMERIC(5,4) NOT NULL DEFAULT 0.0260,
+            created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            deleted_at      TIMESTAMPTZ,
+            created_by      TEXT,
+            updated_by      TEXT,
+            UNIQUE (lga_id, base_year)
+        )`,
+
+		`CREATE INDEX IF NOT EXISTS idx_lga_population_profiles_lga_id ON lga_population_profiles(lga_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_lga_population_profiles_state_id ON lga_population_profiles(state_id)`,
 
 		`CREATE TABLE IF NOT EXISTS score_configs (
             id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -619,6 +637,26 @@ func Migrate(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_news_date ON news_announcements(news_date DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_news_type ON news_announcements(type)`,
 
+		`INSERT INTO lga_population_profiles (id, lga_id, state_id, base_year, population_4_14, annual_growth_rate) VALUES
+        (gen_random_uuid()::TEXT, 'b1768779-0880-4bbb-b1fc-5251a737e3d1','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 25800, 0.029),
+        (gen_random_uuid()::TEXT, '972137dc-6c4d-4864-83ea-793783cdc29d','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 62020, 0.029),
+        (gen_random_uuid()::TEXT, 'dc45c253-a396-4479-9e9e-46bdb3023811','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 39120, 0.029),
+        (gen_random_uuid()::TEXT, '3f5b3d0f-4ffd-4616-8705-69f0a19d803a','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 25618, 0.029),
+        (gen_random_uuid()::TEXT, 'b68d0095-b125-4534-ad6c-6c932008cf6f','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 72031, 0.029),
+        (gen_random_uuid()::TEXT, '127ad4b1-93e1-4d9e-a97a-a52c383504a5','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 24776, 0.029),
+        (gen_random_uuid()::TEXT, '55925fbb-df53-4a10-9d7f-dfc14ed8dd68','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 41239, 0.029),
+        (gen_random_uuid()::TEXT, 'a82147c7-07ca-4ad7-a044-71cbb7b95faf','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 56994, 0.029),
+        (gen_random_uuid()::TEXT, '001df56a-75cd-497e-9853-83f8528e1b8c','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 26828, 0.029),
+        (gen_random_uuid()::TEXT, 'a14a0bd3-9855-4d24-ac6c-3d86200aaa41','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 27976, 0.029),
+        (gen_random_uuid()::TEXT, 'e8b7cd45-365c-45c4-b25f-a4fb2351879c','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 65939, 0.029),
+        (gen_random_uuid()::TEXT, 'eda9cb97-db58-42bf-b8d4-acf2ac707606','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 39552, 0.029),
+        (gen_random_uuid()::TEXT, 'eac61123-7c97-471e-866a-af4fed7a649e','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 26712, 0.029),
+        (gen_random_uuid()::TEXT, 'a3400c2a-867b-4918-a8ef-db5e71d3693c','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 70031, 0.029),
+        (gen_random_uuid()::TEXT, '23b7de58-8ce4-493a-af4f-7617fcc1b88f','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 26411, 0.029),
+        (gen_random_uuid()::TEXT, 'f3ee2068-beb8-4f4b-b797-4e6107249526','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 37527 0.029),
+        
+        `,
+
 		`INSERT INTO permissions (id, resource, action, description) VALUES
         (gen_random_uuid()::TEXT, 'schools',       'create',  'Create a school'),
         (gen_random_uuid()::TEXT, 'schools',       'read',    'View school details'),
@@ -1149,6 +1187,27 @@ CREATE TABLE IF NOT EXISTS level_progressions (
     created_by      TEXT,
     updated_by      TEXT
 );
+
+-- ─────────────────────────────────────────────
+-- POPULATION PROFILES (for OSC calculations)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS lga_population_profiles (
+    id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    lga_id              TEXT NOT NULL REFERENCES lgas(id),
+    state_id            TEXT NOT NULL REFERENCES states(id),
+    base_year           INTEGER NOT NULL DEFAULT 2006,
+    population_4_14     BIGINT NOT NULL DEFAULT 0,
+    annual_growth_rate  NUMERIC(5,4) NOT NULL DEFAULT 0.0260,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at          TIMESTAMPTZ,
+    created_by          TEXT,
+    updated_by          TEXT,
+    UNIQUE (lga_id, base_year)
+);
+
+CREATE INDEX IF NOT EXISTS idx_lga_population_profiles_lga_id ON lga_population_profiles(lga_id);
+CREATE INDEX IF NOT EXISTS idx_lga_population_profiles_state_id ON lga_population_profiles(state_id);
 
 -- ─────────────────────────────────────────────
 -- EXAM & RESULTS

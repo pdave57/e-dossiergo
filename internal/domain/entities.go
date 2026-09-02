@@ -624,6 +624,7 @@ const (
 	AttendanceStatusAbsent  AttendanceStatus = "ABSENT"
 	AttendanceStatusLate    AttendanceStatus = "LATE"
 	AttendanceStatusExcused AttendanceStatus = "EXCUSED"
+	AttendanceStatusHoliday AttendanceStatus = "HOLIDAY"
 )
 
 type PersonnelAttendance struct {
@@ -840,3 +841,41 @@ type PredictionReport struct {
 
 // IsEmpty returns whether the prediction report contains any data.
 func (pr *PredictionReport) IsEmpty() bool { return len(pr.Students) == 0 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OUT-OF-SCHOOL CHILDREN (OSC) REPORTING
+// ─────────────────────────────────────────────────────────────────────────────
+
+// LgaPopulationProfile stores 2006 census base data and growth parameters
+// used to estimate current school-age population (SEP) per LGA.
+type LgaPopulationProfile struct {
+	ID                 string  `json:"id"`
+	LGAID              string  `json:"lga_id"`
+	StateID            string  `json:"state_id"`
+	BaseYear           int     `json:"base_year"`
+	Population4To14    int64   `json:"population_4_14"`
+	AnnualGrowthRate   float64 `json:"annual_growth_rate"`
+	AuditFields
+}
+
+// OSCReportRow represents the out-of-school children calculation for one LGA.
+type OSCReportRow struct {
+	LGAID       string  `json:"lga_id"`
+	LGAName     string  `json:"lga_name"`
+	StateID     string  `json:"state_id"`
+	SEP         int64   `json:"sep"`
+	TCS         int64   `json:"tcs"`
+	EnrollmentCount int64 `json:"enrollment_count"`
+	SchoolStudentCount int64 `json:"school_student_count"`
+	OSC         int64   `json:"osc"`
+	OSCPct      float64 `json:"osc_pct"`
+}
+
+// OSCChartPoint represents a data point for charting OSC per LGA.
+type OSCChartPoint struct {
+	LGAName string  `json:"lga_name"`
+	SEP     int64   `json:"sep"`
+	TCS     int64   `json:"tcs"`
+	OSC     int64   `json:"osc"`
+	OSCPct  float64 `json:"osc_pct"`
+}

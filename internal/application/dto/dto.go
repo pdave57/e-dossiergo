@@ -3,7 +3,11 @@
 // the HTTP interface and use-case layer.
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/edossier/api/internal/domain"
+)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTH
@@ -630,4 +634,13 @@ type PaginationMeta struct {
 	PerPage    int `json:"per_page"`
 	Total      int `json:"total"`
 	TotalPages int `json:"total_pages"`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OUT-OF-SCHOOL CHILDREN (OSC) REPORTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+type OSCReportResponse struct {
+	StateID string          `json:"state_id"`
+	Data    []domain.OSCReportRow `json:"data"`
 }

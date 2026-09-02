@@ -102,6 +102,11 @@ func New(d Deps) http.Handler {
 			r.With(middleware.Authenticate(d.TokenMaker)).Get("/summary", d.ZonalSummary.GetZoneSummaryReport)
 		})
 
+		r.Route("/reports/osc", func(r chi.Router) {
+			r.With(middleware.Authenticate(d.TokenMaker)).Get("/", d.Report.GetOSCReport)
+			r.With(middleware.Authenticate(d.TokenMaker)).Get("/chart", d.Report.GetOSCChart)
+		})
+
 		// ── AUTH (public) ─────────────────────────────────────────────────────
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", d.Auth.Register)

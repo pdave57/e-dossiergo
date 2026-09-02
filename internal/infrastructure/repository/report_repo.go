@@ -82,3 +82,93 @@ func (r *postgresReportRepository) GetTotalTeachingPersonnel(ctx context.Context
 	return total, nil
 }
 
+func (r *postgresReportRepository) GetOSCReport(ctx context.Context, stateID string) ([]domain.OSCReportRow, error) {
+	stateFilter := ""
+	args := []interface{}{}
+	if stateID != "" {
+		stateFilter = "AND l.state_id = $1"
+		args = append(args, stateID)
+	}
+
+	query := fmt.Sprintf(`
+		WITH lga_school_students AS (
+			SELECT
+				sc.lga_id,
+				COALESCE(SUM(sc.total_students), 0) AS school_student_count
+			FROM schools sc
+			WHERE sc.deleted_at IS NULL
+			GROUP BY sc.lga_id
+		),
+		lga_enrollments AS (
+			SELECT
+				sc.lga_id,
+				COUNT(DISTINCT e.student_id) AS enrollment_count
+			FROM enrollments e
+			JOIN schools sc ON sc.id = e.school_id
+			WHERE e.status = 'ACTIVE'
+			  AND sc.deleted_at IS NULL
+			GROUP BY sc.lga_id
+		)
+		SELECT
+			l.id AS lga_id,
+			l.name AS lga_name,
+			l.state_id,
+			COALESCE(ROUND(lp.population_4_14 * POW(1.0 + lp.annual_growth_rate,
+				EXTRACT(YEAR FROM NOW())::INT - lp.base_year)), 0) AS sep,
+			COALESCE(le.enrollment_count, 0) AS enrollment_count,
+			COALESCE(ls.school_student_count, 0) AS school_student_count,
+			COALESCE(le.enrollment_count, 0) + COALESCE(ls.school_student_count, 0) AS tcs
+		FROM lgas l
+		LEFT JOIN lga_population_profiles lp ON lp.lga_id = l.id AND lp.deleted_at IS NULL
+		LEFT JOIN lga_enrollments le ON le.lga_id = l.id
+		LEFT JOIN lga_school_students ls ON ls.lga_id = l.id
+		WHERE l.deleted_at IS NULL %s
+		ORDER BY l.name
+	`, stateFilter)
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query osc report: %w", err)
+	}
+	defer rows.Close()
+
+	var results []domain.OSCReportRow
+	for rows.Next() {
+		var row domain.OSCReportRow
+		err := rows.Scan(
+			&row.LGAID, &row.LGAName, &row.StateID,
+			&row.SEP, &row.EnrollmentCount, &row.SchoolStudentCount, &row.TCS,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan osc report row: %w", err)
+		}
+		row.OSC = row.SEP - row.TCS
+		if row.SEP > 0 {
+			row.OSCPct = (float64(row.OSC) / float64(row.SEP)) * 100
+		}
+		results = append(results, row)
+	}
+
+	return results, rows.Err()
+}
+
+func (r *postgresReportRepository) GetOSCChartData(ctx context.Context, stateID string) ([]domain.OSCChartPoint, error) {
+	reportRows, err := r.GetOSCReport(ctx, stateID)
+	if err != nil {
+		return nil, err
+	}
+
+	chartData := make([]domain.OSCChartPoint, len(reportRows))
+	for i, row := range reportRows {
+		chartData[i] = domain.OSCChartPoint{
+			LGAName: row.LGAName,
+			SEP:     row.SEP,
+			TCS:     row.TCS,
+			OSC:     row.OSC,
+			OSCPct:  row.OSCPct,
+		}
+	}
+
+	return chartData, nil
+}
+
