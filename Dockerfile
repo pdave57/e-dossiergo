@@ -1,35 +1,26 @@
-# ── Build stage ───────────────────────────────────────────────────────────────
 FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache git ca-certificates tzdata
-
-# Cache dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source
 COPY . .
+ARG BUILD_PATH=./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o server ${BUILD_PATH}
 
-# Build static binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-w -s -extldflags '-static'" \
-    -o /app/edossier ./cmd/server
+FROM alpine:3.20
 
-# ── Runtime stage ─────────────────────────────────────────────────────────────
-FROM alpine:3.19
+RUN apk add --no-cache ca-certificates tzdata
 
-# Copy timezone data and CA certs for HTTPS calls
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+WORKDIR /app
 
-COPY --from=builder /app/edossier /edossier
+COPY --from=builder /app/server .
+
+ENV PORT=34005
 
 EXPOSE 34005
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=5 \
-    CMD wget -qO- http://localhost:34005/health || exit 1
-
-ENTRYPOINT ["/edossier"]
+ENTRYPOINT ["./server"]

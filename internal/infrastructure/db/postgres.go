@@ -653,9 +653,8 @@ func Migrate(db *sql.DB) error {
         (gen_random_uuid()::TEXT, 'eac61123-7c97-471e-866a-af4fed7a649e','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 26712, 0.029),
         (gen_random_uuid()::TEXT, 'a3400c2a-867b-4918-a8ef-db5e71d3693c','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 70031, 0.029),
         (gen_random_uuid()::TEXT, '23b7de58-8ce4-493a-af4f-7617fcc1b88f','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 26411, 0.029),
-        (gen_random_uuid()::TEXT, 'f3ee2068-beb8-4f4b-b797-4e6107249526','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 37527 0.029),
-        
-        `,
+        (gen_random_uuid()::TEXT, 'f3ee2068-beb8-4f4b-b797-4e6107249526','7b65a374-75e8-4152-8027-ea5f54f078c6', 2006, 37527, 0.029)
+        ON CONFLICT (lga_id, base_year) DO NOTHING`,
 
 		`INSERT INTO permissions (id, resource, action, description) VALUES
         (gen_random_uuid()::TEXT, 'schools',       'create',  'Create a school'),

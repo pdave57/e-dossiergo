@@ -125,7 +125,7 @@ func (r *newsRepo) List(ctx context.Context, f domain.NewsFilter, p pagination.P
 }
 
 const newsSelectSQL = `
-	SELECT n.id,n.state_id,n.type,n.headline,COALESCE(n.sub_headline,''),n.news_body,COALESCE(n.news_body,''),n.news_date,n.posted_by,
+	SELECT n.id,n.state_id,n.type,n.headline,COALESCE(n.sub_headline,''),n.news_body,n.news_date,n.posted_by,
 	       n.created_at,n.updated_at,
 	       COALESCE(n.created_by,''),COALESCE(n.updated_by,'')
 	FROM news_announcements n`

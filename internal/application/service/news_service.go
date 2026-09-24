@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -39,12 +40,25 @@ func (uc *NewsService) Create(ctx context.Context, stateID string, req dto.Creat
 		MaxLen(req.SubHeadline, 500, "sub_headline").
 		Required(req.PostedBy, "posted_by").
 		MaxLen(req.PostedBy, 200, "posted_by").
-		Check(!req.NewsDate.IsZero(), "news_date", "is required")
+		Required(req.NewsDate, "news_date")
 	if req.Type != "" {
 		v.OneOf(strings.ToUpper(req.Type), newsTypes, "type")
 	}
+	// Validate NewsDate format
+	if req.NewsDate != "" {
+		if _, err := parseNewsDate(req.NewsDate); err != nil {
+			v.Check(false, "news_date", err.Error())
+		}
+	}
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
+	}
+
+	// Parse NewsDate
+	newsDate, err := parseNewsDate(req.NewsDate)
+	if err != nil {
+		// This should not happen because we validated above, but just in case.
+		return nil, apperror.BadRequest("invalid news date: " + err.Error())
 	}
 
 	n := &domain.NewsAnnouncement{
@@ -53,7 +67,7 @@ func (uc *NewsService) Create(ctx context.Context, stateID string, req dto.Creat
 		Headline:    strings.TrimSpace(req.Headline),
 		SubHeadline: strings.TrimSpace(req.SubHeadline),
 		NewsBody:    strings.TrimSpace(req.NewsBody),
-		NewsDate:    truncateToDay(req.NewsDate),
+		NewsDate:    truncateToDay(newsDate),
 		PostedBy:    strings.TrimSpace(req.PostedBy),
 		AuditFields: domain.AuditFields{CreatedBy: createdBy, UpdatedBy: createdBy},
 	}
@@ -91,12 +105,25 @@ func (uc *NewsService) Update(ctx context.Context, id string, req dto.UpdateNews
 		MaxLen(req.SubHeadline, 500, "sub_headline").
 		Required(req.PostedBy, "posted_by").
 		MaxLen(req.PostedBy, 200, "posted_by").
-		Check(!req.NewsDate.IsZero(), "news_date", "is required")
+		Required(req.NewsDate, "news_date")
 	if req.Type != "" {
 		v.OneOf(strings.ToUpper(req.Type), newsTypes, "type")
 	}
+	// Validate NewsDate format
+	if req.NewsDate != "" {
+		if _, err := parseNewsDate(req.NewsDate); err != nil {
+			v.Check(false, "news_date", err.Error())
+		}
+	}
 	if !v.Valid() {
 		return nil, apperror.Validation(v.Errors())
+	}
+
+	// Parse NewsDate
+	newsDate, err := parseNewsDate(req.NewsDate)
+	if err != nil {
+		// This should not happen because we validated above, but just in case.
+		return nil, apperror.BadRequest("invalid news date: " + err.Error())
 	}
 
 	n, err := uc.news.GetByID(ctx, id)
@@ -110,7 +137,7 @@ func (uc *NewsService) Update(ctx context.Context, id string, req dto.UpdateNews
 	n.Headline = strings.TrimSpace(req.Headline)
 	n.SubHeadline = strings.TrimSpace(req.SubHeadline)
 	n.NewsBody = strings.TrimSpace(req.NewsBody)
-	n.NewsDate = truncateToDay(req.NewsDate)
+	n.NewsDate = truncateToDay(newsDate)
 	n.PostedBy = strings.TrimSpace(req.PostedBy)
 	n.UpdatedBy = updatedBy
 
@@ -134,6 +161,18 @@ func newsType(s string) domain.NewsType {
 		return domain.NewsTypeNews
 	}
 	return domain.NewsType(strings.ToUpper(s))
+}
+
+// parseNewsDate attempts to parse a string as a date, accepting either
+// RFC3339 timestamp or date-only string (YYYY-MM-DD).
+func parseNewsDate(s string) (time.Time, error) {
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse("2006-01-02", s); err == nil {
+		return t, nil
+	}
+	return time.Time{}, fmt.Errorf("invalid date format: must be YYYY-MM-DD or RFC3339")
 }
 
 // truncateToDay drops the time component — news_date is a calendar date.

@@ -605,7 +605,7 @@ type CreateNewsRequest struct {
 	Headline    string    `json:"headline"     validate:"required"`
 	SubHeadline string    `json:"sub_headline"`
 	NewsBody    string    `json:"news_body"`
-	NewsDate    time.Time `json:"news_date"    validate:"required"`
+	NewsDate    string    `json:"news_date"    validate:"required"`
 	PostedBy    string    `json:"posted_by"    validate:"required"`
 }
 
@@ -616,7 +616,7 @@ type UpdateNewsRequest struct {
 	Headline    string    `json:"headline"     validate:"required"`
 	SubHeadline string    `json:"sub_headline"`
 	NewsBody    string    `json:"news_body"`
-	NewsDate    time.Time `json:"news_date"    validate:"required"`
+	NewsDate    string    `json:"news_date"    validate:"required"`
 	PostedBy    string    `json:"posted_by"    validate:"required"`
 }
 
